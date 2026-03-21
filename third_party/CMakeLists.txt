@@ -47,9 +47,21 @@ CPMAddPackage(
         "BOOST_ENABLE_CMAKE ON"
         "BOOST_SKIP_INSTALL_RULES ON"
         "BUILD_SHARED_LIBS OFF"
-        "BOOST_INCLUDE_LIBRARIES core\\\;container\\\;smart_ptr\\\;interprocess\\\;asio\\\;lockfree"
+        "BOOST_INCLUDE_LIBRARIES headers\\\;core\\\;container\\\;smart_ptr\\\;interprocess\\\;asio\\\;lockfree"
     FIND_PACKAGE_ARGUMENTS "CONFIG REQUIRED"
 )
+
+# Ensure the base header-only target is visible in this directory before creating
+# our global compatibility targets below.
+if(NOT TARGET Boost::headers)
+    find_package(Boost CONFIG REQUIRED COMPONENTS headers)
+endif()
+if(TARGET Boost::headers)
+    get_target_property(_boost_headers_imported_global Boost::headers IMPORTED_GLOBAL)
+    if(NOT _boost_headers_imported_global)
+        set_property(TARGET Boost::headers PROPERTY IMPORTED_GLOBAL TRUE)
+    endif()
+endif()
 
 ensureboosttarget(algorithm)
 ensureboosttarget(asio)
