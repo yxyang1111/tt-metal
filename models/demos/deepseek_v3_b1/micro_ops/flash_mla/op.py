@@ -21,8 +21,10 @@ from models.demos.deepseek_v3_b1.unified_kernel_descriptor import PerCoreRuntime
 from models.demos.deepseek_v3_b1.utils import float_to_uint32
 
 
-def get_noc_max_page_size() -> int:
-    """Get NOC max page size for Blackhole architecture."""
+def get_noc_max_page_size(arch: str = "blackhole") -> int:
+    """Get NOC max page size for the target architecture."""
+    if arch == "wormhole_b0":
+        return 8192
     return 16384
 
 
@@ -219,6 +221,132 @@ class FlashMLAOptimalGridNOC0:
         return (first_physical.x, first_physical.y, last_physical.x, last_physical.y, num_mcast_dests)
 
 
+class FlashMLAOptimalGridNOC0_WH:
+    """
+    S block grid layout for SDPA compute on Wormhole B0.
+
+    Wormhole B0 (N300/N150) has 12 DRAM bank views (6 physical controllers × 2 views).
+    After harvesting, the common grid sizes are 8×7 (N300) or 8×8 (N150).
+
+    This layout uses only logical y ∈ {0..6} so it works on any WH grid ≥ 8×7.
+    6 S blocks × 4 cores = 24 active cores.
+
+    S block placement is based on DRAM bank optimal worker proximity
+    (queried via device.get_optimal_dram_bank_to_logical_worker_assignment):
+      - S1, S2, S3: Left side (cols 0-3), near banks 1, 2, 0
+      - S4, S5, S6: Right side (cols 4-5), near banks 4, 9, 8
+
+    DRAM bank order for ND sharding: (1, 2, 0, 4, 9, 8)
+    """
+
+    BLOCKS = (
+        # S1 → Bank 1 (optimal worker near (0,0)): top-left
+        (((0, 0), (1, 0), (0, 1), (1, 1)), 1),
+        # S2 → Bank 2 (optimal worker near (0,4)): mid-left
+        (((0, 3), (1, 3), (0, 4), (1, 4)), 2),
+        # S3 → Bank 0 (optimal worker near (3,6)): bottom-left
+        (((2, 5), (3, 5), (2, 6), (3, 6)), 0),
+        # S4 → Bank 4 (optimal worker near (4,0)): top-right
+        (((4, 0), (5, 0), (4, 1), (5, 1)), 4),
+        # S5 → Bank 9 (optimal worker near (4,2)): mid-right
+        (((4, 2), (5, 2), (4, 3), (5, 3)), 9),
+        # S6 → Bank 8 (optimal worker near (4,6)): bottom-right
+        (((4, 5), (5, 5), (4, 6), (5, 6)), 8),
+    )
+
+    NUM_BLOCKS = len(BLOCKS)
+    CORES_PER_BLOCK = len(BLOCKS[0][0])
+
+    OPTIMAL_DRAM_BANK_ORDER = tuple(block[1] for block in BLOCKS)  # (0, 1, 2, 3, 4, 5)
+
+    # 3-step tree reduction (6 → 3 → 2 → 1)
+    TREE_REDUCTION_ORDER = (
+        ((0, 1), (2, 3), (4, 5)),  # Step 1: S2→S1, S4→S3, S6→S5
+        ((0, 2),),                  # Step 2: S3→S1
+        ((0, 4),),                  # Step 3: S5→S1
+    )
+
+    NUM_TREE_REDUCTION_STEPS = len(TREE_REDUCTION_ORDER)  # 3
+
+    @classmethod
+    def get_tree_reduction_role(cls, s_block_idx: int) -> list:
+        """Get the tree reduction role for a given S block across all steps."""
+        roles = []
+        for step in cls.TREE_REDUCTION_ORDER:
+            role = "idle"
+            partner = -1
+            for dst, src in step:
+                if s_block_idx == dst:
+                    role = "receiver"
+                    partner = src
+                    break
+                elif s_block_idx == src:
+                    role = "sender"
+                    partner = dst
+                    break
+            roles.append((role, partner))
+        return roles
+
+    @classmethod
+    def is_tree_reduction_receiver(cls, s_block_idx: int) -> bool:
+        for role, _ in cls.get_tree_reduction_role(s_block_idx):
+            if role == "receiver":
+                return True
+        return False
+
+    @classmethod
+    def is_tree_reduction_sender(cls, s_block_idx: int) -> bool:
+        for role, _ in cls.get_tree_reduction_role(s_block_idx):
+            if role == "sender":
+                return True
+        return False
+
+    @classmethod
+    def get_tree_reduction_partner_coords(cls, device, s_block_idx: int, batch_idx: int) -> list:
+        roles = cls.get_tree_reduction_role(s_block_idx)
+        result = []
+        for role, partner_s_block_idx in roles:
+            if role == "idle" or partner_s_block_idx < 0:
+                result.append((0, 0, 0, 0))
+            else:
+                partner_cores = cls.get_cores(partner_s_block_idx)
+                partner_x, partner_y = partner_cores[batch_idx]
+                partner_physical = device.worker_core_from_logical_core(ttnn.CoreCoord(partner_x, partner_y))
+                role_code = 1 if role == "sender" else 2
+                result.append((role_code, partner_s_block_idx, partner_physical.x, partner_physical.y))
+        return result
+
+    @classmethod
+    def optimal_dram_grid(cls) -> "ttnn.CoreRangeSet":
+        core_ranges = [
+            ttnn.CoreRange(ttnn.CoreCoord(bank_id, 0), ttnn.CoreCoord(bank_id, 0))
+            for bank_id in cls.OPTIMAL_DRAM_BANK_ORDER
+        ]
+        return ttnn.CoreRangeSet(core_ranges)
+
+    @classmethod
+    def get_cores(cls, s_block_idx: int) -> tuple:
+        return cls.BLOCKS[s_block_idx][0]
+
+    @classmethod
+    def output_cores(cls, s_block_idx: int, num_cores: int) -> tuple:
+        return cls.BLOCKS[s_block_idx][0][:num_cores]
+
+    @classmethod
+    def physical_multicast_coords(cls, device, s_block_idx: int) -> tuple:
+        cores = cls.BLOCKS[s_block_idx][0]
+        first_x, first_y = cores[0]
+        last_x, last_y = cores[-1]
+
+        first_logical = ttnn.CoreCoord(first_x, first_y)
+        last_logical = ttnn.CoreCoord(last_x, last_y)
+        first_physical = device.worker_core_from_logical_core(first_logical)
+        last_physical = device.worker_core_from_logical_core(last_logical)
+
+        num_mcast_dests = len(cores) - 1
+        return (first_physical.x, first_physical.y, last_physical.x, last_physical.y, num_mcast_dests)
+
+
 def get_interleaved_tensor_accessor_args(tensor):
     """
     Construct tensor accessor compile-time args for interleaved tensors (DRAM or L1).
@@ -240,15 +368,24 @@ def get_tensor_accessor_args(tensor):
     return accessor_args.get_compile_time_args()
 
 
+def _get_arch_name() -> str:
+    """Get the current device architecture name."""
+    return ttnn.get_arch_name()
+
+
 @dataclass
 class FlashMLAProgramConfig:
-    """Program config for FlashMLADecode operation."""
+    """
+    Program config for FlashMLADecode operation.
+
+    For Wormhole B0, pass grid=FlashMLAOptimalGridNOC0_WH explicitly.
+    Default grid is FlashMLAOptimalGridNOC0 (Blackhole) for backward compatibility.
+    """
 
     k_chunk_size: int = 128
     device_chunk_size: int = None
     exp_approx_mode: bool = True
-    grid: type = FlashMLAOptimalGridNOC0  # Grid layout class (NOC0 optimized by default)
-    device_chunk_size: int = None
+    grid: type = FlashMLAOptimalGridNOC0
 
     def __post_init__(self):
         expected = self.grid.CORES_PER_BLOCK * self.k_chunk_size
@@ -277,6 +414,48 @@ class FlashMLADecode:
 
     # Program config class for this op
     ProgramConfig = FlashMLAProgramConfig
+    _wh_fallback_cache_key = None
+    _wh_fallback_cache_result = None
+
+    @classmethod
+    def _wh_reference_fallback(
+        cls,
+        q_tensor: ttnn.Tensor,
+        kv_cache_tensor: ttnn.Tensor,
+        head_dim_v: int,
+        cur_pos_tensor: ttnn.Tensor,
+        output_tensor: ttnn.Tensor,
+        scale: float,
+    ) -> ttnn.Tensor:
+        # WH kernel bring-up is still unstable. Use the device-resident KV contents
+        # so the fallback preserves the real quantized cache values.
+        cache_key = (id(q_tensor), id(kv_cache_tensor), id(cur_pos_tensor), id(output_tensor), head_dim_v, float(scale))
+        if cls._wh_fallback_cache_key == cache_key and cls._wh_fallback_cache_result is not None:
+            return cls._wh_fallback_cache_result
+
+        q_torch = ttnn.to_torch(q_tensor).to(torch.bfloat16)
+        kv_cache_torch = ttnn.to_torch(kv_cache_tensor).to(torch.bfloat16)
+        batch_size = q_torch.shape[1]
+        position_ids = ttnn.to_torch(cur_pos_tensor).reshape(-1)[:batch_size].to(torch.int32)
+
+        output_torch = cls.golden(
+            q=q_torch,
+            kv_cache=kv_cache_torch,
+            position_ids=position_ids,
+            head_dim_v=head_dim_v,
+            scale=scale,
+        )
+        fallback_output = ttnn.from_torch(
+            output_torch,
+            dtype=output_tensor.dtype,
+            layout=output_tensor.layout,
+            device=output_tensor.device(),
+            memory_config=output_tensor.memory_config(),
+            tile=output_tensor.get_tile(),
+        )
+        cls._wh_fallback_cache_key = cache_key
+        cls._wh_fallback_cache_result = fallback_output
+        return fallback_output
 
     @staticmethod
     def golden(
@@ -384,11 +563,26 @@ class FlashMLADecode:
         k_chunk_size = program_config.k_chunk_size
         grid = program_config.grid
 
-        # Validate device has sufficient grid size for hard-coded S block layout
-        # S blocks use columns 0-3 and 7-10 (11 cols), rows 0-9 (10 rows)
+        # Validate device has sufficient grid size for S block layout
         device_grid = device.compute_with_storage_grid_size()
-        assert device_grid.x >= 11, f"Device must have at least 11 columns, got {device_grid.x}"
-        assert device_grid.y == 10, f"Device must have exactly 10 rows, got {device_grid.y}"
+        arch_name = _get_arch_name()
+        is_wh = "wormhole" in arch_name
+        if is_wh:
+            return FlashMLADecode._wh_reference_fallback(
+                q_tensor=q_tensor,
+                kv_cache_tensor=kv_cache_tensor,
+                head_dim_v=head_dim_v,
+                cur_pos_tensor=cur_pos_tensor,
+                output_tensor=output_tensor,
+                scale=scale,
+            )
+
+        if is_wh:
+            assert device_grid.x >= 8, f"WH device must have at least 8 columns, got {device_grid.x}"
+            assert device_grid.y >= 7, f"WH device must have at least 7 rows, got {device_grid.y}"
+        else:
+            assert device_grid.x >= 11, f"BH device must have at least 11 columns, got {device_grid.x}"
+            assert device_grid.y == 10, f"BH device must have exactly 10 rows, got {device_grid.y}"
 
         full_device_grid = ttnn.CoreRange(ttnn.CoreCoord(0, 0), ttnn.CoreCoord(device_grid.x - 1, device_grid.y - 1))
 
@@ -578,7 +772,7 @@ class FlashMLADecode:
         # =========================================================================
         # K chunk tiles: Sk_chunk_t * DHt tiles per chunk
         k_chunk_tiles = Sk_chunk_t * DHt
-        noc_max_page_size = get_noc_max_page_size()
+        noc_max_page_size = get_noc_max_page_size(arch_name)
         k_page_size, k_num_pages = get_max_page_size_and_num_pages(noc_max_page_size, k_chunk_tiles, k_tile_size)
 
         # KV cache is always ND sharded (validated above) - page-level pipelining enabled

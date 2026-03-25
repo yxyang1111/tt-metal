@@ -81,7 +81,7 @@ void kernel_main() {
     constexpr uint32_t sender_semaphore_id = get_compile_time_arg_val(27);
     constexpr uint32_t receiver_semaphore_id = get_compile_time_arg_val(28);
     constexpr uint32_t valid_semaphore_id = get_compile_time_arg_val(29);
-    constexpr bool mcast_enabled = get_compile_time_arg_val(30) == 1;
+    constexpr bool kernel_supports_mcast = get_compile_time_arg_val(30) == 1;
 
     constexpr auto q_args = TensorAccessorArgs<31>();
     constexpr auto k_args = TensorAccessorArgs<q_args.next_compile_time_args_offset()>();
@@ -131,6 +131,7 @@ void kernel_main() {
     uint32_t next_physical_x = 0;
     uint32_t next_physical_y = 0;
     uint32_t next_core_q_chunks = 0;
+    uint32_t use_mcast = 0;
     uint32_t mcast_num_dests = 0;
     uint32_t mcast_sender_wait = 0;
     uint64_t mcast_base_noc_addr = 0;
@@ -158,6 +159,7 @@ void kernel_main() {
         next_physical_x = get_arg_val<uint32_t>(argidx++);
         next_physical_y = get_arg_val<uint32_t>(argidx++);
         next_core_q_chunks = get_arg_val<uint32_t>(argidx++);
+        use_mcast = get_arg_val<uint32_t>(argidx++);
         mcast_num_dests = get_arg_val<uint32_t>(argidx++);
         mcast_sender_wait = get_arg_val<uint32_t>(argidx++);
 
@@ -173,9 +175,9 @@ void kernel_main() {
 
             *valid_semaphore_addr_ptr = VALID;
 
-            if constexpr (mcast_enabled) {
-                // All chains use mcast (all-or-nothing compile-time decision)
-                sender_semaphore_noc_addr = get_noc_addr(prev_physical_x, prev_physical_y, sender_semaphore_addr);
+            const bool chain_uses_mcast = kernel_supports_mcast && (use_mcast != 0);
+            sender_semaphore_noc_addr = get_noc_addr(prev_physical_x, prev_physical_y, sender_semaphore_addr);
+            if (chain_uses_mcast) {
                 if (is_injector) {
                     // prev_physical = mcast_start (first receiver), next_physical = mcast_end (last receiver)
                     mcast_base_noc_addr = get_noc_multicast_addr(
@@ -188,7 +190,6 @@ void kernel_main() {
                     sender_wait_count = mcast_sender_wait;
                 }
             } else {
-                sender_semaphore_noc_addr = get_noc_addr(prev_physical_x, prev_physical_y, sender_semaphore_addr);
                 receiver_semaphore_noc_addr = get_noc_addr(next_physical_x, next_physical_y, receiver_semaphore_addr);
             }
         }
@@ -390,11 +391,13 @@ void kernel_main() {
                     // Chain forwarding conditions are loop-invariant — compute once
                     bool should_forward = false;
                     bool should_receive = false;
+                    bool chain_uses_mcast = false;
                     if constexpr (!is_causal) {
                         should_forward = is_chain_participant && !is_sink && (nb == chain_batch && nq == chain_head) &&
                                          (q_iter < next_core_q_chunks);
                         should_receive =
                             is_chain_participant && !is_injector && (nb == chain_batch && nq == chain_head);
+                        chain_uses_mcast = kernel_supports_mcast && (use_mcast != 0);
                     }
 
                     // loop while k_low < q_high
@@ -463,7 +466,7 @@ void kernel_main() {
                         if (should_forward) {
                             noc_semaphore_wait(sender_semaphore_addr_ptr, sender_wait_count);
                             noc_semaphore_set(sender_semaphore_addr_ptr, 0);
-                            if constexpr (mcast_enabled) {
+                            if (chain_uses_mcast) {
                                 uint64_t k_mcast_addr = mcast_base_noc_addr | cb_k_start_address;
                                 noc_async_write_multicast(
                                     cb_k_start_address,
@@ -521,7 +524,7 @@ void kernel_main() {
                         // Complete K forward: flush write and signal receiver(s)
                         // (mcast path already completed above — companion sent with linked write)
                         if (should_forward) {
-                            if constexpr (!mcast_enabled) {
+                            if (!chain_uses_mcast) {
                                 noc_async_writes_flushed();
                                 noc_semaphore_set_remote(valid_semaphore_addr, receiver_semaphore_noc_addr);
                             }
@@ -613,7 +616,7 @@ void kernel_main() {
                         if (should_forward) {
                             noc_semaphore_wait(sender_semaphore_addr_ptr, sender_wait_count);
                             noc_semaphore_set(sender_semaphore_addr_ptr, 0);
-                            if constexpr (mcast_enabled) {
+                            if (chain_uses_mcast) {
                                 uint64_t v_mcast_addr = mcast_base_noc_addr | cb_v_start_address;
                                 noc_async_write_multicast(
                                     cb_v_start_address,

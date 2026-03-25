@@ -13,15 +13,29 @@
 #include "../../../../kernel_includes/tt_metal/include/compute_kernel_api/deepseek_compute_kernel_hw_startup.h"
 
 #ifdef TRISC_MATH
+#ifdef ARCH_BLACKHOLE
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_math_sdpa_bcast_col_srcb_reuse_api.h"
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_math_sdpa_bcast_col_srca_srcb_reuse_api.h"
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_sfpu/llk_math_sdpa_reduce_row.h"
+#else
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_math_sdpa_bcast_col_srcb_reuse_api.h"
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_math_sdpa_bcast_col_srca_srcb_reuse_api.h"
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_sfpu/llk_math_sdpa_reduce_row.h"
+#endif
 #endif
 #ifdef TRISC_UNPACK
+#ifdef ARCH_BLACKHOLE
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_unpack_A_sdpa_api.h"
+#else
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_unpack_A_sdpa_api.h"
+#endif
 #endif
 #ifdef TRISC_PACK
+#ifdef ARCH_BLACKHOLE
 #include "../../../../kernel_includes/tt_metal/hw/ckernels/blackhole/metal/llk_api/llk_sfpu/llk_math_sdpa_reduce_row.h"
+#else
+#include "../../../../kernel_includes/tt_metal/hw/ckernels/wormhole_b0/metal/llk_api/llk_sfpu/llk_math_sdpa_reduce_row.h"
+#endif
 #include "ckernel_sfpu_exp.h"
 #include "ckernel_sfpu_recip.h"
 #include "llk_math_eltwise_unary_sfpu_macros.h"

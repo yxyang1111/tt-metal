@@ -6,11 +6,20 @@
 
 #include "api/compute/common.h"
 #ifdef TRISC_MATH
+#ifdef ARCH_BLACKHOLE
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_math_sdpa_custom_mm_api.h"
+#else
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_math_sdpa_custom_mm_api.h"
+#endif
 #endif
 #ifdef TRISC_UNPACK
+#ifdef ARCH_BLACKHOLE
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_unpack_AB_custom_mm_api.h"
 #include "../../hw/ckernels/blackhole/metal/llk_api/llk_unpack_AB_sdpa_custom_mm_api.h"
+#else
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_unpack_AB_custom_mm_api.h"
+#include "../../hw/ckernels/wormhole_b0/metal/llk_api/llk_unpack_AB_sdpa_custom_mm_api.h"
+#endif
 #endif
 namespace ckernel {
 

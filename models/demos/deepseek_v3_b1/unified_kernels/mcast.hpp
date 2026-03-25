@@ -62,15 +62,24 @@ FORCE_INLINE void mcast_send_set_state(uint32_t src_local_addr, uint64_t dst_noc
 
     NOC_CMD_BUF_WRITE_REG(noc, cmd_buf, NOC_CTRL, noc_cmd_field);
     if constexpr (set_noc_coord) {
-        // Handles writing to PCIe
+#ifdef ARCH_BLACKHOLE
         NOC_CMD_BUF_WRITE_REG(noc, cmd_buf, NOC_RET_ADDR_MID, (uint32_t)(dst_noc_addr >> 32) & NOC_PCIE_MASK);
         NOC_CMD_BUF_WRITE_REG(
             noc,
             cmd_buf,
             NOC_RET_ADDR_COORDINATE,
             (uint32_t)(dst_noc_addr >> NOC_ADDR_COORD_SHIFT) & NOC_COORDINATE_MASK);
+#else
+        NOC_CMD_BUF_WRITE_REG(
+            noc,
+            cmd_buf,
+            NOC_RET_ADDR_COORDINATE,
+            (uint32_t)(dst_noc_addr >> NOC_ADDR_COORD_SHIFT));
+#endif
     }
+#ifdef ARCH_BLACKHOLE
     NOC_CMD_BUF_WRITE_REG(noc, cmd_buf, NOC_BRCST_EXCLUDE, 0);
+#endif
     if constexpr (set_size) {
         NOC_CMD_BUF_WRITE_REG(noc, cmd_buf, NOC_AT_LEN_BE, len_bytes);
     }

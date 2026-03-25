@@ -1066,15 +1066,14 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
             chains_built,
             chains_skipped);
 
-        // Third pass: Check multicast eligibility — all-or-nothing policy.
-        // First, check if ALL multi-core chains are eligible. Only if every chain
-        // qualifies do we configure mcast (compile-time decision for the kernel).
+        // Third pass: Check multicast eligibility on a per-chain basis.
+        // Eligible chains use mcast, while ineligible chains stay on the
+        // existing unicast forwarding path.
         struct McastCandidate {
             std::vector<uint32_t> core_indices;
             uint32_t ref_q_chunks;
         };
         std::vector<McastCandidate> candidates;
-        bool all_eligible = true;
         uint32_t total_multi_core_chains = 0;
 
         for (uint32_t head_id = 0; head_id < head_segments.size(); ++head_id) {
@@ -1098,6 +1097,7 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
             }
 
             total_multi_core_chains++;
+            bool chain_eligible_for_mcast = true;
 
             // Check eligibility condition 1: All physical cores share the same Y coordinate
             const uint32_t ref_y = core_work[chain_core_indices[0]].physical_core.y;
@@ -1110,9 +1110,8 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
             }
 
             if (!same_row) {
-                all_eligible = false;
                 log_debug(tt::LogOp, "Head {}: mcast ineligible - cores span multiple rows", head_id);
-                break;
+                chain_eligible_for_mcast = false;
             }
 
             // Eligibility condition 2: no non-chain worker cores inside the mcast rectangle.
@@ -1149,11 +1148,10 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
                 }
             }
 
-            if (has_gap) {
-                all_eligible = false;
+            if (chain_eligible_for_mcast && has_gap) {
                 log_debug(
                     tt::LogOp, "Head {}: mcast ineligible - non-chain worker core inside mcast rectangle", head_id);
-                break;
+                chain_eligible_for_mcast = false;
             }
 
             // Eligibility condition 3: All chain cores must have the same q_chunk_count.
@@ -1170,28 +1168,30 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
                 }
             }
 
-            if (!uniform_q_mcast) {
-                all_eligible = false;
+            if (chain_eligible_for_mcast && !uniform_q_mcast) {
                 log_debug(tt::LogOp, "Head {}: mcast ineligible - mixed q_chunk_counts", head_id);
-                break;
+                chain_eligible_for_mcast = false;
             }
 
-            // Defensive: crash in all builds if a non-uniform chain slips past the check above.
-            for (const auto& ci : chain_core_indices) {
-                TT_FATAL(
-                    core_chain_info[ci].q_chunk_count == ref_q_chunks,
-                    "Mcast chain for head {} has non-uniform q_chunk_count: core {} has {} vs ref {}",
-                    head_id,
-                    ci,
-                    core_chain_info[ci].q_chunk_count,
-                    ref_q_chunks);
-            }
+            if (chain_eligible_for_mcast) {
+                // Defensive: crash in all builds if a non-uniform chain slips past the check above.
+                for (const auto& ci : chain_core_indices) {
+                    TT_FATAL(
+                        core_chain_info[ci].q_chunk_count == ref_q_chunks,
+                        "Mcast chain for head {} has non-uniform q_chunk_count: core {} has {} vs ref {}",
+                        head_id,
+                        ci,
+                        core_chain_info[ci].q_chunk_count,
+                        ref_q_chunks);
+                }
 
-            candidates.push_back(McastCandidate{std::move(chain_core_indices), ref_q_chunks});
+                candidates.push_back(McastCandidate{std::move(chain_core_indices), ref_q_chunks});
+            }
         }
 
-        // Only configure mcast if ALL multi-core chains are eligible (all-or-nothing)
-        if (all_eligible && !candidates.empty()) {
+        // Configure mcast only for eligible chains. Ineligible chains keep the
+        // unicast chain topology assigned above.
+        if (!candidates.empty()) {
             mcast_chains = candidates.size();
             for (const auto& cand : candidates) {
                 const uint32_t chain_size = cand.core_indices.size();
@@ -1264,12 +1264,13 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
 
         log_info(
             tt::LogOp,
-            "Multicast eligibility: {}/{} chains using mcast (all-or-nothing)",
+            "Multicast eligibility: {}/{} chains using mcast (per-chain hybrid)",
             mcast_chains,
             total_multi_core_chains);
     }
 
-    // Update mcast_enabled compile-time arg now that chain construction is complete
+    // Enable mcast support in the reader kernel if any chain uses it. The reader
+    // selects between mcast and unicast at runtime per chain.
     reader_compile_time_args[sem_args_offset + 3] = (mcast_chains > 0) ? 1 : 0;
 
     // Create kernels (deferred until after chain construction for mcast_enabled flag)
@@ -1363,6 +1364,7 @@ SDPAProgramFactory::cached_program_t SDPAProgramFactory::create(
             reader_args.push_back(static_cast<uint32_t>(chain.next_physical.x));
             reader_args.push_back(static_cast<uint32_t>(chain.next_physical.y));
             reader_args.push_back(chain.next_core_q_chunks);
+            reader_args.push_back(static_cast<uint32_t>(chain.use_mcast));
             reader_args.push_back(chain.mcast_num_dests);
             reader_args.push_back(chain.mcast_sender_wait);
         }

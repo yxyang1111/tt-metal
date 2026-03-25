@@ -29,6 +29,49 @@ endif()
 ############################################################################################################################
 
 function(ensureboosttarget boostTarget)
+    if(NOT TARGET Boost::headers)
+        set(boost_headers_dir "")
+        set(boost_root_candidates
+            "${Boost_SOURCE_DIR}"
+            "${CPM_PACKAGE_Boost_SOURCE_DIR}"
+            "${CMAKE_SOURCE_DIR}/.cpmcache/boost"
+            "/usr/include"
+        )
+        foreach(boost_root_candidate IN LISTS boost_root_candidates)
+            if(NOT boost_root_candidate)
+                continue()
+            endif()
+            if(EXISTS "${boost_root_candidate}/boost")
+                set(boost_headers_dir "${boost_root_candidate}")
+                break()
+            endif()
+
+            file(GLOB boost_nested_candidates LIST_DIRECTORIES true "${boost_root_candidate}/*")
+            foreach(boost_nested_candidate IN LISTS boost_nested_candidates)
+                if(EXISTS "${boost_nested_candidate}/boost")
+                    set(boost_headers_dir "${boost_nested_candidate}")
+                    break()
+                endif()
+            endforeach()
+            if(boost_headers_dir)
+                break()
+            endif()
+        endforeach()
+
+        if(NOT boost_headers_dir)
+            message(FATAL_ERROR "Could not determine Boost headers root for Boost::headers compatibility target.")
+        endif()
+
+        add_library(Boost::headers INTERFACE IMPORTED GLOBAL)
+        set_target_properties(
+            Boost::headers
+            PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES
+                    "${boost_headers_dir}"
+        )
+        message(STATUS "Defined Boost::headers as an INTERFACE target using ${boost_headers_dir}.")
+    endif()
+
     if(NOT TARGET Boost::${boostTarget})
         add_library(Boost::${boostTarget} INTERFACE IMPORTED GLOBAL)
         target_link_libraries(Boost::${boostTarget} INTERFACE Boost::headers)
