@@ -1,0 +1,16 @@
+{
+  "physical_chip_to_eth_coord": {
+    "1": {
+      "rack": 0,
+      "shelf": 0,
+      "x": 1,
+      "y": 0
+    },
+    "0": {
+      "rack": 0,
+      "shelf": 0,
+      "x": 0,
+      "y": 0
+    }
+  }
+}

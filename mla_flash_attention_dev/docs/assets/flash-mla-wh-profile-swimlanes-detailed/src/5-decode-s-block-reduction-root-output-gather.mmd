@@ -1,0 +1,31 @@
+sequenceDiagram
+    participant SAComp as S-block A Compute / TRISC
+    participant SAWrite as S-block A Writer / BRISC
+    participant SBComp as S-block B Compute / TRISC
+    participant SBWrite as S-block B Writer / BRISC
+    participant Sem as reducer_semaphore / output_semaphore
+    participant RootW as Root Writer / BRISC
+    participant RootC as Root Compute / TRISC
+    participant OUT as Output shard / DRAM
+
+    Note over SAComp,OUT: 这是跨 S block 的 tree reduction / root write 路径。profile 里的 writer source-level 等待，主要就出现在这里。
+
+    SAComp->>SAWrite: local l/m/o ready in cb_out_worker / cb_out_m / cb_out_l
+    SBComp->>SBWrite: local l/m/o ready in cb_out_worker / cb_out_m / cb_out_l
+
+    SAWrite->>RootW: noc_async_write(l/m/o -> cb_intermed_out)
+    SAWrite->>Sem: reducer_semaphore_inc(round child-ready)
+
+    SBWrite->>RootW: noc_async_write(l/m/o -> cb_intermed_out)
+    SBWrite->>Sem: reducer_semaphore_inc(round child-ready)
+
+    RootW->>Sem: wait child-ready nibble
+    RootW->>RootC: cb_push_back(cb_l_in / cb_m_in / cb_out_o)
+    RootC->>RootC: sdpa_reduce / sdpa_tail merge
+
+    alt output is sharded
+        RootW->>Sem: wait output_semaphore_addr
+        RootW->>OUT: partial tile write / gather
+    else single-root final output
+        RootW->>OUT: final output write
+    end

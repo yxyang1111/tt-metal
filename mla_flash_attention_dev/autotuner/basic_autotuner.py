@@ -5,6 +5,8 @@ This version extends the initial skeleton with:
 - compile-time vs runtime plan split
 - bucketed policy cache keys
 - optional top-K measured reranking
+- workload-aware heuristic pruning for redundant search axes
+- reserve/backpressure and sender-hotspot latency penalties
 """
 
 from __future__ import annotations
@@ -34,6 +36,13 @@ def _clamp(value: float, lower: float, upper: float) -> float:
     return max(lower, min(value, upper))
 
 
+def _soft_knee_penalty(value: float, *, knee: float, span: float, scale: float) -> float:
+    if value <= knee:
+        return 0.0
+    normalized = (value - knee) / max(span, 1e-9)
+    return scale * normalized * normalized
+
+
 def _round_up_to_multiple(value: int, multiple: int) -> int:
     if multiple <= 1:
         return value
@@ -44,6 +53,18 @@ def _next_power_of_two(value: int) -> int:
     if value <= 1:
         return 1
     return 1 << (value - 1).bit_length()
+
+
+def _semantic_workload_payload(workload: MLAWorkloadSpec) -> dict[str, Any]:
+    payload = asdict(workload)
+    payload.pop("name", None)
+    return payload
+
+
+def _semantic_hardware_payload(hardware: HardwareTopologySpec) -> dict[str, Any]:
+    payload = asdict(hardware)
+    payload.pop("name", None)
+    return payload
 
 
 def _slack_ratio(total: int, parallel_factor: int) -> float:
@@ -208,7 +229,7 @@ class SearchSpace:
     trid_window_candidates: tuple[int, ...] = (4, 8, 14)
     k_cb_depths: tuple[int, ...] = (2, 3)
     v_cb_depths: tuple[int, ...] = (2, 3)
-    math_fidelities: tuple[MathFidelity, ...] = ("LoFi", "HiFi2")
+    math_fidelities: tuple[MathFidelity, ...] = ("LoFi", "HiFi2", "HiFi4")
     dual_noc_policies: tuple[bool, ...] = (False, True)
     sblock_topology_names: tuple[str, ...] = ("wh_sblock_6x4", "bh_sblock_8x8")
     decode_heads_per_lane_cap: int = 8
@@ -232,7 +253,7 @@ class PolicyBucketConfig:
 
     def normalize_workload(self, workload: MLAWorkloadSpec) -> dict[str, Any]:
         if self.mode == "exact":
-            return asdict(workload)
+            return _semantic_workload_payload(workload)
         return {
             "mode": workload.mode,
             "causal": workload.causal,
@@ -254,7 +275,7 @@ class PolicyBucketConfig:
 
     def normalize_hardware(self, hardware: HardwareTopologySpec) -> dict[str, Any]:
         if self.mode == "exact":
-            return asdict(hardware)
+            return _semantic_hardware_payload(hardware)
         return {
             "arch": hardware.arch,
             "compute_grid_x": hardware.compute_grid_x,
@@ -350,6 +371,18 @@ class PlanMetrics:
     q_num_chunks: int
     kv_num_chunks: int
     k_reuse_groups: int
+    reader_ms: float
+    reduction_ms: float
+    reader_backpressure_ms: float
+    writer_backpressure_ms: float
+    sender_hotspot_ms: float
+    overlap_residual_ms: float
+    page_control_ms: float
+    pipeline_bubble_ms: float
+    l1_pressure_ms: float
+    complexity_penalty_ms: float
+    dual_noc_effectiveness: float
+    unused_trid_ratio: float
 
 
 @dataclass(frozen=True)
@@ -403,6 +436,21 @@ class PlanCandidate:
         compile_time = payload["compile_time_config"]
         runtime = payload["runtime_config"]
         grouping = runtime["grouping"]
+        metric_payload = {
+            "reader_ms": 0.0,
+            "reduction_ms": 0.0,
+            "reader_backpressure_ms": 0.0,
+            "writer_backpressure_ms": 0.0,
+            "sender_hotspot_ms": 0.0,
+            "overlap_residual_ms": 0.0,
+            "page_control_ms": 0.0,
+            "pipeline_bubble_ms": 0.0,
+            "l1_pressure_ms": 0.0,
+            "complexity_penalty_ms": 0.0,
+            "dual_noc_effectiveness": 0.0,
+            "unused_trid_ratio": 0.0,
+            **payload["metrics"],
+        }
         return cls(
             candidate_key=payload["candidate_key"],
             compile_time_config=CompileTimeConfig(
@@ -431,7 +479,7 @@ class PlanCandidate:
                 reduction_tree_depth=runtime["reduction_tree_depth"],
                 k_reuse_groups=runtime["k_reuse_groups"],
             ),
-            metrics=PlanMetrics(**payload["metrics"]),
+            metrics=PlanMetrics(**metric_payload),
         )
 
 
@@ -507,37 +555,60 @@ class PolicyCache:
         self.records[result.policy_cache_key] = result.to_dict()
 
     def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(self.records, indent=2, sort_keys=True))
 
 
 @dataclass
 class MeasurementDB:
     path: Path
-    records: dict[str, float] = field(default_factory=dict)
+    records: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: str | Path) -> "MeasurementDB":
         db_path = Path(path)
-        records: dict[str, float] = {}
+        records: dict[str, dict[str, Any]] = {}
         if db_path.exists():
             payload = json.loads(db_path.read_text())
             for key, value in payload.items():
                 if isinstance(value, dict):
-                    records[key] = float(value["latency_ms"])
+                    record = dict(value)
+                    record["latency_ms"] = float(value["latency_ms"])
+                    records[key] = record
                 else:
-                    records[key] = float(value)
+                    records[key] = {"latency_ms": float(value)}
         return cls(path=db_path, records=records)
 
     def get(self, candidate_key: str) -> float | None:
-        return self.records.get(candidate_key)
+        payload = self.records.get(candidate_key)
+        if payload is None:
+            return None
+        return float(payload["latency_ms"])
+
+    def put(self, candidate_key: str, latency_ms: float, metadata: dict[str, Any] | None = None) -> None:
+        payload: dict[str, Any] = {"latency_ms": float(latency_ms)}
+        if metadata:
+            payload.update(metadata)
+        self.records[candidate_key] = payload
+
+    def save(self) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.path.write_text(json.dumps(self.records, indent=2, sort_keys=True))
 
 
 class BasicMLAAutotuner:
     """Offline analytical autotuner for MLA plan selection."""
 
-    def __init__(self, search_space: SearchSpace | None = None, weights: CostWeights | None = None):
+    def __init__(
+        self,
+        search_space: SearchSpace | None = None,
+        weights: CostWeights | None = None,
+        *,
+        heuristic_pruning: bool = True,
+    ):
         self.search_space = search_space or SearchSpace()
         self.weights = weights or CostWeights()
+        self.heuristic_pruning = heuristic_pruning
 
     def tune(
         self,
@@ -549,6 +620,7 @@ class BasicMLAAutotuner:
         bucket_config: PolicyBucketConfig | None = None,
         measurement_db: MeasurementDB | None = None,
         rerank_top_k: int = 0,
+        calibrated_cost_model: object | None = None,
     ) -> TuningResult:
         bucket_config = bucket_config or PolicyBucketConfig()
         workload_signature = self._exact_signature(workload, hardware)
@@ -557,6 +629,18 @@ class BasicMLAAutotuner:
         if policy_cache is not None:
             cached = policy_cache.get(policy_cache_key)
             if cached is not None:
+                best_plan = cached.best_plan
+                top_candidates = cached.top_candidates[:top_k]
+                if calibrated_cost_model is not None:
+                    from .cost_model import apply_calibration_to_candidate
+
+                    best_plan = apply_calibration_to_candidate(
+                        best_plan, calibrated_cost_model, cost_weights=self.weights
+                    )
+                    top_candidates = tuple(
+                        apply_calibration_to_candidate(c, calibrated_cost_model, cost_weights=self.weights)
+                        for c in top_candidates
+                    )
                 return TuningResult(
                     workload_signature=workload_signature,
                     policy_cache_key=policy_cache_key,
@@ -567,8 +651,8 @@ class BasicMLAAutotuner:
                     measured_candidate_count=cached.measured_candidate_count,
                     workload=workload,
                     hardware=hardware,
-                    best_plan=cached.best_plan,
-                    top_candidates=cached.top_candidates[:top_k],
+                    best_plan=best_plan,
+                    top_candidates=top_candidates,
                     searched_candidate_count=cached.searched_candidate_count,
                 )
 
@@ -576,7 +660,24 @@ class BasicMLAAutotuner:
         if not candidates:
             raise RuntimeError("no feasible candidate found")
 
-        candidates.sort(key=lambda candidate: candidate.metrics.analytical_score)
+        if calibrated_cost_model is not None:
+            from .cost_model import apply_calibration_to_candidate
+
+            candidates = [
+                apply_calibration_to_candidate(c, calibrated_cost_model, cost_weights=self.weights)
+                for c in candidates
+            ]
+
+        candidates.sort(
+            key=lambda candidate: (
+                candidate.metrics.analytical_score,
+                candidate.metrics.selected_latency_ms,
+                candidate.metrics.l1_pressure_ms,
+                candidate.metrics.complexity_penalty_ms,
+                candidate.metrics.l1_usage_ratio,
+                candidate.candidate_key,
+            )
+        )
         measured_count = 0
         if measurement_db is not None and rerank_top_k > 0:
             candidates, measured_count = self._apply_measurement_rerank(
@@ -608,11 +709,18 @@ class BasicMLAAutotuner:
         hardware: HardwareTopologySpec,
     ) -> list[PlanCandidate]:
         batch_factors = self._bounded_factors(self.search_space.batch_parallel_factors, workload.batch_size)
-        head_factors = self._bounded_factors(self.search_space.head_parallel_factors, workload.num_q_heads)
+        head_factors = self._candidate_head_factors(
+            workload, self._bounded_factors(self.search_space.head_parallel_factors, workload.num_q_heads)
+        )
         device_factors = self._bounded_factors(self.search_space.device_parallel_factors, hardware.num_devices)
 
         candidates: list[PlanCandidate] = []
-        for q_chunk_size in self.search_space.q_chunk_sizes:
+        q_chunk_sizes = self.search_space.q_chunk_sizes
+        if workload.mode == "decode" and workload.seq_len_q <= min(self.search_space.q_chunk_sizes):
+            q_chunk_sizes = (min(self.search_space.q_chunk_sizes),)
+
+        topology_modes = self._candidate_topology_modes(workload)
+        for q_chunk_size in q_chunk_sizes:
             q_num_chunks = workload.q_num_chunks(q_chunk_size)
             q_factors = self._bounded_factors(self.search_space.q_parallel_factors, q_num_chunks)
             if workload.mode == "decode":
@@ -624,52 +732,30 @@ class BasicMLAAutotuner:
                 if workload.mode == "prefill":
                     base_kv_factors = (1,)
 
-                for topology_mode in self.search_space.topology_modes:
+                for topology_mode in topology_modes:
                     topology_choices = self._topology_choices(workload, hardware, topology_mode)
                     if not topology_choices:
                         continue
 
                     for topology in topology_choices:
-                        lane_group_capacities = (
-                            (topology.cores_per_s_block,)
-                            if topology is not None
-                            else self.search_space.lane_group_capacities
-                        )
                         kv_factors = (
                             (topology.num_s_blocks,)
                             if topology is not None and workload.mode == "decode"
                             else base_kv_factors
                         )
+                        layout_policies = self._candidate_layout_policies(workload, topology_mode)
                         for (
                             batch_parallel_factor,
                             head_parallel_factor,
                             q_parallel_factor,
                             kv_parallel_factor,
                             device_parallel_factor,
-                            lane_group_capacity,
-                            layout_policy,
-                            page_size_strategy,
-                            pipeline_depth,
-                            trid_window,
-                            k_cb_depth,
-                            v_cb_depth,
-                            math_fidelity,
-                            dual_noc_policy,
                         ) in itertools.product(
                             batch_factors,
                             head_factors,
                             q_factors,
                             kv_factors,
                             device_factors,
-                            lane_group_capacities,
-                            self.search_space.layout_policies,
-                            self.search_space.page_size_strategies,
-                            self.search_space.pipeline_depths,
-                            self.search_space.trid_window_candidates,
-                            self.search_space.k_cb_depths,
-                            self.search_space.v_cb_depths,
-                            self.search_space.math_fidelities,
-                            self.search_space.dual_noc_policies,
                         ):
                             parallelism = ParallelismPlan5D(
                                 batch_parallel_factor=batch_parallel_factor,
@@ -678,36 +764,77 @@ class BasicMLAAutotuner:
                                 kv_parallel_factor=kv_parallel_factor,
                                 device_parallel_factor=device_parallel_factor,
                             )
-                            compile_time_config = self._build_compile_time_config(
-                                workload=workload,
-                                hardware=hardware,
-                                q_chunk_size=q_chunk_size,
-                                k_chunk_size=k_chunk_size,
-                                layout_policy=layout_policy,
-                                topology_mode=topology_mode,
-                                topology=topology,
-                                lane_group_capacity=lane_group_capacity,
-                                pipeline_depth=pipeline_depth,
-                                trid_window=trid_window,
-                                page_size_strategy=page_size_strategy,
-                                k_cb_depth=k_cb_depth,
-                                v_cb_depth=v_cb_depth,
-                                dual_noc_policy=dual_noc_policy,
-                                math_fidelity=math_fidelity,
+                            lane_group_capacities = self._candidate_lane_group_capacities(parallelism, topology)
+                            dual_noc_policies = self._candidate_dual_noc_policies(
+                                workload, hardware, parallelism, topology_mode
                             )
-                            if not self._check_feasibility(workload, hardware, parallelism, compile_time_config, topology):
-                                continue
 
-                            candidate = self._build_candidate(
-                                workload=workload,
-                                hardware=hardware,
-                                parallelism=parallelism,
-                                compile_time_config=compile_time_config,
-                                topology=topology,
-                            )
-                            if candidate.metrics.l1_usage_ratio > 1.0:
-                                continue
-                            candidates.append(candidate)
+                            for lane_group_capacity in lane_group_capacities:
+                                seen_compile_configs: set[tuple[Any, ...]] = set()
+                                for layout_policy in layout_policies:
+                                    for page_size_strategy in self.search_space.page_size_strategies:
+                                        _, k_num_pages = _select_page_size(
+                                            total_bytes=k_chunk_size * workload.head_dim_qk * workload.kv_dtype_bytes,
+                                            max_page_size=hardware.max_noc_page_size,
+                                            strategy=page_size_strategy,
+                                        )
+                                        pipeline_depths = self._candidate_pipeline_depths(
+                                            workload, hardware, topology_mode, k_num_pages
+                                        )
+                                        v_cb_depths = self._candidate_v_cb_depths(workload)
+                                        for pipeline_depth in pipeline_depths:
+                                            trid_windows = self._candidate_trid_windows(
+                                                hardware, pipeline_depth, k_num_pages
+                                            )
+                                            for (
+                                                trid_window,
+                                                k_cb_depth,
+                                                v_cb_depth,
+                                                math_fidelity,
+                                                dual_noc_policy,
+                                            ) in itertools.product(
+                                                trid_windows,
+                                                self.search_space.k_cb_depths,
+                                                v_cb_depths,
+                                                self.search_space.math_fidelities,
+                                                dual_noc_policies,
+                                            ):
+                                                compile_time_config = self._build_compile_time_config(
+                                                    workload=workload,
+                                                    hardware=hardware,
+                                                    q_chunk_size=q_chunk_size,
+                                                    k_chunk_size=k_chunk_size,
+                                                    layout_policy=layout_policy,
+                                                    topology_mode=topology_mode,
+                                                    topology=topology,
+                                                    lane_group_capacity=lane_group_capacity,
+                                                    pipeline_depth=pipeline_depth,
+                                                    trid_window=trid_window,
+                                                    page_size_strategy=page_size_strategy,
+                                                    k_cb_depth=k_cb_depth,
+                                                    v_cb_depth=v_cb_depth,
+                                                    dual_noc_policy=dual_noc_policy,
+                                                    math_fidelity=math_fidelity,
+                                                )
+                                                compile_key = self._compile_time_dedup_key(compile_time_config)
+                                                if compile_key in seen_compile_configs:
+                                                    continue
+                                                seen_compile_configs.add(compile_key)
+                                                if not self._check_feasibility(
+                                                    workload, hardware, parallelism, compile_time_config, topology
+                                                ):
+                                                    continue
+
+                                                candidate = self._build_candidate(
+                                                    workload=workload,
+                                                    hardware=hardware,
+                                                    parallelism=parallelism,
+                                                    compile_time_config=compile_time_config,
+                                                    topology=topology,
+                                                )
+                                                if candidate.metrics.l1_usage_ratio > 1.0:
+                                                    continue
+                                                candidates.append(candidate)
         return candidates
 
     def _topology_choices(
@@ -726,6 +853,143 @@ class BasicMLAAutotuner:
             if name in TOPOLOGY_LIBRARY and TOPOLOGY_LIBRARY[name].arch == hardware.arch
         ]
         return tuple(candidates)
+
+    def _candidate_topology_modes(self, workload: MLAWorkloadSpec) -> tuple[TopologyMode, ...]:
+        if self.heuristic_pruning and workload.mode != "decode":
+            return ("independent",)
+        return self.search_space.topology_modes
+
+    def _candidate_head_factors(
+        self,
+        workload: MLAWorkloadSpec,
+        head_factors: tuple[int, ...],
+    ) -> tuple[int, ...]:
+        if not self.heuristic_pruning or workload.mode != "decode":
+            return head_factors
+        filtered = tuple(
+            value
+            for value in head_factors
+            if _ceil_div(workload.num_q_heads, value) <= self.search_space.decode_heads_per_lane_cap
+        )
+        return filtered or head_factors
+
+    def _candidate_layout_policies(
+        self,
+        workload: MLAWorkloadSpec,
+        topology_mode: TopologyMode,
+    ) -> tuple[LayoutPolicy, ...]:
+        if not self.heuristic_pruning:
+            return self.search_space.layout_policies
+        if workload.mode == "decode" and topology_mode != "independent":
+            preferred = ("bandwidth_balanced", "row_packed_by_head")
+        elif workload.mode == "decode":
+            preferred = ("bandwidth_balanced", "default")
+        else:
+            preferred = self.search_space.layout_policies
+        filtered = tuple(policy for policy in preferred if policy in self.search_space.layout_policies)
+        return filtered or self.search_space.layout_policies
+
+    def _candidate_lane_group_capacities(
+        self,
+        parallelism: ParallelismPlan5D,
+        topology: SBlockTopologySpec | None,
+    ) -> tuple[int, ...]:
+        if topology is not None:
+            return (topology.cores_per_s_block,)
+        active_lane_count = (
+            parallelism.batch_parallel_factor
+            * parallelism.head_parallel_factor
+            * parallelism.q_parallel_factor
+        )
+        return (max(1, active_lane_count),)
+
+    def _candidate_pipeline_depths(
+        self,
+        workload: MLAWorkloadSpec,
+        hardware: HardwareTopologySpec,
+        topology_mode: TopologyMode,
+        k_num_pages: int,
+    ) -> tuple[int, ...]:
+        depths = tuple(
+            depth
+            for depth in self.search_space.pipeline_depths
+            if depth <= hardware.max_trid_window and depth <= max(1, k_num_pages)
+        )
+        if not depths:
+            depth = min(min(self.search_space.pipeline_depths), hardware.max_trid_window, max(1, k_num_pages))
+            return (max(1, depth),)
+        if not self.heuristic_pruning:
+            return depths
+        min_depth = 1
+        if workload.mode == "decode" and topology_mode != "independent" and k_num_pages > 1:
+            min_depth = 2
+        filtered = tuple(depth for depth in depths if depth >= min_depth)
+        return filtered or depths
+
+    def _candidate_trid_windows(
+        self,
+        hardware: HardwareTopologySpec,
+        pipeline_depth: int,
+        k_num_pages: int,
+    ) -> tuple[int, ...]:
+        candidates = tuple(
+            window
+            for window in self.search_space.trid_window_candidates
+            if pipeline_depth <= window <= hardware.max_trid_window
+        )
+        if not candidates or not self.heuristic_pruning:
+            return candidates
+        anchor = min(hardware.max_trid_window, max(pipeline_depth, k_num_pages))
+        lower = max((window for window in candidates if window <= anchor), default=None)
+        upper = min((window for window in candidates if window >= anchor), default=None)
+        selected = {window for window in (lower, upper) if window is not None}
+        if len(selected) == 1:
+            lighter = max((window for window in candidates if window < anchor), default=None)
+            if lighter is not None:
+                selected.add(lighter)
+        return tuple(sorted(selected)) or candidates
+
+    def _candidate_v_cb_depths(self, workload: MLAWorkloadSpec) -> tuple[int, ...]:
+        if self.heuristic_pruning and workload.mode == "prefill":
+            return (min(self.search_space.v_cb_depths),)
+        return self.search_space.v_cb_depths
+
+    def _candidate_dual_noc_policies(
+        self,
+        workload: MLAWorkloadSpec,
+        hardware: HardwareTopologySpec,
+        parallelism: ParallelismPlan5D,
+        topology_mode: TopologyMode,
+    ) -> tuple[bool, ...]:
+        if not hardware.supports_dual_noc:
+            return (False,)
+        if not self.heuristic_pruning:
+            return self.search_space.dual_noc_policies
+        if workload.mode == "prefill":
+            return (False,)
+        if topology_mode == "independent" and parallelism.kv_parallel_factor == 1:
+            return (False,)
+        return self.search_space.dual_noc_policies
+
+    def _compile_time_dedup_key(self, compile_time_config: CompileTimeConfig) -> tuple[Any, ...]:
+        return (
+            compile_time_config.q_chunk_size,
+            compile_time_config.k_chunk_size,
+            compile_time_config.layout_policy,
+            compile_time_config.topology_mode,
+            compile_time_config.sblock_topology_name,
+            compile_time_config.lane_group_capacity,
+            compile_time_config.pipeline_depth,
+            compile_time_config.trid_window,
+            compile_time_config.k_page_size_bytes,
+            compile_time_config.k_num_pages,
+            compile_time_config.k_cb_depth,
+            compile_time_config.v_cb_depth,
+            compile_time_config.dual_noc_policy,
+            compile_time_config.math_fidelity,
+            compile_time_config.bank_map,
+            compile_time_config.tree_order,
+        )
 
     def _build_compile_time_config(
         self,
@@ -979,13 +1243,15 @@ class BasicMLAAutotuner:
             and q_chunk_group_size % 2 == 0
         )
 
-        compute_efficiency = 0.66
+        compute_efficiency = 0.64
         if compile_time_config.layout_policy == "row_packed_by_head":
             compute_efficiency += 0.04
         elif compile_time_config.layout_policy == "bandwidth_balanced":
             compute_efficiency += 0.07
         if use_balanced_q_parallel:
             compute_efficiency += 0.03
+        if compile_time_config.k_cb_depth > compile_time_config.pipeline_depth:
+            compute_efficiency += 0.02
         compute_efficiency += 0.05 * active_core_ratio
         compute_efficiency -= 0.12 * imbalance_score
         compute_efficiency = _clamp(compute_efficiency, 0.35, 0.90)
@@ -999,8 +1265,19 @@ class BasicMLAAutotuner:
         )
         compute_ms = compute_flops / throughput_flops_s * 1e3
 
+        reader_slots = max(
+            1,
+            min(
+                compile_time_config.pipeline_depth,
+                compile_time_config.trid_window,
+                compile_time_config.k_cb_depth,
+                compile_time_config.k_num_pages,
+            ),
+        )
+        buffer_slack = max(0, compile_time_config.k_cb_depth - compile_time_config.pipeline_depth)
         page_overlap_gain = min(1.0, compile_time_config.trid_window / max(1, compile_time_config.k_num_pages))
-        dram_efficiency = 0.58 + 0.08 * (compile_time_config.pipeline_depth - 1) + 0.07 * page_overlap_gain
+        dram_efficiency = 0.56 + 0.07 * (compile_time_config.pipeline_depth - 1) + 0.06 * page_overlap_gain
+        dram_efficiency += 0.02 * min(2, buffer_slack)
         if compile_time_config.layout_policy == "bandwidth_balanced":
             dram_efficiency += 0.08
         if compile_time_config.topology_mode != "independent":
@@ -1040,15 +1317,142 @@ class BasicMLAAutotuner:
         if compile_time_config.topology_mode == "tree":
             noc_efficiency += 0.05 if effective_kv_parallel_factor >= 4 else -0.03
         noc_efficiency = _clamp(noc_efficiency, 0.35, 0.90)
-        noc_bandwidth_scale = 2.0 if compile_time_config.dual_noc_policy and hardware.supports_dual_noc else 1.0
+
+        dual_noc_effectiveness = 0.0
+        if compile_time_config.dual_noc_policy and hardware.supports_dual_noc and noc_bytes > 0.0:
+            noc_to_dram_ratio = noc_bytes / max(dram_bytes, 1.0)
+            dual_noc_effectiveness = _clamp(
+                0.55 * min(1.0, noc_to_dram_ratio)
+                + 0.15 * (compile_time_config.topology_mode != "independent")
+                + 0.10 * page_overlap_gain,
+                0.0,
+                0.90,
+            )
+        noc_bandwidth_scale = 1.0 + dual_noc_effectiveness
         effective_noc_bw = hardware.noc_bandwidth_GBs * noc_bandwidth_scale * noc_efficiency
 
         q_preamble_ms = q_preamble_bytes / 1e9 / effective_noc_bw * 1e3
-        noc_overlap_bytes = k_noc_bytes + reduction_bytes + control_bytes
-        noc_ms = noc_overlap_bytes / 1e9 / effective_noc_bw * 1e3
+        reader_noc_ms = (k_noc_bytes + 0.5 * control_bytes) / 1e9 / effective_noc_bw * 1e3
+
+        reduction_ms = 0.0
+        if reduction_bytes > 0.0 or control_bytes > 0.0:
+            reduction_ms = (reduction_bytes + 0.5 * control_bytes) / 1e9 / effective_noc_bw * 1e3
+        reduction_ms += 0.00025 * reduction_tree_depth * max(
+            1.0, head_group_size / max(1, self.search_space.decode_heads_per_lane_cap)
+        )
+
+        critical_page_transactions = max(1, kv_chunk_group_size) * compile_time_config.k_num_pages
+        page_control_per_transfer_ms = 0.00008 if workload.mode == "prefill" else 0.00012
+        page_control_ms = critical_page_transactions * page_control_per_transfer_ms
+        if compile_time_config.topology_mode != "independent":
+            page_control_ms *= 1.15
+        if compile_time_config.dual_noc_policy:
+            page_control_ms *= 1.05
+
+        dram_page_ms = compile_time_config.k_page_size_bytes / 1e9 / effective_dram_bw * 1e3
+        noc_page_ms = 0.0
+        if critical_page_transactions > 0 and noc_bytes > 0.0:
+            noc_page_ms = (k_noc_bytes + reduction_bytes + control_bytes) / critical_page_transactions / 1e9 / effective_noc_bw * 1e3
+
+        pipeline_bubble_ratio = max(0.0, 1.0 - reader_slots / max(1, compile_time_config.k_num_pages))
+        pipeline_bubble_ms = (
+            (dram_page_ms + noc_page_ms)
+            * pipeline_bubble_ratio
+            * max(1, kv_chunk_group_size)
+            * 0.75
+        )
+
+        reader_ms = max(dram_ms, reader_noc_ms) + page_control_ms + pipeline_bubble_ms
+
+        page_pipeline_pressure = compile_time_config.k_num_pages / max(1, reader_slots)
+        reader_backpressure_factor = _clamp(
+            0.015 * max(0, kv_chunk_group_size - 1)
+            + 0.05 * max(0.0, page_pipeline_pressure - 1.0)
+            + 0.10 * max(0.0, l1_usage_ratio - 0.30)
+            + 0.04 * (compile_time_config.topology_mode != "independent")
+            + 0.03 * max(0, effective_kv_parallel_factor - 1)
+            - 0.04 * min(2, buffer_slack)
+            - 0.03 * max(0, compile_time_config.v_cb_depth - 2),
+            0.0,
+            0.45 if workload.mode == "decode" else 0.20,
+        )
+        reader_backpressure_ms = reader_ms * reader_backpressure_factor
+
+        sender_hotspot_ms = 0.0
+        if effective_kv_parallel_factor > 1:
+            sender_base_ms = 0.5 * reader_noc_ms + 0.25 * q_preamble_ms
+            if topology is not None:
+                sender_base_ms += (
+                    (k_bytes_base / max(1, topology.num_s_blocks)) / 1e9 / effective_noc_bw * 1e3
+                )
+            else:
+                sender_base_ms += 0.5 * reduction_ms
+            sender_hotspot_factor = _clamp(
+                0.04 * max(0, effective_kv_parallel_factor - 1)
+                + 0.03 * max(0, active_lane_count - 1)
+                + 0.05 * max(0.0, page_pipeline_pressure - 1.0)
+                - 0.06 * dual_noc_effectiveness
+                - 0.03 * (compile_time_config.topology_mode == "tree")
+                - 0.02 * max(0, compile_time_config.pipeline_depth - 2),
+                0.0,
+                0.35,
+            )
+            sender_hotspot_ms = sender_base_ms * sender_hotspot_factor
+
+        writer_backpressure_factor = _clamp(
+            0.06 * max(0, effective_kv_parallel_factor - 1)
+            + 0.05 * max(0.0, head_group_size / max(1, self.search_space.decode_heads_per_lane_cap) - 1.0)
+            + 0.04 * (compile_time_config.topology_mode != "independent")
+            + 0.03 * max(0.0, l1_usage_ratio - 0.35)
+            - 0.07 * max(0, compile_time_config.v_cb_depth - 2)
+            - 0.04 * dual_noc_effectiveness,
+            0.0,
+            0.35 if workload.mode == "decode" else 0.18,
+        )
+        writer_backpressure_ms = (reduction_ms + 0.15 * reader_ms) * writer_backpressure_factor
+
+        overlap_residual_factor = _clamp(
+            0.42
+            - 0.06 * (compile_time_config.pipeline_depth - 1)
+            - 0.04 * page_overlap_gain
+            - 0.03 * min(2, buffer_slack)
+            - 0.04 * dual_noc_effectiveness,
+            0.08,
+            0.45,
+        )
+        overlap_residual_ms = min(reader_ms, compute_ms) * overlap_residual_factor
+
+        l1_pressure_ms = 0.0015 * l1_usage_ratio + _soft_knee_penalty(
+            l1_usage_ratio,
+            knee=0.45,
+            span=0.35,
+            scale=0.04,
+        )
+
+        useful_trid_need = min(
+            compile_time_config.k_num_pages,
+            compile_time_config.pipeline_depth + compile_time_config.k_cb_depth - 1,
+        )
+        unused_trid_ratio = max(0.0, compile_time_config.trid_window - useful_trid_need) / hardware.max_trid_window
+        complexity_penalty_ms = 0.001 * unused_trid_ratio
+        if compile_time_config.dual_noc_policy:
+            complexity_penalty_ms += 0.0015 * (1.0 - dual_noc_effectiveness)
+        complexity_penalty_ms += 0.0006 * max(0, compile_time_config.k_cb_depth - compile_time_config.pipeline_depth - 1)
+        complexity_penalty_ms += 0.0006 * max(0, compile_time_config.v_cb_depth - 2)
+
+        noc_ms = reader_noc_ms + reduction_ms
         sync_ms = 0.001 * (compile_time_config.pipeline_depth - 1) + 0.0005 * max(0, effective_kv_parallel_factor - 1)
 
-        estimated_latency_ms = q_preamble_ms + max(compute_ms, dram_ms, noc_ms) + sync_ms
+        estimated_latency_ms = (
+            q_preamble_ms
+            + max(reader_ms + reader_backpressure_ms + sender_hotspot_ms, compute_ms)
+            + overlap_residual_ms
+            + reduction_ms
+            + writer_backpressure_ms
+            + sync_ms
+            + l1_pressure_ms
+            + complexity_penalty_ms
+        )
 
         l1_overuse = max(0.0, l1_usage_ratio - 1.0)
         analytical_score = (
@@ -1099,6 +1503,18 @@ class BasicMLAAutotuner:
             q_num_chunks=q_num_chunks,
             kv_num_chunks=kv_num_chunks,
             k_reuse_groups=k_reuse_groups,
+            reader_ms=reader_ms,
+            reduction_ms=reduction_ms,
+            reader_backpressure_ms=reader_backpressure_ms,
+            writer_backpressure_ms=writer_backpressure_ms,
+            sender_hotspot_ms=sender_hotspot_ms,
+            overlap_residual_ms=overlap_residual_ms,
+            page_control_ms=page_control_ms,
+            pipeline_bubble_ms=pipeline_bubble_ms,
+            l1_pressure_ms=l1_pressure_ms,
+            complexity_penalty_ms=complexity_penalty_ms,
+            dual_noc_effectiveness=dual_noc_effectiveness,
+            unused_trid_ratio=unused_trid_ratio,
         )
         return metrics, runtime_config
 
@@ -1120,9 +1536,16 @@ class BasicMLAAutotuner:
         rerank_top_k: int,
     ) -> tuple[list[PlanCandidate], int]:
         rerank_top_k = min(rerank_top_k, len(candidates))
+        extra_measured_indices = [
+            index
+            for index, candidate in enumerate(candidates[rerank_top_k:], start=rerank_top_k)
+            if candidate.candidate_key in measurement_db.records
+        ]
+        rerank_indices = list(range(rerank_top_k)) + extra_measured_indices
         reranked: list[PlanCandidate] = []
         measured_count = 0
-        for candidate in candidates[:rerank_top_k]:
+        for index in rerank_indices:
+            candidate = candidates[index]
             measured = measurement_db.get(candidate.candidate_key)
             if measured is not None:
                 measured_count += 1
@@ -1137,12 +1560,19 @@ class BasicMLAAutotuner:
 
         reranked.sort(
             key=lambda candidate: (
-                0 if candidate.metrics.measured_latency_ms is not None else 1,
                 candidate.metrics.selected_latency_ms,
+                0 if candidate.metrics.measured_latency_ms is not None else 1,
                 candidate.metrics.analytical_score,
+                candidate.candidate_key,
             )
         )
-        return reranked + candidates[rerank_top_k:], measured_count
+        extra_measured_index_set = set(extra_measured_indices)
+        remaining_candidates = [
+            candidate
+            for index, candidate in enumerate(candidates[rerank_top_k:], start=rerank_top_k)
+            if index not in extra_measured_index_set
+        ]
+        return reranked + remaining_candidates, measured_count
 
     def _bounded_factors(self, factors: Sequence[int], upper_bound: int) -> tuple[int, ...]:
         bounded = sorted({value for value in factors if 1 <= value <= max(1, upper_bound)})
@@ -1151,7 +1581,10 @@ class BasicMLAAutotuner:
         return tuple(bounded)
 
     def _exact_signature(self, workload: MLAWorkloadSpec, hardware: HardwareTopologySpec) -> str:
-        payload = {"workload": asdict(workload), "hardware": asdict(hardware)}
+        payload = {
+            "workload": _semantic_workload_payload(workload),
+            "hardware": _semantic_hardware_payload(hardware),
+        }
         encoded = json.dumps(payload, sort_keys=True).encode("utf-8")
         return hashlib.sha1(encoded).hexdigest()
 
@@ -1177,8 +1610,8 @@ class BasicMLAAutotuner:
         runtime_config: RuntimeConfig,
     ) -> str:
         payload = {
-            "workload": asdict(workload),
-            "hardware": asdict(hardware),
+            "workload": _semantic_workload_payload(workload),
+            "hardware": _semantic_hardware_payload(hardware),
             "compile_time_config": asdict(compile_time_config),
             "runtime_config": asdict(runtime_config),
         }
@@ -1199,6 +1632,21 @@ PRESET_HARDWARE: dict[str, HardwareTopologySpec] = {
         clock_GHz=1.0,
         max_noc_page_size=8_192,
         max_trid_window=14,
+    ),
+    # Single Wormhole chip on an N300 card (N300 = 2× WH; use num_devices=2 for full-card)
+    "wormhole_n300": HardwareTopologySpec(
+        name="wormhole_n300",
+        arch="wormhole_b0",
+        compute_grid_x=8,
+        compute_grid_y=8,
+        dram_bank_endpoints=6,
+        dram_bandwidth_GBs=258.0,
+        noc_bandwidth_GBs=32.0,
+        l1_bytes_per_core=1_499_136,
+        clock_GHz=1.0,
+        max_noc_page_size=8_192,
+        max_trid_window=14,
+        num_devices=1,
     ),
     "blackhole": HardwareTopologySpec(
         name="blackhole",
@@ -1260,6 +1708,19 @@ PRESET_WORKLOADS: dict[str, MLAWorkloadSpec] = {
         kv_lora_rank=512,
         d_rope=64,
     ),
+    "flash_decode_n300": MLAWorkloadSpec(
+        name="flash_decode_n300",
+        mode="decode",
+        causal=False,
+        paged=False,
+        batch_size=1,
+        seq_len_q=1,
+        seq_len_kv=4096,
+        num_q_heads=32,
+        num_kv_heads=1,
+        kv_lora_rank=512,
+        d_rope=64,
+    ),
     "flash_decode_bh": MLAWorkloadSpec(
         name="flash_decode_bh",
         mode="decode",
@@ -1303,6 +1764,7 @@ PRESET_WORKLOADS: dict[str, MLAWorkloadSpec] = {
 
 PRESET_TOPOLOGY_FOR_WORKLOAD: dict[str, str] = {
     "flash_decode_wh": "wormhole_b0",
+    "flash_decode_n300": "wormhole_n300",
     "flash_decode_bh": "blackhole",
     "mla_prefill_wh": "wormhole_b0",
     "mla_prefill_bh": "blackhole",
@@ -1364,10 +1826,18 @@ def _summarize_plan(candidate: PlanCandidate) -> list[str]:
             "Metrics: "
             f"selected_ms={metrics.selected_latency_ms:.6f}, "
             f"estimated_ms={metrics.estimated_latency_ms:.6f}, "
+            f"reader_ms={metrics.reader_ms:.6f}, "
             f"compute_ms={metrics.compute_ms:.6f}, "
+            f"reduce_ms={metrics.reduction_ms:.6f}, "
+            f"reader_bp_ms={metrics.reader_backpressure_ms:.6f}, "
+            f"writer_bp_ms={metrics.writer_backpressure_ms:.6f}, "
+            f"sender_hotspot_ms={metrics.sender_hotspot_ms:.6f}, "
             f"dram_ms={metrics.dram_ms:.6f}, "
             f"noc_ms={metrics.noc_ms:.6f}, "
+            f"overlap_residual_ms={metrics.overlap_residual_ms:.6f}, "
             f"l1_ratio={metrics.l1_usage_ratio:.3f}, "
+            f"l1_pressure_ms={metrics.l1_pressure_ms:.6f}, "
+            f"complexity_ms={metrics.complexity_penalty_ms:.6f}, "
             f"active_cores={metrics.active_cores}/{metrics.provisioned_cores}, "
             f"selection_source={metrics.selection_source}"
         ),
@@ -1377,6 +1847,30 @@ def _summarize_plan(candidate: PlanCandidate) -> list[str]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Refined offline analytical autotuner for MLA planning")
+    parser.add_argument(
+        "--wh-profile-json",
+        help="WH profile JSON (simple or detailed) used by profile-derived calibration flows.",
+    )
+    parser.add_argument(
+        "--build-wh-profile-measurement-db",
+        help="Build a MeasurementDB from WH profile JSON (simple or detailed) and exit.",
+    )
+    parser.add_argument(
+        "--measurement-db-output",
+        help="Output path for generated MeasurementDB JSON when using --build-wh-profile-measurement-db.",
+    )
+    parser.add_argument(
+        "--profile-measurement-selection-mode",
+        choices=("reference_current_a", "analytical_best"),
+        default="reference_current_a",
+        help="How WH profile measurements are mapped onto autotuner candidate keys.",
+    )
+    parser.add_argument(
+        "--profile-measurement-reference-source",
+        choices=("profile_harness", "mla1d_defaults", "hybrid_auto"),
+        default="profile_harness",
+        help="Which reference A-path config source is used when building MeasurementDB entries from profile JSON.",
+    )
     parser.add_argument(
         "--preset",
         choices=sorted(PRESET_WORKLOADS.keys()),
@@ -1394,6 +1888,34 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--measurement-db", help="Optional JSON measurement DB keyed by candidate_key")
     parser.add_argument("--rerank-top-k", type=int, default=0, help="Measured reranking depth over analytical top-K")
+    parser.add_argument(
+        "--calibration-json",
+        help="Load a hardware-calibrated cost model JSON; ranking uses calibrated latency (see autotuner.cost_model).",
+    )
+    parser.add_argument(
+        "--fit-calibration-output",
+        help=(
+            "Fit CalibratedCostModel from either --measurement-db against enumerated candidates "
+            "or directly from --wh-profile-json, write JSON, then exit."
+        ),
+    )
+    parser.add_argument(
+        "--calibration-feature-mode",
+        choices=("auto", "scalar", "breakdown", "extended"),
+        default="auto",
+        help="Feature set for linear calibration (default: auto).",
+    )
+    parser.add_argument(
+        "--calibration-ridge",
+        type=float,
+        default=1e-4,
+        help="Ridge regularization for calibration normal equations.",
+    )
+    parser.add_argument(
+        "--disable-heuristic-pruning",
+        action="store_true",
+        help="Disable workload-aware search pruning and run the fuller cartesian search.",
+    )
     parser.add_argument("--output-json", help="Optional JSON output path")
     return parser
 
@@ -1401,6 +1923,76 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    if args.fit_calibration_output:
+        if args.wh_profile_json and args.measurement_db:
+            parser.error("use either --measurement-db or --wh-profile-json with --fit-calibration-output")
+        from .cost_model import fit_calibrated_cost_model_for_workload, fit_calibrated_cost_model_from_wh_profile
+
+        if args.wh_profile_json:
+            model, report = fit_calibrated_cost_model_from_wh_profile(
+                args.wh_profile_json,
+                heuristic_pruning=not args.disable_heuristic_pruning,
+                selection_mode=args.profile_measurement_selection_mode,
+                reference_source=args.profile_measurement_reference_source,
+                feature_mode=args.calibration_feature_mode,
+                ridge=args.calibration_ridge,
+            )
+            model.save(args.fit_calibration_output)
+            print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+            return 0
+
+        if not args.measurement_db:
+            parser.error("--measurement-db or --wh-profile-json is required with --fit-calibration-output")
+
+        if args.preset:
+            workload = get_preset_workload(args.preset)
+            hardware = get_preset_hardware(PRESET_TOPOLOGY_FOR_WORKLOAD[args.preset])
+        else:
+            if not args.workload_json or not args.hardware_json:
+                parser.error("--fit-calibration-output requires --preset or both --workload-json and --hardware-json")
+            workload = _load_spec(args.workload_json, MLAWorkloadSpec)
+            hardware = _load_spec(args.hardware_json, HardwareTopologySpec)
+        measurement_db = MeasurementDB.load(args.measurement_db)
+        autotuner = BasicMLAAutotuner(heuristic_pruning=not args.disable_heuristic_pruning)
+        model, report = fit_calibrated_cost_model_for_workload(
+            measurement_db,
+            workload,
+            hardware,
+            autotuner=autotuner,
+            feature_mode=args.calibration_feature_mode,
+            ridge=args.calibration_ridge,
+        )
+        model.save(args.fit_calibration_output)
+        print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+        return 0
+
+    if args.build_wh_profile_measurement_db:
+        if not args.measurement_db_output:
+            parser.error("--measurement-db-output is required with --build-wh-profile-measurement-db")
+        from .profile_measurement_bridge import build_wh_profile_measurement_db
+
+        summary = build_wh_profile_measurement_db(
+            profile_results_path=args.build_wh_profile_measurement_db,
+            output_path=args.measurement_db_output,
+            heuristic_pruning=not args.disable_heuristic_pruning,
+            selection_mode=args.profile_measurement_selection_mode,
+            reference_source=args.profile_measurement_reference_source,
+        )
+        print(f"measurement_db_path: {summary.output_path}")
+        print(f"entry_count: {summary.entry_count}")
+        print(f"reference_source: {summary.reference_source}")
+        for entry in summary.entries:
+            print(
+                "entry: "
+                f"profile_case={entry['profile_case']}, "
+                f"candidate_key={entry['candidate_key']}, "
+                f"latency_ms={entry['latency_ms']:.6f}, "
+                f"selection_mode={entry['selection_mode']}, "
+                f"reference_source={entry['reference_source']}, "
+                f"analytical_ms={entry['analytical_latency_ms']:.6f}"
+            )
+        return 0
 
     if args.preset:
         workload = get_preset_workload(args.preset)
@@ -1414,8 +2006,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     policy_cache = PolicyCache.load(args.cache_file) if args.cache_file else None
     bucket_config = PolicyBucketConfig(mode=args.cache_key_mode)
     measurement_db = MeasurementDB.load(args.measurement_db) if args.measurement_db else None
+    calibrated_model = None
+    if args.calibration_json:
+        from .cost_model import CalibratedCostModel
 
-    autotuner = BasicMLAAutotuner()
+        calibrated_model = CalibratedCostModel.load(args.calibration_json)
+
+    autotuner = BasicMLAAutotuner(heuristic_pruning=not args.disable_heuristic_pruning)
     result = autotuner.tune(
         workload,
         hardware,
@@ -1424,6 +2021,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         bucket_config=bucket_config,
         measurement_db=measurement_db,
         rerank_top_k=args.rerank_top_k,
+        calibrated_cost_model=calibrated_model,
     )
 
     print(f"workload_signature: {result.workload_signature}")

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "decode_1k",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/src/decode_1k.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_1k.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_1k.png"
+  },
+  {
+    "name": "decode_4k",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/src/decode_4k.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_4k.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_4k.png"
+  },
+  {
+    "name": "decode_16k",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/src/decode_16k.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_16k.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_16k.png"
+  },
+  {
+    "name": "decode_32k",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/src/decode_32k.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_32k.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/decode_32k.png"
+  },
+  {
+    "name": "prefill_4k",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/src/prefill_4k.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/prefill_4k.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes/prefill_4k.png"
+  }
+]

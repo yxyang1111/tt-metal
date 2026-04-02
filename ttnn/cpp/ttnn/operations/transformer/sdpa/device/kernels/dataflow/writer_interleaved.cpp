@@ -67,6 +67,7 @@ void kernel_main() {
     const auto out_tile_shape = TensorTileShape(B, NQH, valid_Sqt, vDHt);
 
     constexpr uint32_t barrier_threshold = get_barrier_read_threshold<tile_bytes, num_cores>();
+    SDPAPrefillWriterProfiler writer_profiler{};
 
     constexpr uint32_t cb_identity_scale_in = tt::CBIndex::c_5;
     constexpr uint32_t cb_col_identity = tt::CBIndex::c_7;
@@ -158,9 +159,18 @@ void kernel_main() {
                         vDHt,
                         out_tile_id,
                         tile_bytes,
-                        barrier_threshold);
+                        barrier_threshold,
+                        &writer_profiler);
                 }
             }
         }
+    }
+
+    if (writer_profiler.wait_front_cycles > 0 || writer_profiler.issue_cycles > 0 || writer_profiler.wait_cycles > 0 ||
+        writer_profiler.pop_cycles > 0) {
+        DeviceTimestampedData("SDPA-WRITER-CB-WAIT-SUM", writer_profiler.wait_front_cycles);
+        DeviceTimestampedData("SDPA-WRITER-ISSUE-SUM", writer_profiler.issue_cycles);
+        DeviceTimestampedData("SDPA-WRITER-BARRIER-SUM", writer_profiler.wait_cycles);
+        DeviceTimestampedData("SDPA-WRITER-POP-SUM", writer_profiler.pop_cycles);
     }
 }

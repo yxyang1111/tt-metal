@@ -240,6 +240,7 @@ void kernel_main() {
 
     constexpr uint32_t barrier_threshold = get_barrier_read_threshold<tile_bytes, num_cores>();
     uint32_t barrier_count = 0;
+    SDPADecodeWriterProfiler writer_profiler{};
 
     noc_async_write_barrier();  // #19201 BH hang workaround
 
@@ -260,6 +261,7 @@ void kernel_main() {
                     // Wait for this specific child to send its results
                     // Poll until round-specific nibble is >= 1
                     // Each round uses a 4-bit field: round 0 = bits 0-3, round 1 = bits 4-7, etc.
+                    uint64_t child_wait_start = read_wall_clock_cycles();
                     while (true) {
                         invalidate_l1_cache();
                         uint32_t sem_val = *in0_receiver_semaphore_addr_ptr;
@@ -268,6 +270,7 @@ void kernel_main() {
                             break;
                         }
                     }
+                    writer_profiler.tree_child_wait_cycles += read_wall_clock_cycles() - child_wait_start;
 
                     // Now read the data from the intermediate buffer
                     constexpr uint32_t tile_bytes_intermed = get_tile_size(cb_intermed_out);
@@ -307,9 +310,15 @@ void kernel_main() {
         // We have data (checked at function start), so send it
         if (!is_tree_root && should_send_to_parent) {
             // Wait for compute to finish writing to cb_out_worker, cb_out_m, cb_out_l
-            cb_wait_front(cb_out_worker, out_chunk_tiles);
-            cb_wait_front(cb_out_m, PNHt);
-            cb_wait_front(cb_out_l, PNHt);
+            {
+                uint64_t wait_front_start = read_wall_clock_cycles();
+                cb_wait_front(cb_out_worker, out_chunk_tiles);
+                cb_wait_front(cb_out_m, PNHt);
+                cb_wait_front(cb_out_l, PNHt);
+                uint64_t elapsed = read_wall_clock_cycles() - wait_front_start;
+                writer_profiler.wait_front_cycles += elapsed;
+                writer_profiler.sender_wait_front_cycles += elapsed;
+            }
 
             constexpr uint32_t tile_bytes = get_tile_size(cb_out_worker);
             uint32_t block_offset = send_at_round * (out_chunk_tiles + 2 * PNHt) * tile_bytes;
@@ -323,20 +332,48 @@ void kernel_main() {
                 get_noc_addr(parent_noc_x, parent_noc_y, get_write_ptr(cb_intermed_out)) + block_offset;
 
             // Send l, m, o to parent (same order as original worker_compute)
+            uint64_t issue_start = read_wall_clock_cycles();
             noc_async_write(get_read_ptr(cb_out_l), output_write_addr, ml_write_size);
             output_write_addr += ml_write_size;
             noc_async_write(get_read_ptr(cb_out_m), output_write_addr, ml_write_size);
             output_write_addr += ml_write_size;
             noc_async_write(get_read_ptr(cb_out_worker), output_write_addr, o_write_size);
-            noc_async_write_barrier();
+            writer_profiler.issue_cycles += read_wall_clock_cycles() - issue_start;
+            {
+                uint64_t wait_start = read_wall_clock_cycles();
+                noc_async_write_barrier();
+                writer_profiler.wait_cycles += read_wall_clock_cycles() - wait_start;
+            }
             uint64_t parent_semaphore_noc_addr = get_noc_addr(parent_noc_x, parent_noc_y, reducer_semaphore_addr);
             noc_semaphore_inc(parent_semaphore_noc_addr, step_semaphore_inc[send_at_round]);
 
             // pop front
-            cb_pop_front(cb_out_worker, out_chunk_tiles);
-            cb_pop_front(cb_out_m, PNHt);
-            cb_pop_front(cb_out_l, PNHt);
-            noc_async_atomic_barrier();
+            {
+                uint64_t pop_start = read_wall_clock_cycles();
+                cb_pop_front(cb_out_worker, out_chunk_tiles);
+                cb_pop_front(cb_out_m, PNHt);
+                cb_pop_front(cb_out_l, PNHt);
+                writer_profiler.pop_cycles += read_wall_clock_cycles() - pop_start;
+            }
+            {
+                uint64_t wait_start = read_wall_clock_cycles();
+                noc_async_atomic_barrier();
+                writer_profiler.wait_cycles += read_wall_clock_cycles() - wait_start;
+            }
+            if (
+                writer_profiler.wait_front_cycles > 0 || writer_profiler.issue_cycles > 0 ||
+                writer_profiler.wait_cycles > 0 || writer_profiler.pop_cycles > 0 ||
+                writer_profiler.sender_wait_front_cycles > 0 || writer_profiler.root_wait_front_cycles > 0 ||
+                writer_profiler.tree_child_wait_cycles > 0 || writer_profiler.output_gather_wait_cycles > 0) {
+                DeviceTimestampedData("SDPA-WRITER-CB-WAIT-SUM", writer_profiler.wait_front_cycles);
+                DeviceTimestampedData("SDPA-WRITER-ISSUE-SUM", writer_profiler.issue_cycles);
+                DeviceTimestampedData("SDPA-WRITER-BARRIER-SUM", writer_profiler.wait_cycles);
+                DeviceTimestampedData("SDPA-WRITER-POP-SUM", writer_profiler.pop_cycles);
+                DeviceTimestampedData("SDPA-WRITER-SENDER-CB-WAIT-SUM", writer_profiler.sender_wait_front_cycles);
+                DeviceTimestampedData("SDPA-WRITER-ROOT-CB-WAIT-SUM", writer_profiler.root_wait_front_cycles);
+                DeviceTimestampedData("SDPA-WRITER-TREE-CHILD-WAIT-SUM", writer_profiler.tree_child_wait_cycles);
+                DeviceTimestampedData("SDPA-WRITER-OUTPUT-GATHER-WAIT-SUM", writer_profiler.output_gather_wait_cycles);
+            }
             // Senders can return, dont need to participate
             return;
         }
@@ -349,9 +386,17 @@ void kernel_main() {
         // Offset for current batch
         uint32_t out_tile_id = cur_batch * out_chunk_tiles;
         if constexpr (num_kv_heads > 1 || !is_out_sharded) {
+            uint64_t wait_front_start = read_wall_clock_cycles();
             cb_wait_front(cb_out, out_chunk_tiles);
+            uint64_t elapsed = read_wall_clock_cycles() - wait_front_start;
+            writer_profiler.wait_front_cycles += elapsed;
+            writer_profiler.root_wait_front_cycles += elapsed;
         }
-        noc_async_writes_flushed();
+        {
+            uint64_t wait_start = read_wall_clock_cycles();
+            noc_async_writes_flushed();
+            writer_profiler.wait_cycles += read_wall_clock_cycles() - wait_start;
+        }
 
         if constexpr (num_kv_heads > 1) {
             // if gqa, we will need to write partial outputs for each head
@@ -360,7 +405,7 @@ void kernel_main() {
             constexpr uint32_t num_heads_to_write = num_q_heads / num_kv_heads;  // each head is one row in a tile
             if (!is_out_sharded) {
                 barrier_count = write_partial_tiles_to_memory<cb_out, ELEMENT_SIZE, barrier_threshold, PNHt>(
-                    out_tile_id, out_writer, barrier_count, cur_head, num_heads_to_write, out_chunk_tiles);
+                    out_tile_id, out_writer, barrier_count, cur_head, num_heads_to_write, out_chunk_tiles, &writer_profiler);
             }
             // sharded out case
             else if (do_output) {
@@ -370,7 +415,9 @@ void kernel_main() {
                 constexpr uint32_t num_reducers_to_wait = num_reducers_per_output - 1;
                 volatile tt_l1_ptr uint32_t* output_self_semaphore_addr_ptr =
                     reinterpret_cast<volatile tt_l1_ptr uint32_t*>(output_semaphore_addr);
+                uint64_t output_gather_wait_start = read_wall_clock_cycles();
                 noc_semaphore_wait(output_self_semaphore_addr_ptr, num_reducers_to_wait);
+                writer_profiler.output_gather_wait_cycles += read_wall_clock_cycles() - output_gather_wait_start;
 
                 uint32_t reduce_core_read_index_start = (cur_batch * num_cores_per_batch) / num_cores_per_head;
 
@@ -426,12 +473,34 @@ void kernel_main() {
             // tiles to memory
             if (!is_out_sharded) {
                 barrier_count = write_tiles_to_memory<cb_out, out_chunk_tiles, barrier_threshold>(
-                    out_tile_id, out_writer, barrier_count);
+                    out_tile_id, out_writer, barrier_count, &writer_profiler);
             }
         }
         if constexpr (num_kv_heads > 1 || !is_out_sharded) {
-            noc_async_write_barrier();
-            cb_pop_front(cb_out, out_chunk_tiles);
+            {
+                uint64_t wait_start = read_wall_clock_cycles();
+                noc_async_write_barrier();
+                writer_profiler.wait_cycles += read_wall_clock_cycles() - wait_start;
+            }
+            {
+                uint64_t pop_start = read_wall_clock_cycles();
+                cb_pop_front(cb_out, out_chunk_tiles);
+                writer_profiler.pop_cycles += read_wall_clock_cycles() - pop_start;
+            }
         }
+    }
+
+    if (writer_profiler.wait_front_cycles > 0 || writer_profiler.issue_cycles > 0 || writer_profiler.wait_cycles > 0 ||
+        writer_profiler.pop_cycles > 0 || writer_profiler.sender_wait_front_cycles > 0 ||
+        writer_profiler.root_wait_front_cycles > 0 || writer_profiler.tree_child_wait_cycles > 0 ||
+        writer_profiler.output_gather_wait_cycles > 0) {
+        DeviceTimestampedData("SDPA-WRITER-CB-WAIT-SUM", writer_profiler.wait_front_cycles);
+        DeviceTimestampedData("SDPA-WRITER-ISSUE-SUM", writer_profiler.issue_cycles);
+        DeviceTimestampedData("SDPA-WRITER-BARRIER-SUM", writer_profiler.wait_cycles);
+        DeviceTimestampedData("SDPA-WRITER-POP-SUM", writer_profiler.pop_cycles);
+        DeviceTimestampedData("SDPA-WRITER-SENDER-CB-WAIT-SUM", writer_profiler.sender_wait_front_cycles);
+        DeviceTimestampedData("SDPA-WRITER-ROOT-CB-WAIT-SUM", writer_profiler.root_wait_front_cycles);
+        DeviceTimestampedData("SDPA-WRITER-TREE-CHILD-WAIT-SUM", writer_profiler.tree_child_wait_cycles);
+        DeviceTimestampedData("SDPA-WRITER-OUTPUT-GATHER-WAIT-SUM", writer_profiler.output_gather_wait_cycles);
     }
 }

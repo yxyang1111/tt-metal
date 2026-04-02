@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant SRead as Sender Reader / NCRISC
+    participant RComp as Receiver Compute / TRISC
+    participant RWrite as Receiver Writer / BRISC
+    participant Tree as Parent / Tree node BRISC
+    participant RootC as Root Compute / TRISC
+    participant RootW as Root Writer / BRISC
+    participant Sig as CB reserve / wait_front / semaphore chain
+
+    Note over SRead,RootW: 这是 decode_16k / 32k 的“回压闭环”图，不是单次消息图。它回答为什么 reader reserve、writer cb_wait、compute reserve-back 会一起升高。
+
+    SRead->>Sig: cb_reserve_back(cb_k_in / cb_v_in) 变重
+    SRead->>RComp: K/V 输入节拍被拖慢
+
+    RComp->>Sig: compute wait-front 仍占主导
+    RComp->>RWrite: local output push to cb_out_worker
+
+    RWrite->>Sig: writer cb_wait_front(cb_out_worker)
+    RWrite->>Tree: sender write + child-ready signal
+
+    Tree->>Sig: tree child wait
+    Tree->>RootC: child l/m/o merge input
+    RootC->>RootW: merged output / next-round result
+    RootW-->>Sig: output-side backpressure 继续传回前面
+    Sig-->>SRead: 下游空间释放变慢，reader reserve 继续升高

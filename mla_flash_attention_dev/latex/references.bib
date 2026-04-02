@@ -1,0 +1,245 @@
+%%
+%% References for ICPP 2026 paper
+%%
+
+%% ===== Attention Mechanisms & Optimization =====
+
+@inproceedings{dao2022flashattention,
+  author    = {Tri Dao and Daniel Y. Fu and Stefano Ermon and Atri Rudra and Christopher R\'{e}},
+  title     = {{FlashAttention}: Fast and Memory-Efficient Exact Attention with {IO}-Awareness},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2022},
+}
+
+@inproceedings{dao2023flashattention2,
+  author    = {Tri Dao},
+  title     = {{FlashAttention-2}: Faster Attention with Better Parallelism and Work Partitioning},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024},
+}
+
+@inproceedings{flatattention2024,
+  author    = {Dongyang Li and others},
+  title     = {{FlatAttention}: Dataflow and Fabric Collectives Co-Optimization for Efficient Multi-Head Attention on Tile-Based Many-{PE} Accelerators},
+  booktitle = {IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
+  year      = {2024},
+}
+
+@inproceedings{kwon2023pagedattention,
+  author    = {Woosuk Kwon and Zhuohan Li and Siyuan Zhuang and Ying Sheng and Lianmin Zheng and Cody Hao Yu and Joseph E. Gonzalez and Hao Zhang and Ion Stoica},
+  title     = {Efficient Memory Management for Large Language Model Serving with {PagedAttention}},
+  booktitle = {ACM Symposium on Operating Systems Principles (SOSP)},
+  year      = {2023},
+}
+
+@article{vaswani2017attention,
+  author    = {Ashish Vaswani and Noam Shazeer and Niki Parmar and Jakob Uszkoreit and Llion Jones and Aidan N. Gomez and \L{}ukasz Kaiser and Illia Polosukhin},
+  title     = {Attention Is All You Need},
+  journal   = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2017},
+}
+
+%% ===== LLM Inference =====
+
+@article{pope2023efficiently,
+  author    = {Reiner Pope and Sholto Douglas and Aakanksha Chowdhery and Jacob Devlin and James Bradbury and Jonathan Heek and Kefan Xiao and Shivani Agrawal and Jeff Dean},
+  title     = {Efficiently Scaling Transformer Inference},
+  journal   = {Proceedings of Machine Learning and Systems (MLSys)},
+  year      = {2023},
+}
+
+@article{sheng2023flexgen,
+  author    = {Ying Sheng and Lianmin Zheng and Binhang Yuan and Zhuohan Li and Max Ryabinin and Beidi Chen and Percy Liang and Christopher R\'{e} and Ion Stoica and Ce Zhang},
+  title     = {{FlexGen}: High-Throughput Generative Inference of Large Language Models with a Single {GPU}},
+  booktitle = {International Conference on Machine Learning (ICML)},
+  year      = {2023},
+}
+
+%% ===== Tenstorrent / Wormhole =====
+
+@inproceedings{tt-fft2025,
+  author    = {FilipUl\v{c}ar and Nima Taherinejad},
+  title     = {Exploring Fast {Fourier} Transforms on the {Tenstorrent Grayskull} Architecture},
+  booktitle = {Proceedings of the Conference},
+  year      = {2025},
+}
+
+%% ===== Dataflow and Mapping =====
+
+@inproceedings{kwon2019maestro,
+  author    = {Hyoukjun Kwon and Prasanth Chatarasi and Michael Pellauer and Angshuman Parashar and Vivek Sarkar and Tushar Krishna},
+  title     = {{MAESTRO}: A Data-Centric Approach to Understand Reuse, Performance, and Hardware Cost of {DNN} Mappings},
+  booktitle = {IEEE/ACM International Symposium on Microarchitecture (MICRO)},
+  year      = {2019},
+}
+
+@inproceedings{chen2019eyerissv2,
+  author    = {Yu-Hsin Chen and Tien-Ju Yang and Joel Emer and Vivienne Sze},
+  title     = {{Eyeriss v2}: A Flexible Accelerator for Emerging Deep Neural Networks on Mobile Devices},
+  journal   = {IEEE Journal on Emerging and Selected Topics in Circuits and Systems},
+  year      = {2019},
+}
+
+@inproceedings{parashar2019timeloop,
+  author    = {Angshuman Parashar and Priyanka Raina and Yakun Sophia Shao and Yu-Hsin Chen and Victor A. Ying and Anurag Mukkara and Rangharajan Venkatesan and Brucek Khailany and Stephen W. Keckler and Joel Emer},
+  title     = {{Timeloop}: A Systematic Approach to {DNN} Accelerator Evaluation},
+  booktitle = {IEEE International Symposium on Performance Analysis of Systems and Software (ISPASS)},
+  year      = {2019},
+}
+
+%% ===== Many-Core / NoC =====
+
+@inproceedings{tandem2023,
+  author    = {Yue Pan and others},
+  title     = {{Tandem}: A Collaborative Multi-Chiplet Many-Core System with Dataflow-Based Trace-Driven Evaluation},
+  booktitle = {IEEE International Symposium on High-Performance Computer Architecture (HPCA)},
+  year      = {2023},
+}
+
+@article{cerebras2024waferscale,
+  author    = {Sean Lie},
+  title     = {Inside the {Cerebras} Wafer-Scale Cluster},
+  journal   = {IEEE Micro},
+  year      = {2024},
+}
+
+@inproceedings{dynamic-alloc2024,
+  author    = {Jia-Cing Li and others},
+  title     = {A Dynamic Allocation Scheme for Adaptive Shared-Memory Mapping on Kilo-Core {RV} Clusters for Attention-Based Model Deployment},
+  booktitle = {IEEE International Conference on Artificial Intelligence Circuits and Systems (AICAS)},
+  year      = {2024},
+}
+
+%% ===== LLM Models =====
+
+@article{touvron2023llama,
+  author    = {Hugo Touvron and others},
+  title     = {{LLaMA}: Open and Efficient Foundation Language Models},
+  journal   = {arXiv preprint arXiv:2302.13971},
+  year      = {2023},
+}
+
+@article{touvron2023llama2,
+  author    = {Hugo Touvron and others},
+  title     = {{LLaMA 2}: Open Foundation and Fine-Tuned Chat Models},
+  journal   = {arXiv preprint arXiv:2307.09288},
+  year      = {2023},
+}
+
+%% ===== Attention Optimization (GPU, Decode) =====
+
+@article{shah2024flashattention3,
+  author    = {Jay Shah and Ganesh Bikshandi and Ying Zhang and Vijay Thakkar and Pradeep Ramani and Tri Dao},
+  title     = {{FlashAttention-3}: Fast and Accurate Attention with Asynchrony and Low-precision},
+  journal   = {arXiv preprint arXiv:2407.08691},
+  year      = {2024},
+}
+
+@article{flashdecoding2023,
+  author    = {Tri Dao and Daniel Haziza and Francisco Massa and Grigory Sizov},
+  title     = {Flash-Decoding for Long-Context Inference},
+  journal   = {Meta AI Blog},
+  year      = {2023},
+}
+
+@inproceedings{hong2024flashdecoding,
+  author    = {Ke Hong and Guohao Dai and Jiaming Xu and Qiuli Mao and Xiuhong Li and Jun Liu and Kangdi Chen and Yuhan Dong and Yu Wang},
+  title     = {{FlashDecoding++}: Faster Large Language Model Inference on {GPUs}},
+  booktitle = {Proceedings of Machine Learning and Systems (MLSys)},
+  year      = {2024},
+}
+
+@article{liu2023ringattention,
+  author    = {Hao Liu and Matei Zaharia and Pieter Abbeel},
+  title     = {Ring Attention with Blockwise Transformers for Near-Infinite Context},
+  journal   = {arXiv preprint arXiv:2310.01889},
+  year      = {2023},
+}
+
+%% ===== KV Cache Optimization & Attention Variants =====
+
+@inproceedings{ainslie2023gqa,
+  author    = {Joshua Ainslie and James Lee-Thorp and Michiel de Jong and Yinfei Yang and Sumit Sanghai},
+  title     = {{GQA}: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints},
+  booktitle = {Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  year      = {2023},
+}
+
+@article{shazeer2019mqa,
+  author    = {Noam Shazeer},
+  title     = {Fast Transformer Decoding: One Write-Head is All You Need},
+  journal   = {arXiv preprint arXiv:1911.02150},
+  year      = {2019},
+}
+
+@inproceedings{xiao2024streamingllm,
+  author    = {Guangxuan Xiao and Yuandong Tian and Beidi Chen and Song Han and Mike Lewis},
+  title     = {Efficient Streaming Language Models with Attention Sinks},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2024},
+}
+
+@inproceedings{zhang2024h2o,
+  author    = {Zhenyu Zhang and Ying Sheng and Tianyi Zhou and Tianlong Chen and Lianmin Zheng and Ruisi Cai and Zhao Song and Yuandong Tian and Zhangyang Wang and Beidi Chen},
+  title     = {{H2O}: Heavy-Hitter Oracle for Efficient Generative Inference of Large Language Models},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2023},
+}
+
+%% ===== LLM Serving Systems =====
+
+@inproceedings{yu2022orca,
+  author    = {Gyeong-In Yu and Joo Seong Jeong and Geon-Woo Kim and Soojeong Kim and Byung-Gon Chun},
+  title     = {{Orca}: A Distributed Serving System for Transformer-Based Generative Models},
+  booktitle = {USENIX Symposium on Operating Systems Design and Implementation (OSDI)},
+  year      = {2022},
+}
+
+@inproceedings{aminabadi2022deepspeed,
+  author    = {Reza Yazdani Aminabadi and Samyam Rajbhandari and Ammar Ahmad Awan and Cheng Li and Du Li and Elton Zheng and Olatunji Ruwase and Shaden Smith and Minjia Zhang and Jeff Rasley and Yuxiong He},
+  title     = {{DeepSpeed-Inference}: Enabling Efficient Inference of Transformer Models at Unprecedented Scale},
+  booktitle = {International Conference for High Performance Computing, Networking, Storage and Analysis (SC)},
+  year      = {2022},
+}
+
+@inproceedings{patel2024splitwise,
+  author    = {Pratyush Patel and Esha Choukse and Chaojie Zhang and Anil Shah and \'I\~nigo Goiri and Saeed Maleki and Ricardo Bianchini},
+  title     = {{Splitwise}: Efficient Generative {LLM} Inference Using Phase Splitting},
+  booktitle = {International Symposium on Computer Architecture (ISCA)},
+  year      = {2024},
+}
+
+@inproceedings{zhong2024distserve,
+  author    = {Yinmin Zhong and Shengyu Liu and Junda Chen and Jianbo Hu and Yibo Zhu and Xuanzhe Liu and Xin Jin and Hao Zhang},
+  title     = {{DistServe}: Disaggregating Prefill and Decoding for Goodput-optimized Large Language Model Serving},
+  booktitle = {USENIX Symposium on Operating Systems Design and Implementation (OSDI)},
+  year      = {2024},
+}
+
+%% ===== Dataflow Mapping =====
+
+@inproceedings{kao2023flat,
+  author    = {Sheng-Chun Kao and Suvinay Subramanian and Gaurav Agrawal and Amir Yazdanbakhsh and Tushar Krishna},
+  title     = {{FLAT}: An Optimized Dataflow for Mitigating Attention Bottlenecks},
+  booktitle = {International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS)},
+  year      = {2023},
+}
+
+%% ===== Tenstorrent =====
+
+@misc{tenstorrent2024wormhole,
+  author    = {{Tenstorrent Inc.}},
+  title     = {Wormhole Architecture and {TT-Metalium} Programming Guide},
+  howpublished = {Tenstorrent Technical Documentation},
+  year      = {2024},
+  note      = {\url{https://tenstorrent.com/}},
+}
+
+%% ===== Other Architecture =====
+
+@inproceedings{jouppi2023tpu,
+  author    = {Norman P. Jouppi and others},
+  title     = {{TPU} v4: An Optically Reconfigurable Supercomputer for Machine Learning with Hardware Support for Embeddings},
+  booktitle = {International Symposium on Computer Architecture (ISCA)},
+  year      = {2023},
+}

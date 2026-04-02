@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlashMLA Decode PM Bubble Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #121925;
+      --panel-2: #0f141d;
+      --text: #f5f7fb;
+      --muted: #9fb0c3;
+      --border: #223046;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #162033 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+    }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 1020px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    figure {
+      margin: 0;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+    }
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>FlashMLA Decode PM/Bubble Dashboard</h1>
+    <p class="lead">这页只对应 guarded `decode_safe` rerun。重点不是重新解释 reader/writer stage，而是把这轮真正补齐的 compute bubble 计数和仍然缺失的 PM/NOC/DRAM util 状态单独拎出来看。</p>
+    <section class="cards">
+      <div class="card">
+        <div class="label">Case Completion</div>
+        <div class="value">8/8</div>
+        <div class="hint">preflight=`passed`，decode guarded rerun 全部完成。</div>
+      </div>
+      <div class="card">
+        <div class="label">Bubble Counters</div>
+        <div class="value">8/8</div>
+        <div class="hint">`DEVICE COMPUTE CB WAIT FRONT/RESERVE BACK` 在所有 decode 点可用。</div>
+      </div>
+      <div class="card">
+        <div class="label">PM Triplet</div>
+        <div class="value">8/8 placeholder</div>
+        <div class="hint">`PM IDEAL/COMPUTE/BANDWIDTH` 全部固定在 `1.0 ns`，不能当作真实 PM 利用率。</div>
+      </div>
+      <div class="card">
+        <div class="label">NOC / DRAM Util</div>
+        <div class="value">0/8 usable</div>
+        <div class="hint">`NOC/MULTICAST/DRAM BW UTIL` 当前仍为空；这轮应解读成 bubble-only rerun。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k Bubble Mix</div>
+        <div class="value">70.9% / 29.1%</div>
+        <div class="hint">`decode_32k` 的 bubble 里，wait-front 仍然占主导，但 reserve-back 已经明显抬升。</div>
+      </div>
+    </section>
+    <section class="grid">
+      <figure><img src="visuals/decode_compute_bubble_density.svg" alt="Decode compute bubble density"></figure>
+      <figure><img src="visuals/decode_compute_bubble_composition.svg" alt="Decode compute bubble composition"></figure>
+      <figure><img src="visuals/decode_pm_capture_status.svg" alt="Decode PM capture status"></figure>
+    </section>
+    <p class="footnote">解释口径：compute bubble 这里按 counter 密度而不是 wall-time share 来读，因为短序列点上 counter 总和会超过单次 kernel wall time。Stage-level 的 reader reserve / writer cb_wait 仍然以 detailed JSON 里的分解表为准。</p>
+  </div>
+</body>
+</html>

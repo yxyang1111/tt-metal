@@ -1,0 +1,65 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_decode4k_sum_after_device_restart",
+  "preflight": {
+    "case": "decode_4k",
+    "status": "passed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+      "--child-run",
+      "--case",
+      "decode_4k"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  "cases": [
+    {
+      "case": "decode_4k",
+      "status": "failed",
+      "output_dir": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_decode4k_sum_after_device_restart/decode_4k",
+      "report_dir": null,
+      "ops_csv": null,
+      "available_required_columns": null,
+      "missing_required_columns": null,
+      "available_optional_noc_columns": null,
+      "command": [
+        "python3",
+        "-m",
+        "tracy",
+        "-v",
+        "-r",
+        "-p",
+        "-o",
+        "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_decode4k_sum_after_device_restart/decode_4k",
+        "--check-exit-code",
+        "--op-support-count",
+        "4000",
+        "--enable-sum-profiling",
+        "-a",
+        "device_kernel_duration",
+        "-a",
+        "device_kernel_first_to_last_start",
+        "-a",
+        "device_brisc_kernel_duration",
+        "-a",
+        "device_ncrisc_kernel_duration",
+        "-a",
+        "device_trisc0_kernel_duration",
+        "-a",
+        "device_trisc1_kernel_duration",
+        "-a",
+        "device_trisc2_kernel_duration",
+        "-a",
+        "device_compute_cb_wait_front",
+        "-a",
+        "device_compute_cb_reserve_back",
+        "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+        "--child-run",
+        "--case",
+        "decode_4k"
+      ],
+      "error": "case exited with return code 1"
+    }
+  ]
+}

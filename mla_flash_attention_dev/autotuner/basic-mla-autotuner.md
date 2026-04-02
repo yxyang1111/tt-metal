@@ -85,6 +85,97 @@ python -m mla_flash_attention_dev.autotuner \
   --rerank-top-k 8
 ```
 
+### 3.5 从 WH profile 结果生成 measurement DB
+
+```bash
+python -m mla_flash_attention_dev.autotuner \
+  --build-wh-profile-measurement-db \
+  mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh/flash_mla_wh_profile_results.json \
+  --measurement-db-output \
+  mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh/flash_mla_wh_measurement_db.json
+```
+
+这个入口现在同时接受两类输入：
+
+- `flash_mla_wh_profile_results.json` 这种简单版 `wh_profile`
+- `flash_mla_wh_detailed_profile_results.json` 这种 detailed `profiles`
+
+默认情况下，profile 会被映射到一个更接近当前 production A 路径的参考候选：
+
+```bash
+--profile-measurement-selection-mode reference_current_a
+```
+
+reference source 现在也可以显式指定：
+
+```bash
+--profile-measurement-reference-source profile_harness
+--profile-measurement-reference-source mla1d_defaults
+--profile-measurement-reference-source hybrid_auto
+```
+
+其中：
+
+- `profile_harness`：优先贴合当前 profiling 脚本里的 A 路径配置
+- `mla1d_defaults`：优先贴合 `models/demos/deepseek_v3/tt/mla/mla1d.py` 里的 production 默认配置
+  - decode：`q_chunk_size=0`、`k_chunk_size=128`、`HiFi4`
+  - prefill：`q_chunk_size=128`、`k_chunk_size=128`、`HiFi4`
+- `hybrid_auto`：当前对 simple/detailed WH profile JSON 会优先走 harness reference，主要是给后续更多输入来源预留默认模式
+
+如果你只是想把 profile latency 暂时绑定到 analytical top-1，也可以切到：
+
+```bash
+--profile-measurement-selection-mode analytical_best
+```
+
+### 3.6 从 WH profile 直接拟合 calibration
+
+如果你想让真实 Wormhole profile 不只是挂到某一个候选 key 上，而是直接进入后续 ranking，更推荐直接拟合 calibration：
+
+```bash
+python -m mla_flash_attention_dev.autotuner \
+  --wh-profile-json \
+  mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/flash_mla_wh_detailed_profile_results.json \
+  --fit-calibration-output \
+  mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/flash_mla_wh_detailed_calibration.json
+```
+
+这个入口会：
+
+- 直接读取 simple/detailed WH profile JSON
+- 先按 `reference_current_a` 或 `analytical_best` 把 profile case 映射到候选
+- 再自动拟合 calibration model
+
+默认的 feature mode 现在是：
+
+```bash
+--calibration-feature-mode auto
+```
+
+它会按样本数自动选择：
+
+- 优先 `extended`
+- 样本不够时退到 `breakdown`
+- 再不够时退到 `scalar`
+
+如果后面要用这份 calibration 参与 ranking，可以再这样调用：
+
+```bash
+python -m mla_flash_attention_dev.autotuner \
+  --preset flash_decode_wh \
+  --calibration-json \
+  mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/flash_mla_wh_detailed_calibration.json
+```
+
+### 3.7 对照 heuristic pruning
+
+```bash
+python -m mla_flash_attention_dev.autotuner \
+  --preset flash_decode_wh \
+  --top-k 1 \
+  --disable-heuristic-pruning
+```
+
 ---
 
 ## 4. 输入是什么
@@ -396,6 +487,18 @@ kv_chunk_group_size = ceil(kv_num_chunks / kv_parallel_factor)
 | `estimated_latency_ms` | 解析式估计时延 |
 | `measured_latency_ms` | 若命中 measurement DB，则是真实测量值 |
 | `selection_source` | `analytical` 或 `measurement_db` |
+| `reader_ms` | reader 临界路径时间，含 DRAM/reader-side NoC/page 控制 |
+| `reduction_ms` | tail reduction 阶段时间 |
+| `reader_backpressure_ms` | 近似建模 `cb_reserve_back` 一类 reader 下游反压 |
+| `writer_backpressure_ms` | 近似建模 writer/output-side `cb_wait` 一类耦合等待 |
+| `sender_hotspot_ms` | 近似建模 sender core / injector 过热造成的额外串行化 |
+| `overlap_residual_ms` | reader 与 compute 不能完全重叠时剩余的气泡 |
+| `page_control_ms` | page-level pipeline 的控制/信令开销 |
+| `pipeline_bubble_ms` | page 数与 reader/trid 窗口不匹配引入的 bubble |
+| `l1_pressure_ms` | L1 软压力导致的额外惩罚 |
+| `complexity_penalty_ms` | 过深窗口/额外 buffer/低效 dual NOC 的复杂度惩罚 |
+| `dual_noc_effectiveness` | dual NOC 在当前候选上的有效利用率估计 |
+| `unused_trid_ratio` | trid window 没被有效利用的比例 |
 | `compute_ms` | compute 子项 |
 | `dram_ms` | DRAM 子项 |
 | `noc_ms` | NoC 子项 |
@@ -403,6 +506,12 @@ kv_chunk_group_size = ceil(kv_num_chunks / kv_parallel_factor)
 | `active_cores` | 真正活跃的 core 数 |
 | `provisioned_cores` | 配置上预留的 core 数 |
 | `imbalance_score` | 负载不均衡程度 |
+
+新增的三个经验项里：
+
+- `reader_backpressure_ms` 主要用来吸收 WH profile 里 `reserve/block` 的迁移趋势
+- `writer_backpressure_ms` 主要用来吸收 writer 侧 `cb_wait_front` 主导的耦合等待
+- `sender_hotspot_ms` 主要用来吸收 sender/injector 在 multicast / reduction 场景下的热点代价
 
 ---
 
@@ -457,21 +566,37 @@ analytical_score =
 - `selected_latency_ms` 默认等于 `estimated_latency_ms`
 - 如果启用了 measured reranking，则 `selected_latency_ms` 会被真实测量值覆盖
 
-估计时延仍拆成：
+估计时延现在更接近分阶段执行模型：
 
 ```text
 estimated_latency_ms
   = q_preamble_ms
-  + max(compute_ms, dram_ms, noc_ms)
+  + max(reader_ms, compute_ms)
+  + overlap_residual_ms
+  + reduction_ms
   + sync_ms
+  + l1_pressure_ms
+  + complexity_penalty_ms
 ```
 
-这不是最终精确 runtime model，但已经能反映：
+其中：
+
+```text
+reader_ms
+  ~= max(dram_ms, reader_noc_ms)
+   + page_control_ms
+   + pipeline_bubble_ms
+```
+
+这不是最终精确 runtime model，但已经能更细地反映：
 
 - compute / DRAM / NoC 谁是主瓶颈
 - page 粒度和 trid 窗口对 overlap 的影响
+- reader pipeline 深度、page 数、buffer slack 的耦合
+- reduction tail 的代价
 - method-B 的 tree depth / effective S Block 数
-- L1 预算是否超限
+- L1 预算和 L1 软压力
+- dual NOC 是否真的被有效利用
 - active core 是否浪费
 - group 划分是否不均匀
 
@@ -494,7 +619,9 @@ python -m mla_flash_attention_dev.autotuner \
 
 1. 先用解析式 score 排序所有候选
 2. 取 analytical top-K
-3. 如果 measurement DB 里能找到这些候选的真实测量值，就用真实值重新排序
+3. 再把当前 exact workload 已有的 measured candidate 一并并入 rerank pool
+4. 对命中的候选，用真实测量值覆盖 `selected_latency_ms`
+5. 用 `selected_latency_ms` 重新排序；若时延相同，measured candidate 优先
 
 measurement DB 的 key 不是 workload signature，而是：
 
@@ -508,6 +635,16 @@ candidate_key
 - `hardware`
 - `compile_time_config`
 - `runtime_config`
+
+这里有一个重要修正：
+
+- 现在 `candidate_key` / `workload_signature` / exact `policy_cache_key` 都按 workload/hardware 的**语义字段**计算
+- `workload.name` 和 `hardware.name` 不再参与哈希
+
+这意味着：
+
+- 同 shape 的 profile harness workload 和你手写的 workload JSON 不会再因为名字不同而完全匹配不上
+- 旧的基于 name-sensitive key 生成的本地 measurement DB / cache 如果还要继续用，建议重新生成
 
 measurement DB 的最简单格式可以是：
 
@@ -527,11 +664,36 @@ measurement DB 的最简单格式可以是：
 }
 ```
 
+现在也允许带额外 metadata，例如：
+
+```json
+{
+  "candidate_key_1": {
+    "latency_ms": 0.0312,
+    "profile_case": "decode_4k",
+    "profile_selection_mode": "reference_current_a",
+    "analytical_latency_ms": 0.0450
+  }
+}
+```
+
 一旦命中 rerank：
 
 - `metrics.measured_latency_ms` 会被填充
 - `metrics.selected_latency_ms` 会切到 measured latency
 - `metrics.selection_source` 会从 `analytical` 变成 `measurement_db`
+
+这意味着当前 rerank 更适合做：
+
+- analytical top-K 和 exact workload 已测 candidate 的直接比较
+- 把 current A-path grounding 作为一个可比较的真实基线带回候选池
+
+它不再要求 measured candidate 本身一开始就落在 analytical top-K 里。
+
+但这里也要注意：
+
+- 命中 `measurement_db` 不等于一定改写 best plan
+- 是否真的改写排序，仍然取决于 measured latency 和当前 analytical 最优之间的真实比较
 
 ---
 
@@ -552,6 +714,7 @@ measurement DB 的最简单格式可以是：
 | 若启用 method-B 拓扑，则 `kv_parallel_factor == num_s_blocks` | decode 必须和 S Block 宽度对齐 |
 | 若启用 method-B 拓扑，则 `lane_group_capacity == cores_per_s_block` | lane 容量必须和 block 容量对齐 |
 | 若启用 method-B 拓扑，则 `active_lane_count <= cores_per_s_block` | 当前 lanes 必须能装进 block |
+| decode 且 `seq_len_q <= 32` 时折叠 `q_chunk_size` | 避免把单 token decode 的伪旋钮当成真实搜索维度 |
 
 另外，decode 下还有一个更贴近当前 FlashMLA 的约束：
 
@@ -596,6 +759,7 @@ Compile-time:
 6. 这 `6` 路不是抽象数字，而是明确绑定到 `wh_sblock_6x4`
 7. 每个 block `4` 个核，因此当前一次 launch 最多承载 `4` 条 lane
 8. 一个 `K chunk` 会被切成 `6144 B` 的页粒度
+9. `reader_ms` 往往是 decode 的关键阶段，因此 `tree/dual_noc/pipeline` 这些 reader-side knob 更容易改变排序
 
 从 method B 的视角，你可以把它理解成：
 
@@ -747,9 +911,10 @@ sequence_pow2
 2. prefill 当前固定 `kv_parallel_factor = 1`
 3. decode 当前固定 `q_parallel_factor = 1`
 4. decode 默认加了 `8 heads/lane` 上限，目的是贴近现有 FlashMLA 风格
-5. `topology_mode` 的代价仍是近似估计，不是精确 runtime trace
-6. compile/runtime 已经分层，但还没有和真实 TT kernel args 一一对接
-7. `SBlockTopologySpec` 当前只内置了 WH/BH 的现有代表性 method-B 拓扑
+5. single-token decode 下会把 `q_chunk_size` 折叠到最小合法值，避免伪等价候选污染 top-K
+6. `topology_mode` 的代价仍是近似估计，不是精确 runtime trace
+7. compile/runtime 已经分层，但还没有和真实 TT kernel args 一一对接
+8. `SBlockTopologySpec` 当前只内置了 WH/BH 的现有代表性 method-B 拓扑
 
 所以这版的定位应该是：
 
@@ -802,3 +967,105 @@ topology-aware skeleton
 3. group 和五维并行怎么表示
 4. method-B 的 `S Block / bank_map / tree_order` 怎么进入 tuner
 5. cache 和 measured rerank 怎么接入
+
+---
+
+## 23. 本轮已完成的增强
+
+这轮继续完善后，已经额外落地了下面几件事。
+
+### 23.1 搜索空间剪枝不再只是硬规则
+
+除了原来的 feasibility pruning，这轮又加了一层 workload-aware heuristic pruning：
+
+- `prefill` 默认只搜索 `independent`
+- `decode` 会优先压缩更不可能胜出的 `layout / dual_noc / trid` 组合
+- `independent` 模式下不再枚举无意义的 `lane_group_capacity`
+- 保留 `--disable-heuristic-pruning`，方便和 fuller search 做对照
+
+### 23.2 Cost model 开始吸收 profile 里看到的 stall 形态
+
+这轮新增了三类经验惩罚：
+
+1. `reader_backpressure_ms`
+2. `writer_backpressure_ms`
+3. `sender_hotspot_ms`
+
+它们不是最终精确 oracle，但已经把下面这些现象从“文档观察”推进成了“排序信号”：
+
+- decode 长序列 reader 的 `reserve/block` 占比迁移
+- writer 长时间卡在 `cb_wait_front`
+- sender/injector 在 `kv_parallel_factor` 较大时的热点风险
+
+### 23.3 修正了 `independent` 模式下的搜索语义
+
+此前 `independent` 模式下的 `lane_group_capacity` 会错误限制很多高并行 prefill 候选，导致搜索空间里一部分本应存在的方案直接消失。
+
+这轮已经修正为：
+
+- `topology != independent` 时，`lane_group_capacity` 仍然受 block / topology 约束
+- `topology == independent` 时，直接按当前 `active_lane_count` 派生，不再用额外枚举值去误卡候选
+
+### 23.4 Profile 结果现在可以直接桥接成 measurement DB
+
+这轮新增了：
+
+- `mla_flash_attention_dev/autotuner/profile_measurement_bridge.py`
+- CLI 入口 `--build-wh-profile-measurement-db`
+
+默认桥接模式是：
+
+```text
+reference_current_a
+```
+
+这一步现在不再只是宽松启发式，而是会优先贴合当前 A 路径里已经显式出现在 profile harness 里的几个关键特征：
+
+- `topology_mode = independent`
+- `dual_noc_policy = False`
+- `math_fidelity = HiFi4`
+- `k_chunk_size = 128`
+- decode 下优先贴近 `4 lanes x 4 cores/lane`
+
+内部实现现在也把这一步收敛成了一个显式的 reference 配置对象，而不是散落的 if/else 打分项；生成出来的 measurement DB metadata 里也会把这些 reference 目标值一起记下来，方便回查映射是否合理。
+
+### 23.5 已完成的验证
+
+在当前代码上，已经做过以下 full/pruned 对照：
+
+| workload | full search | heuristic pruning | best plan 是否一致 |
+|---|---:|---:|---|
+| `flash_decode_wh` | `38880` | `14688` | 一致 |
+| `flash_decode_bh` | `22680` | `7524` | 一致 |
+| `mla_prefill_wh` | `57024` | `10854` | 一致 |
+
+这说明目前这层 pruning 至少在这些代表性 workload 上，是“减少冗余搜索”而不是“换结果”。
+
+另外，profile bridge 这一层现在已经支持：
+
+- 简单版 `wh_profile` JSON
+- detailed `profiles` JSON
+- 在 metadata 里记录 `profile_mode / profile_variant / profile_selection_mode / analytical_latency_ms`
+
+---
+
+## 24. 当前建议的使用顺序
+
+如果你现在想把这版 autotuner 用起来，比较推荐下面这个顺序：
+
+1. 先用 `--preset` 或 JSON 跑 analytical 搜索
+2. 如果你要保留 current A-path grounding，就先把已有 WH profile 转成 `measurement_db`
+3. 如果你希望真实 WH 信号能进入更一般的 ranking，优先直接从 `--wh-profile-json` 拟合 calibration
+4. 只有在 measured candidate 本身就会进入 analytical top-K，或者你明确用了 `analytical_best` bridge 时，再把 `measurement_db + rerank` 当成主路径
+5. 只在要做对照实验时，才开 `--disable-heuristic-pruning`
+
+---
+
+## 25. 这一轮之后仍然没做的事
+
+这轮已经把“经验 stall 信号”和“profile bridge”接上了，但还有几件事仍然是下一阶段工作：
+
+1. 让 `measurement_db` 不只来自离线 profile JSON，而是能直接调用 benchmark harness
+2. 把 profile 里的 `reference_current_a` 映射扩展到更系统的 host/runtime arg 还原
+3. 继续提升 calibration 的泛化能力，而不只拟合当前这组 WH sweep
+4. 继续把 compile-time config / runtime config 往真实 TT kernel args 上贴

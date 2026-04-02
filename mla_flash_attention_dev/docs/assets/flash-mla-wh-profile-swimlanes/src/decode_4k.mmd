@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant R as Reader / NCRISC
+    participant C as Compute / TRISC
+    participant W as Writer / BRISC
+
+    Note over R,W: decode_4k | 从 issue-dominant 向 K reserve-dominant 迁移的关键转折点
+
+    rect rgb(255, 248, 235)
+        loop steady-state tile
+            Note over R: issue 47.94%<br/>reserve 39.78%<br/>wait 10.65%<br/>k_reserve 31.64%
+            R->>C: K 仍在持续前送，但 turnover 已被下游压住
+
+            Note over C: wait-front 332.1 us (78.12%)<br/>reserve-back 93.0 us (21.88%)<br/>output/backpressure 开始抬升
+            C->>W: partial output 进入 reduction / output path
+
+            Note over W: cb_wait 98.10%<br/>sender 49.59%<br/>tree 50.41%
+            W-->>R: 回压开始明确传回 K path
+            W-->>C: compute 已开始明显感受到 output-side pressure
+        end
+    end

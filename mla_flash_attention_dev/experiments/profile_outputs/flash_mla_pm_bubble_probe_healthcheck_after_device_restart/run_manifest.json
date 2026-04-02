@@ -1,0 +1,17 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_healthcheck_after_device_restart",
+  "preflight": {
+    "case": "decode_1k",
+    "status": "passed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+      "--child-run",
+      "--case",
+      "decode_1k"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  "cases": []
+}

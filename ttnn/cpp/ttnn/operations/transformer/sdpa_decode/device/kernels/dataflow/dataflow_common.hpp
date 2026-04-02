@@ -393,16 +393,42 @@ void generate_block_padding_mask(uint32_t Sk_chunk_t, uint32_t block_size) {
 /******************************************************************************
  *                   Writer Kernel Specific Functions                         *
  ******************************************************************************/
+#ifndef SDPA_DECODE_WRITER_PROFILER_DEFINED
+#define SDPA_DECODE_WRITER_PROFILER_DEFINED
+struct SDPADecodeWriterProfiler {
+    uint64_t wait_front_cycles = 0;
+    uint64_t issue_cycles = 0;
+    uint64_t wait_cycles = 0;
+    uint64_t pop_cycles = 0;
+    uint64_t sender_wait_front_cycles = 0;
+    uint64_t root_wait_front_cycles = 0;
+    uint64_t tree_child_wait_cycles = 0;
+    uint64_t output_gather_wait_cycles = 0;
+};
+#endif
+
 template <uint32_t cb_out, uint32_t out_chunk_tiles, uint32_t barrier_threshold, typename WriterType>
-uint32_t write_tiles_to_memory(uint32_t& out_tile_id, const WriterType& out_writer, uint32_t& barrier_count) {
+uint32_t write_tiles_to_memory(
+    uint32_t& out_tile_id,
+    const WriterType& out_writer,
+    uint32_t& barrier_count,
+    SDPADecodeWriterProfiler* profiler = nullptr) {
     constexpr uint32_t tile_bytes = get_tile_size(cb_out);
     uint32_t l1_read_addr = get_read_ptr(cb_out);
     for (uint32_t tile = 0; tile < out_chunk_tiles; ++tile) {
+        uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
         noc_async_write_tile(out_tile_id, out_writer, l1_read_addr);
+        if (profiler != nullptr) {
+            profiler->issue_cycles += read_wall_clock_cycles() - issue_start;
+        }
         ++out_tile_id;
         l1_read_addr += tile_bytes;
         if (++barrier_count == barrier_threshold) {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
             noc_async_writes_flushed();
+            if (profiler != nullptr) {
+                profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+            }
             barrier_count = 0;
         }
     }
@@ -416,7 +442,8 @@ uint32_t write_partial_tiles_to_memory(
     uint32_t& barrier_count,
     uint32_t cur_head,            // kv-head group index 0..num_kv_heads-1
     uint32_t num_heads_to_write,  // q-heads per kv-head group, e.g. 8
-    uint32_t out_chunk_tiles) {   // total tiles = PNHt * vDHt
+    uint32_t out_chunk_tiles,
+    SDPADecodeWriterProfiler* profiler = nullptr) {  // total tiles = PNHt * vDHt
     constexpr uint32_t FACE_HW = 16;
     constexpr uint32_t TILE_HW = 32;
     constexpr uint32_t FACE_ELEMENT_CNT = FACE_HW * FACE_HW;
@@ -446,6 +473,7 @@ uint32_t write_partial_tiles_to_memory(
             uint64_t out_writer_noc_addr_head = out_writer_tile_addr + in_tile_offset;
 
             // Write first phase
+            uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
             noc_async_write(l1_read_addr_head, out_writer_noc_addr_head, FACE_LINE_BYTES);
 
             // Write second phase
@@ -453,9 +481,16 @@ uint32_t write_partial_tiles_to_memory(
                 l1_read_addr_head + FACE_ELEMENT_CNT * ELEMENT_SIZE,
                 out_writer_noc_addr_head + FACE_ELEMENT_CNT * ELEMENT_SIZE,
                 FACE_LINE_BYTES);
+            if (profiler != nullptr) {
+                profiler->issue_cycles += read_wall_clock_cycles() - issue_start;
+            }
 
             if (++barrier_count == barrier_threshold) {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_writes_flushed();
+                if (profiler != nullptr) {
+                    profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+                }
                 barrier_count = 0;
             }
         }
@@ -587,8 +622,17 @@ uint64_t read_k(
     volatile tt_l1_ptr uint16_t* page_table_ptr_u16,
     volatile tt_l1_ptr uint32_t* page_table_ptr_u32,
     uint32_t& barrier_count,
-    const KMcastParams& mcast_params = {}) {
-    cb_reserve_back(cb_k_in, k_chunk_tiles);
+    const KMcastParams& mcast_params = {},
+    SDPAPagedReadProfiler* profiler = nullptr) {
+    {
+        uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+        cb_reserve_back(cb_k_in, k_chunk_tiles);
+        if (profiler != nullptr) {
+            uint64_t elapsed = read_wall_clock_cycles() - start;
+            profiler->reserve_cycles += elapsed;
+            profiler->k_reserve_cycles += elapsed;
+        }
+    }
     uint32_t k_write_ptr = get_write_ptr(cb_k_in);
     uint64_t k_base_read_ptr = get_noc_addr(k_write_ptr);
     barrier_count = 0;
@@ -605,16 +649,36 @@ uint64_t read_k(
                         : virtual_seq_tile_id_to_physical_tile_id<uint32_t, num_kv_heads, block_size_t, DHt>(
                               virtual_k_tile_row_num, cur_head, page_table_ptr_u32);
                 for (uint32_t col = 0; col < DHt; ++col) {
+                    uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read_tile(physical_k_tile_id, k_reader, k_write_ptr_col);
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                        profiler->issue_cycles += elapsed;
+                        profiler->k_issue_cycles += elapsed;
+                    }
                     physical_k_tile_id += 1;
                     k_write_ptr_col += Sk_chunk_t_dynamic * k_tile_bytes;
                     if (++barrier_count == barrier_threshold) {
+                        uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                         noc_async_read_barrier();
+                        if (profiler != nullptr) {
+                            uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                            profiler->wait_cycles += elapsed;
+                            profiler->k_wait_cycles += elapsed;
+                        }
                         barrier_count = 0;
                     }
                 }
             }
-            noc_async_read_barrier();
+            {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+                noc_async_read_barrier();
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                    profiler->wait_cycles += elapsed;
+                    profiler->k_wait_cycles += elapsed;
+                }
+            }
             // Multicast the full K^T chunk to all receiver cores at once
             uint64_t dst_mcast_addr = get_noc_multicast_addr(
                 mcast_params.mcast_x,   // x (same column)
@@ -622,14 +686,28 @@ uint64_t read_k(
                 mcast_params.mcast_x,   // x (same column)
                 mcast_params.mcast_y1,  // y_end
                 k_write_ptr);
+            uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
             noc_async_write_multicast(
                 k_write_ptr,
                 dst_mcast_addr,
                 k_chunk_tiles * k_tile_bytes,
                 mcast_params.num_dests,
                 /*linked=*/false);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                profiler->issue_cycles += elapsed;
+                profiler->k_issue_cycles += elapsed;
+            }
             // Ensure data multicast is complete before signaling
-            noc_async_write_barrier();
+            {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+                noc_async_write_barrier();
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                    profiler->wait_cycles += elapsed;
+                    profiler->k_wait_cycles += elapsed;
+                }
+            }
             // Signal all receivers that the full K^T chunk is ready
             constexpr uint32_t VALID = 1;
             noc_semaphore_set(mcast_params.mcast_sem_ptr, VALID);
@@ -640,14 +718,44 @@ uint64_t read_k(
                 mcast_params.mcast_y1,
                 mcast_params.mcast_sem_addr);
             noc_semaphore_set_multicast(mcast_params.mcast_sem_addr, sem_mcast_addr, mcast_params.num_dests, false);
-            cb_push_back(cb_k_in, k_chunk_tiles);
-            noc_async_write_barrier();
+            {
+                uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+                cb_push_back(cb_k_in, k_chunk_tiles);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - push_start;
+                    profiler->push_cycles += elapsed;
+                    profiler->k_push_cycles += elapsed;
+                }
+            }
+            {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+                noc_async_write_barrier();
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                    profiler->wait_cycles += elapsed;
+                    profiler->k_wait_cycles += elapsed;
+                }
+            }
         } else {
             // Wait for single signal that the full K^T chunk is ready
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
             noc_semaphore_wait(mcast_params.mcast_sem_ptr, 1);
             noc_semaphore_set(mcast_params.mcast_sem_ptr, 0);
             noc_async_atomic_barrier();
-            cb_push_back(cb_k_in, k_chunk_tiles);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->k_wait_cycles += elapsed;
+            }
+            {
+                uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+                cb_push_back(cb_k_in, k_chunk_tiles);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - push_start;
+                    profiler->push_cycles += elapsed;
+                    profiler->k_push_cycles += elapsed;
+                }
+            }
         }
     } else {
         // Non-multicast path: original transposed read
@@ -661,18 +769,46 @@ uint64_t read_k(
                     : virtual_seq_tile_id_to_physical_tile_id<uint32_t, num_kv_heads, block_size_t, DHt>(
                           virtual_k_tile_row_num, cur_head, page_table_ptr_u32);
             for (uint32_t col = 0; col < DHt; ++col) {
+                uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_read_tile(physical_k_tile_id, k_reader, k_write_ptr_col);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                    profiler->issue_cycles += elapsed;
+                    profiler->k_issue_cycles += elapsed;
+                }
                 physical_k_tile_id += 1;                               // Go to next tile in row
                 k_write_ptr_col += Sk_chunk_t_dynamic * k_tile_bytes;  // Go to next column in CB
 
                 if (++barrier_count == barrier_threshold) {
+                    uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read_barrier();
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                        profiler->wait_cycles += elapsed;
+                        profiler->k_wait_cycles += elapsed;
+                    }
                     barrier_count = 0;
                 }
             }
         }
-        noc_async_read_barrier();
-        cb_push_back(cb_k_in, k_chunk_tiles);
+        {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+            noc_async_read_barrier();
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->k_wait_cycles += elapsed;
+            }
+        }
+        {
+            uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+            cb_push_back(cb_k_in, k_chunk_tiles);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - push_start;
+                profiler->push_cycles += elapsed;
+                profiler->k_push_cycles += elapsed;
+            }
+        }
     }
     return k_base_read_ptr;
 }
@@ -697,8 +833,17 @@ void read_v(
     volatile tt_l1_ptr uint32_t* page_table_ptr_u32,
     uint32_t& barrier_count,
     uint64_t k_base_read_ptr = 0,
-    uint32_t k_tile_bytes = 0) {
-    cb_reserve_back(cb_v_in, v_chunk_tiles);
+    uint32_t k_tile_bytes = 0,
+    SDPAPagedReadProfiler* profiler = nullptr) {
+    {
+        uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+        cb_reserve_back(cb_v_in, v_chunk_tiles);
+        if (profiler != nullptr) {
+            uint64_t elapsed = read_wall_clock_cycles() - start;
+            profiler->reserve_cycles += elapsed;
+            profiler->v_reserve_cycles += elapsed;
+        }
+    }
     uint32_t v_write_ptr = get_write_ptr(cb_v_in);
     if constexpr (reuse_k) {
         // Read V chunk (transpose of K), from K's L1 buffer
@@ -706,12 +851,26 @@ void read_v(
         for (uint32_t row = 0; row < Sk_chunk_t_dynamic; ++row) {  // Row of V
             k_read_ptr = k_base_read_ptr + row * k_tile_bytes;     // Increment across K's Col
             for (uint32_t col = 0; col < vDHt; ++col) {            // Col of V
+                uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_read(k_read_ptr, v_write_ptr, v_tile_bytes);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                    profiler->issue_cycles += elapsed;
+                    profiler->v_issue_cycles += elapsed;
+                }
                 v_write_ptr += v_tile_bytes;
                 k_read_ptr += Sk_chunk_t_dynamic * k_tile_bytes;  // Stride across K's width
             }
         }
-        noc_async_read_barrier();
+        {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+            noc_async_read_barrier();
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->v_wait_cycles += elapsed;
+            }
+        }
     } else {
         // Read V chunk in row major order, write in row-major order
         // V is an independent tensor with its own layout (width = vDHt, not DHt)
@@ -726,20 +885,48 @@ void read_v(
                     : virtual_seq_tile_id_to_physical_tile_id<uint32_t, num_kv_heads, block_size_t, vDHt>(
                           virtual_v_tile_row_num, cur_head, page_table_ptr_u32);
             for (uint32_t col = 0; col < vDHt; ++col) {
+                uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_read_tile(physical_v_tile_id, v_reader, v_write_ptr);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                    profiler->issue_cycles += elapsed;
+                    profiler->v_issue_cycles += elapsed;
+                }
                 physical_v_tile_id += 1;
                 v_write_ptr += v_tile_bytes;
 
                 if (++barrier_count == barrier_threshold) {
+                    uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read_barrier();
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                        profiler->wait_cycles += elapsed;
+                        profiler->v_wait_cycles += elapsed;
+                    }
                     barrier_count = 0;
                 }
             }
             // No padding to skip - V is an independent tensor with contiguous layout
         }
-        noc_async_read_barrier();
+        {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+            noc_async_read_barrier();
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->v_wait_cycles += elapsed;
+            }
+        }
     }
-    cb_push_back(cb_v_in, v_chunk_tiles);
+    {
+        uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+        cb_push_back(cb_v_in, v_chunk_tiles);
+        if (profiler != nullptr) {
+            uint64_t elapsed = read_wall_clock_cycles() - push_start;
+            profiler->push_cycles += elapsed;
+            profiler->v_push_cycles += elapsed;
+        }
+    }
 }
 
 template <

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "3-decode-host-dram-s-block-root",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/src/3-decode-host-dram-s-block-root.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/3-decode-host-dram-s-block-root.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/3-decode-host-dram-s-block-root.png"
+  },
+  {
+    "name": "4-decode-s-block",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/src/4-decode-s-block.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/4-decode-s-block.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/4-decode-s-block.png"
+  },
+  {
+    "name": "5-decode-s-block-reduction-root-output-gather",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/src/5-decode-s-block-reduction-root-output-gather.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/5-decode-s-block-reduction-root-output-gather.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/5-decode-s-block-reduction-root-output-gather.png"
+  },
+  {
+    "name": "6-decode-core",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/src/6-decode-core.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/6-decode-core.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/6-decode-core.png"
+  },
+  {
+    "name": "7-prefill-core-dram-forwarding-writer",
+    "source": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/src/7-prefill-core-dram-forwarding-writer.mmd",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/7-prefill-core-dram-forwarding-writer.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/7-prefill-core-dram-forwarding-writer.png"
+  }
+]

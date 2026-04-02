@@ -1,0 +1,36 @@
+sequenceDiagram
+    participant Host as Host CPU / Python
+    participant Rt as Host Runtime / Program Factory
+    participant DRAM as DRAM / paged KV cache
+    participant QSrc as Q source / output-core L1
+    participant SR as Sender Reader / NCRISC
+    participant RR as Receiver Reader / NCRISC
+    participant CT as Worker Compute / TRISC
+    participant WW as Worker Writer / BRISC
+    participant RootW as Root Writer / BRISC
+    participant RootC as Root Compute / TRISC
+
+    Note over Host,RootC: decode 主线的控制面 + 数据面。Host 不是只“拉起 kernel”，而是在 host 侧就布好 Q local replicate、K multicast、tree reduction、root/output core。
+
+    Host->>Rt: 计算 grid / column group / root core / output core
+    Host->>Rt: 生成 per-core args、CB map、page table、semaphore 地址
+    Rt->>SR: launch reader with page-table / cb_k_in / k_mcast_semaphore_id
+    Rt->>WW: launch writer with reducer_semaphore_addr / output_semaphore_addr
+    Rt->>CT: launch compute with Q/K/V/mask CB bindings
+    Rt->>RootW: launch root/output role
+
+    SR->>DRAM: paged read K chunk (virtual -> physical tile)
+    QSrc-->>RR: Q local / output-core L1 visible
+    SR->>RR: K multicast + semaphore ready
+    RR->>CT: cb_push_back(cb_q_in / cb_k_in / cb_v_in / cb_mask_in)
+
+    CT->>CT: cb_wait_front(Q/K/V/mask)
+    CT->>CT: local SDPA compute
+    CT->>WW: cb_out_worker / cb_out_m / cb_out_l ready
+
+    WW->>RootW: noc_async_write(l/m/o -> cb_intermed_out)
+    WW->>RootW: reducer_semaphore_inc(child-ready)
+    RootW->>RootC: push child l/m/o into cb_l_in / cb_m_in / cb_out_o
+    RootC->>RootC: sdpa_reduce / sdpa_tail merge
+    RootW->>DRAM: final write or sharded output gather
+    RootW-->>Host: completion / output visible

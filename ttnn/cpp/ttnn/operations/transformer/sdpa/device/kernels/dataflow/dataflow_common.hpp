@@ -9,6 +9,29 @@
 #include "api/dataflow/dataflow_api.h"
 #include <tt-metalium/constants.hpp>
 #include "api/debug/assert.h"
+#include "tt_metal/tools/profiler/kernel_profiler.hpp"
+
+struct SDPAPagedReadProfiler {
+    uint64_t reserve_cycles = 0;
+    uint64_t issue_cycles = 0;
+    uint64_t wait_cycles = 0;
+    uint64_t push_cycles = 0;
+    uint64_t page_table_cycles = 0;
+    uint64_t k_reserve_cycles = 0;
+    uint64_t k_issue_cycles = 0;
+    uint64_t k_wait_cycles = 0;
+    uint64_t k_push_cycles = 0;
+    uint64_t v_reserve_cycles = 0;
+    uint64_t v_issue_cycles = 0;
+    uint64_t v_wait_cycles = 0;
+    uint64_t v_push_cycles = 0;
+};
+
+FORCE_INLINE uint64_t read_wall_clock_cycles() {
+    volatile uint tt_reg_ptr* clock_lo = reinterpret_cast<volatile uint tt_reg_ptr*>(RISCV_DEBUG_REG_WALL_CLOCK_L);
+    volatile uint tt_reg_ptr* clock_hi = reinterpret_cast<volatile uint tt_reg_ptr*>(RISCV_DEBUG_REG_WALL_CLOCK_H);
+    return clock_lo[0] | ((uint64_t)clock_hi[0] << 32);
+}
 
 template <uint32_t tile_bytes, uint32_t num_readers>
 constexpr uint32_t get_barrier_read_threshold() {
@@ -219,9 +242,16 @@ void read_paged_chunk_with_padding(
     const uint32_t barrier_threshold,
     const volatile tt_l1_ptr uint32_t* const page_table_ptr,
     const bool transpose = false,
-    const uint32_t skip_src_cols = 0) {
+    const uint32_t skip_src_cols = 0,
+    SDPAPagedReadProfiler* profiler = nullptr) {
     const uint32_t num_tiles = dst_rows * dst_cols;
-    cb_reserve_back(cb_id, num_tiles);
+    {
+        uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+        cb_reserve_back(cb_id, num_tiles);
+        if (profiler != nullptr) {
+            profiler->reserve_cycles += read_wall_clock_cycles() - start;
+        }
+    }
     const uint32_t base_write_ptr = get_write_ptr(cb_id);
 
     // Stride calculation based on transpose flag
@@ -236,19 +266,39 @@ void read_paged_chunk_with_padding(
             virtual_row_num, cur_head, page_table_ptr);
 
         for (uint32_t col = 0; col < src_cols; ++col) {
+            uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
             noc_async_read_tile(physical_tile_id, reader, write_ptr);
+            if (profiler != nullptr) {
+                profiler->issue_cycles += read_wall_clock_cycles() - issue_start;
+            }
             physical_tile_id += 1;
             write_ptr += inner_ptr_stride;
 
             if (++barrier_count == barrier_threshold) {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_read_barrier();
+                if (profiler != nullptr) {
+                    profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+                }
                 barrier_count = 0;
             }
         }
         physical_tile_id += skip_src_cols;  // Skip src cols if needed
     }
-    noc_async_read_barrier();
-    cb_push_back(cb_id, num_tiles);
+    {
+        uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+        noc_async_read_barrier();
+        if (profiler != nullptr) {
+            profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+        }
+    }
+    {
+        uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+        cb_push_back(cb_id, num_tiles);
+        if (profiler != nullptr) {
+            profiler->push_cycles += read_wall_clock_cycles() - push_start;
+        }
+    }
 }
 
 template <uint32_t tile_bytes>
@@ -982,6 +1032,16 @@ void write_block(
     cb_pop_front(cb_id, num_tiles);
 }
 
+#ifndef SDPA_PREFILL_WRITER_PROFILER_DEFINED
+#define SDPA_PREFILL_WRITER_PROFILER_DEFINED
+struct SDPAPrefillWriterProfiler {
+    uint64_t wait_front_cycles = 0;
+    uint64_t issue_cycles = 0;
+    uint64_t wait_cycles = 0;
+    uint64_t pop_cycles = 0;
+};
+#endif
+
 template <typename TensorAccessorType>
 void write_block(
     const TensorAccessorType& out_writer,
@@ -991,27 +1051,54 @@ void write_block(
     const uint32_t cols,
     const uint32_t out_tile_id,
     const uint32_t tile_bytes,
-    const uint32_t barrier_threshold) {
+    const uint32_t barrier_threshold,
+    SDPAPrefillWriterProfiler* profiler = nullptr) {
     uint32_t barrier_count = 0;
     uint32_t tile_id = out_tile_id;
 
-    cb_wait_front(cb_out, out_chunk_tiles);
+    {
+        uint64_t wait_front_start = profiler ? read_wall_clock_cycles() : 0;
+        cb_wait_front(cb_out, out_chunk_tiles);
+        if (profiler != nullptr) {
+            profiler->wait_front_cycles += read_wall_clock_cycles() - wait_front_start;
+        }
+    }
 
     uint32_t l1_read_addr = get_read_ptr(cb_out);
     for (uint32_t row = 0; row < rows; ++row) {
         for (uint32_t col = 0; col < cols; ++col) {
+            uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
             noc_async_write_tile(tile_id, out_writer, l1_read_addr);
+            if (profiler != nullptr) {
+                profiler->issue_cycles += read_wall_clock_cycles() - issue_start;
+            }
             ++tile_id;
             l1_read_addr += tile_bytes;
 
             if (++barrier_count == barrier_threshold) {
+                uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_writes_flushed();
+                if (profiler != nullptr) {
+                    profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+                }
                 barrier_count = 0;
             }
         }
     }
-    noc_async_write_barrier();
-    cb_pop_front(cb_out, out_chunk_tiles);
+    {
+        uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+        noc_async_write_barrier();
+        if (profiler != nullptr) {
+            profiler->wait_cycles += read_wall_clock_cycles() - wait_start;
+        }
+    }
+    {
+        uint64_t pop_start = profiler ? read_wall_clock_cycles() : 0;
+        cb_pop_front(cb_out, out_chunk_tiles);
+        if (profiler != nullptr) {
+            profiler->pop_cycles += read_wall_clock_cycles() - pop_start;
+        }
+    }
 }
 
 template <uint32_t tile_bytes>

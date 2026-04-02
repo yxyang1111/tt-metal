@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant R as Reader / NCRISC
+    participant C as Compute / TRISC
+    participant W as Writer / BRISC
+
+    Note over R,W: decode_16k | 长序列形态已基本固定，reader / writer / compute 三侧强耦合
+
+    rect rgb(255, 240, 244)
+        loop steady-state tile
+            Note over R: reserve 59.71%<br/>issue 34.90%<br/>k_reserve 52.79%<br/>v_reserve 2.77%
+            R->>C: 输入供给越来越由 K reserve / downstream turnover 决定
+
+            Note over C: wait-front 442.9 us (71.96%)<br/>reserve-back 172.6 us (28.04%)<br/>max TRISC share 99.95%
+            C->>W: partial output 持续进入 sender / tree reduction
+
+            Note over W: cb_wait 99.56%<br/>sender 49.89%<br/>tree 50.11%<br/>issue/barrier/pop 接近 0
+            W-->>R: sender/tree 链路形成稳定回压
+            W-->>C: output/backpressure 已成为 bubble 的重要组成
+        end
+    end

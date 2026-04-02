@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FlashMLA Profile Dashboard</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #121925;
+      --panel-2: #0f141d;
+      --text: #f5f7fb;
+      --muted: #9fb0c3;
+      --border: #223046;
+      --accent: #5c7cfa;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #162033 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+    }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 980px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    figure {
+      margin: 0;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+    }
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>FlashMLA Profile Dashboard</h1>
+    <p class="lead">这份 dashboard 把当前 WH detailed profile 和 BH 模型放到一页里，重点突出 decode 阶段迁移、reader/writer 内部分解，以及 A-BH 一阶/二阶/B 的差异。</p>
+    <section class="cards">
+      <div class="card">
+        <div class="label">Decode 迁移</div>
+        <div class="value">compute -&gt; writer -&gt; reader</div>
+        <div class="hint">`256~1k` compute-critical，`2k~8k` writer-close，`16k` reader-close，`32k` reader/writer saturated。</div>
+      </div>
+      <div class="card">
+        <div class="label">Reader Reserve</div>
+        <div class="value">61.5%</div>
+        <div class="hint">`decode_32k` 的 reader 主导项已经是 reserve，而不是 issue。</div>
+      </div>
+      <div class="card">
+        <div class="label">Writer cb_wait</div>
+        <div class="value">99.8%</div>
+        <div class="hint">长序列 decode 的 writer 主要是在等结果 ready，而不是等写带宽。</div>
+      </div>
+      <div class="card">
+        <div class="label">BH 32k 差距</div>
+        <div class="value">5.6x</div>
+        <div class="hint">`A-BH empirical` 相对 `B-BH ideal` 的结构差距。</div>
+      </div>
+    </section>
+    <section class="grid">
+      <figure><img src="visuals/decode_thread_shares.svg" alt="Decode stage migration"></figure>
+      <figure><img src="visuals/decode_reader_breakdown.svg" alt="Decode reader breakdown"></figure>
+      <figure><img src="visuals/decode_writer_breakdown.svg" alt="Decode writer breakdown"></figure>
+      <figure><img src="visuals/normalized_latency.svg" alt="Prefill vs decode normalized latency"></figure>
+      <figure><img src="visuals/bh_latency_comparison.svg" alt="BH latency comparison"></figure>
+      <figure><img src="visuals/bh_active_core_sweep.svg" alt="BH active core sweep"></figure>
+    </section>
+    <p class="footnote">说明：当前 dashboard 使用现有 detailed JSON 和 simple BH simulation JSON。新接入的 source-level marker 要在下次重跑 detailed sweep 后才会真正出现在结果里。</p>
+  </div>
+</body>
+</html>

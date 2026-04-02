@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant R as Reader / NCRISC
+    participant C as Compute / TRISC
+    participant W as Writer / BRISC
+
+    Note over R,W: decode_32k | reader_writer_saturated，16k 形态继续固化
+
+    rect rgb(246, 239, 255)
+        loop steady-state tile
+            Note over R: reserve 61.54%<br/>issue 33.38%<br/>k_reserve 54.82%
+            R->>C: reader 几乎一直受 K path reserve 限制
+
+            Note over C: wait-front 829.7 us (70.91%)<br/>reserve-back 340.3 us (29.09%)
+            C->>W: 输出推进到 sender / tree reduction
+
+            Note over W: cb_wait 99.77%<br/>sender 49.95%<br/>tree 50.05%
+            W-->>R: 回压继续锁定 reader turnover
+            W-->>C: reserve-back 继续抬升
+        end
+    end

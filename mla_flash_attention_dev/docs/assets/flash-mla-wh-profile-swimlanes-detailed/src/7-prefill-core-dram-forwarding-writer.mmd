@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant Host as Host CPU
+    participant DRAM as DRAM / K-V-Q source
+    participant R0 as Sender Reader / NCRISC
+    participant Fwd as Forward / valid semaphore
+    participant C0 as Worker0 Compute / TRISC
+    participant R1 as Receiver Reader / NCRISC
+    participant C1 as Worker1 Compute / TRISC
+    participant W as Writer / BRISC
+    participant OUT as Output shard / DRAM
+
+    Note over Host,OUT: prefill 没有 decode 那种 K reuse + tree reduction 主路径；它更像是多 core forwarding + reader wait + writer cb_wait 的强耦合流水线。
+
+    Host->>R0: launch with page table / chunk_start_idx / mask args
+    R0->>DRAM: read Q chunk / paged K / explicit V
+    R0->>Fwd: sender_ready / valid semaphore + cb_q_in/cb_k_in/cb_v_in
+
+    Fwd->>R1: noc_async_write / noc_async_write_multicast forward next tiles
+    R1->>C1: cb_push_back(cb_q_in / cb_k_in / cb_v_in / cb_mask_in)
+    R0->>C0: local cb_push_back(cb_q_in / cb_k_in / cb_v_in / cb_mask_in)
+
+    C0->>C0: cb_wait_front(Q/K/V/mask) + local attention compute
+    C1->>C1: cb_wait_front(Q/K/V/mask) + local attention compute
+
+    C0->>W: cb_out push
+    C1->>W: cb_out push
+    W->>W: cb_wait_front(cb_out) dominates
+    W->>OUT: chunk write / partial tile write / handoff

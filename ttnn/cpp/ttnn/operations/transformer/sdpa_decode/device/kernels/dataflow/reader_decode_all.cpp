@@ -214,9 +214,11 @@ void kernel_main() {
     uint32_t page_table_cb_wr_ptr = 0;
     volatile tt_l1_ptr uint16_t* page_table_ptr_u16 = nullptr;
     volatile tt_l1_ptr uint32_t* page_table_ptr_u32 = nullptr;
+    SDPAPagedReadProfiler paged_read_profiler{};
     if constexpr (is_paged_attention) {
         constexpr uint32_t cb_id_page_table = tt::CBIndex::c_9;
         uint32_t num_pages_to_read = is_page_table_sharded ? B : 1;
+        uint64_t page_table_start = read_wall_clock_cycles();
         cb_reserve_back(cb_id_page_table, num_pages_to_read);
         // Read page table from DRAM
         if constexpr (!is_page_table_sharded) {
@@ -233,6 +235,7 @@ void kernel_main() {
             page_table_ptr_u16 = reinterpret_cast<volatile tt_l1_ptr uint16_t*>(page_table_cb_wr_ptr);
         }
         cb_push_back(cb_id_page_table, num_pages_to_read);
+        paged_read_profiler.page_table_cycles += read_wall_clock_cycles() - page_table_start;
     }
 
     for (uint32_t cur_head = cur_head_group * num_heads_per_core;
@@ -274,7 +277,8 @@ void kernel_main() {
                     page_table_ptr_u16,
                     page_table_ptr_u32,
                     barrier_count,
-                    k_mcast_params);
+                    k_mcast_params,
+                    &paged_read_profiler);
 
                 if constexpr (use_attention_mask) {
                     mask_start_tile_id = read_mask_chunk<cb_mask_in, mask_tile_bytes, barrier_threshold, PNHt>(
@@ -299,7 +303,8 @@ void kernel_main() {
                     page_table_ptr_u32,
                     barrier_count,
                     k_base_read_ptr,
-                    k_tile_bytes);
+                    k_tile_bytes,
+                    &paged_read_profiler);
             }
         } else {
             // Offset for current batch
@@ -343,5 +348,21 @@ void kernel_main() {
                 v_tile_bytes,
                 PSt);
         }
+    }
+
+    if (paged_read_profiler.page_table_cycles > 0) {
+        DeviceTimestampedData("SDPA-PAGE-TABLE-SUM", paged_read_profiler.page_table_cycles);
+        DeviceTimestampedData("SDPA-PAGED-RESERVE-SUM", paged_read_profiler.reserve_cycles);
+        DeviceTimestampedData("SDPA-PAGED-ISSUE-SUM", paged_read_profiler.issue_cycles);
+        DeviceTimestampedData("SDPA-PAGED-WAIT-SUM", paged_read_profiler.wait_cycles);
+        DeviceTimestampedData("SDPA-PAGED-PUSH-SUM", paged_read_profiler.push_cycles);
+        DeviceTimestampedData("SDPA-K-RESERVE-SUM", paged_read_profiler.k_reserve_cycles);
+        DeviceTimestampedData("SDPA-K-ISSUE-SUM", paged_read_profiler.k_issue_cycles);
+        DeviceTimestampedData("SDPA-K-WAIT-SUM", paged_read_profiler.k_wait_cycles);
+        DeviceTimestampedData("SDPA-K-PUSH-SUM", paged_read_profiler.k_push_cycles);
+        DeviceTimestampedData("SDPA-V-RESERVE-SUM", paged_read_profiler.v_reserve_cycles);
+        DeviceTimestampedData("SDPA-V-ISSUE-SUM", paged_read_profiler.v_issue_cycles);
+        DeviceTimestampedData("SDPA-V-WAIT-SUM", paged_read_profiler.v_wait_cycles);
+        DeviceTimestampedData("SDPA-V-PUSH-SUM", paged_read_profiler.v_push_cycles);
     }
 }

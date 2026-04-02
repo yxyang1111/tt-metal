@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant R as Reader / NCRISC
+    participant C as Compute / TRISC
+    participant W as Writer / BRISC
+
+    Note over R,W: prefill_4k | direct PM util 可读，但主 wall-time 仍由流水线等待决定
+
+    rect rgb(238, 252, 241)
+        loop steady-state chunk
+            Note over R: wait 66.10%<br/>issue 33.15%<br/>reserve 0.33%<br/>NCRISC share 99.98%
+            R->>C: tile 到达前存在长 in-flight read wait
+
+            Note over C: PM FPU util 19.427%<br/>PM compute 10.785 ms / kernel 55.516 ms<br/>wait-front 92.6% of bubble
+            C->>W: compute / reduction output 前送
+
+            Note over W: cb_wait 99.62%<br/>issue 0.19%<br/>barrier 0.19%<br/>BRISC share 100.00%
+            W-->>C: 持续等待 compute/reduction 结果 ready
+        end
+    end

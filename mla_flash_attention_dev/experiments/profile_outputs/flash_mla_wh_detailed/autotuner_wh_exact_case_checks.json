@@ -1,0 +1,38 @@
+[
+  {
+    "case": "decode_4k",
+    "measured_candidate_count": 1,
+    "best_selection_source": "analytical",
+    "best_selected_latency_ms": 0.1197596914997652,
+    "best_estimated_latency_ms": 0.1197596914997652,
+    "measured_candidates": [
+      {
+        "rank": 65,
+        "candidate_key": "575d239f8a4f25d9e6919b7eae88af51f9b038c8",
+        "selected_latency_ms": 0.17185466666666666,
+        "estimated_latency_ms": 0.1651079470704025,
+        "math_fidelity": "HiFi4",
+        "topology_mode": "independent",
+        "k_chunk_size": 128
+      }
+    ]
+  },
+  {
+    "case": "prefill_1k",
+    "measured_candidate_count": 1,
+    "best_selection_source": "analytical",
+    "best_selected_latency_ms": 0.604561143401001,
+    "best_estimated_latency_ms": 0.604561143401001,
+    "measured_candidates": [
+      {
+        "rank": 65,
+        "candidate_key": "5d299fcc03669d229362dea721fcc40d6ba39142",
+        "selected_latency_ms": 4.009475833333333,
+        "estimated_latency_ms": 6.558598109263593,
+        "math_fidelity": "HiFi4",
+        "topology_mode": "independent",
+        "k_chunk_size": 128
+      }
+    ]
+  }
+]

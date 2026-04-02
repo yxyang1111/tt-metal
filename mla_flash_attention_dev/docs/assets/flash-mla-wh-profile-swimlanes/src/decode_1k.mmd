@@ -1,0 +1,19 @@
+sequenceDiagram
+    participant R as Reader / NCRISC
+    participant C as Compute / TRISC
+    participant W as Writer / BRISC
+
+    Note over R,W: decode_1k | compute 仍是最后退休线程，reader 以 K/V issue 为主
+
+    rect rgb(239, 246, 255)
+        loop steady-state tile
+            Note over R: issue 77.27%<br/>reserve 0.70%<br/>wait 16.49%<br/>K total 72.51% / V total 27.49%
+            R->>C: 连续发 K/V tile
+
+            Note over C: max TRISC share 99.64%<br/>wait-front 187.5 us<br/>bubble 内占比 86.12%<br/>reserve-back 30.2 us
+            C->>W: 产出 partial output / reduction fragment
+
+            Note over W: cb_wait 94.15%<br/>sender 48.58%<br/>tree 51.42%<br/>root/output-gather = 0%
+            W-->>C: 已有回压，但 output-side 仍不是主导矛盾
+        end
+    end

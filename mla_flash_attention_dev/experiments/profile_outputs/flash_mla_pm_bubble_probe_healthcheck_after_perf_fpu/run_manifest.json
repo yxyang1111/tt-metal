@@ -1,0 +1,17 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_healthcheck_after_perf_fpu",
+  "preflight": {
+    "case": "decode_1k",
+    "status": "failed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+      "--child-run",
+      "--case",
+      "decode_1k"
+    ],
+    "error": "preflight exited with return code 1",
+    "attempts": 1
+  },
+  "cases": []
+}

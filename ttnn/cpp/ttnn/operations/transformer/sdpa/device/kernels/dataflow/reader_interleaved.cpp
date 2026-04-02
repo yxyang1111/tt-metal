@@ -248,6 +248,7 @@ void kernel_main() {
     const auto attention_sink_tile_shape = TensorTileShape(B, NQH, 1, 1);
 
     volatile tt_l1_ptr uint32_t* page_table_ptr;
+    SDPAPagedReadProfiler paged_read_profiler{};
 
     uint32_t chunked_q_chunk_offset = 0;
     if constexpr (is_chunked) {
@@ -293,10 +294,12 @@ void kernel_main() {
         for (uint32_t nb = local_batch_start; nb < local_batch_end; ++nb) {
             if constexpr (is_chunked) {
                 // Chunked means that we have paged attention
+                uint64_t page_table_start = read_wall_clock_cycles();
                 cb_reserve_back(cb_id_page_table, 1);
                 page_table_ptr = read_page_table_for_batch(
                     cb_id_page_table, nb, page_table_args, page_table_addr, page_table_stick_size);
                 cb_push_back(cb_id_page_table, 1);
+                paged_read_profiler.page_table_cycles += read_wall_clock_cycles() - page_table_start;
             }
 
             // Calculate mask batch offset based on broadcasting (using unpadded mask dimensions):
@@ -436,7 +439,9 @@ void kernel_main() {
                                     k_tile_bytes,
                                     barrier_threshold,
                                     page_table_ptr,
-                                    true  // transpose=true for K reads
+                                    true,  // transpose=true for K reads
+                                    0,
+                                    &paged_read_profiler
                                 );
                             } else {
                                 if (should_forward) {
@@ -584,7 +589,8 @@ void kernel_main() {
                                     barrier_threshold,
                                     page_table_ptr,
                                     false,
-                                    skip_src_cols);
+                                    skip_src_cols,
+                                    &paged_read_profiler);
                             } else {
                                 if (should_forward) {
                                     cb_v_start_address = read_chunk_for_forwarding<v_tile_bytes, false>(
@@ -641,5 +647,13 @@ void kernel_main() {
                 cb_pop_front(cb_id_page_table, 1);
             }
         }
+    }
+
+    if (paged_read_profiler.page_table_cycles > 0) {
+        DeviceTimestampedData("SDPA-PAGE-TABLE-SUM", paged_read_profiler.page_table_cycles);
+        DeviceTimestampedData("SDPA-PAGED-RESERVE-SUM", paged_read_profiler.reserve_cycles);
+        DeviceTimestampedData("SDPA-PAGED-ISSUE-SUM", paged_read_profiler.issue_cycles);
+        DeviceTimestampedData("SDPA-PAGED-WAIT-SUM", paged_read_profiler.wait_cycles);
+        DeviceTimestampedData("SDPA-PAGED-PUSH-SUM", paged_read_profiler.push_cycles);
     }
 }

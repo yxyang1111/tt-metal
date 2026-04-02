@@ -1,0 +1,733 @@
+%%
+%% ICPP 2026 Paper — Multicast-Aware Attention Dataflow on Tenstorrent Many-Core
+%% Based on ACM acmart sigconf template
+%%
+
+%% For submission / review:
+\documentclass[sigconf, review, anonymous]{acmart}
+%% For camera-ready:
+% \documentclass[sigconf]{acmart}
+
+%%
+%% Useful packages
+%%
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{booktabs}
+\usepackage{subcaption}
+\usepackage{xspace}
+
+%%
+%% Custom commands
+%%
+\newcommand{\sysname}{\textsc{McastAttn}\xspace}
+\newcommand{\ie}{\textit{i.e.}\xspace}
+\newcommand{\eg}{\textit{e.g.}\xspace}
+\newcommand{\etal}{\textit{et al.}\xspace}
+\newcommand{\Bkv}{B_{\mathrm{kv}}}
+\newcommand{\Ghead}{G_{\mathrm{head}}}
+\newcommand{\Tgroup}{T_{\mathrm{group}}}
+
+%%
+%% Rights / conference metadata — update when known
+%%
+\setcopyright{acmlicensed}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{XXXXXXX.XXXXXXX}
+\acmConference[ICPP '26]{ACM International Conference on Parallel Processing}{August 2026}{TBD}
+\acmISBN{978-1-4503-XXXX-X/2026/08}
+
+%%
+%% Document
+%%
+\begin{document}
+
+%% ============================================================
+%%  TITLE
+%% ============================================================
+\title{Multicast-Aware Attention Dataflow and Auto-Tuning\\on Tenstorrent Many-Core for LLM Decode Inference}
+
+%% ============================================================
+%%  AUTHORS — replace with real info
+%% ============================================================
+\author{First Author}
+\affiliation{%
+  \institution{University / Lab}
+  \city{City}
+  \country{Country}}
+\email{first@example.com}
+
+\author{Second Author}
+\affiliation{%
+  \institution{University / Lab}
+  \city{City}
+  \country{Country}}
+\email{second@example.com}
+
+\renewcommand{\shortauthors}{Author et al.}
+
+%% ============================================================
+%%  ABSTRACT
+%% ============================================================
+\begin{abstract}
+Large Language Model (LLM) inference is increasingly dominated by the
+\emph{decode} phase, where each token generation step reads a large
+KV cache from DRAM — making multi-head attention (MHA) severely
+memory-bound. On many-core accelerators with tens to hundreds of
+processing elements, a na\"ive mapping causes each core to redundantly
+read KV data from DRAM, inflating total memory traffic linearly with
+the number of consumer cores.
+
+We present \sysname, a \emph{multicast-aware attention dataflow} and
+accompanying \emph{auto-tuner} targeting the Tenstorrent Wormhole
+many-core architecture. \sysname exploits Tensix's decoupled data
+movers, circular buffers, and dual on-chip network (NoC) to read each
+KV cache block from DRAM \emph{exactly once} and distribute it via
+hardware multicast, while overlapping data movement with computation in
+a pipelined schedule. An analytical cost model captures DRAM traffic,
+NoC multicast latency, and compute utilization as closed-form functions
+of workload parameters and a compact design space of \emph{head
+grouping}, \emph{tile grouping}, \emph{block sizes}, and \emph{pipeline
+depth}. The auto-tuner enumerates this space and outputs near-optimal
+configurations without manual tuning.
+
+Evaluation on Tenstorrent Wormhole N300 shows that \sysname reduces
+per-step DRAM traffic by up to $X\times$ compared to the per-core-read
+baseline, and improves decode latency by $Y$\% over a fixed-dataflow
+configuration across representative LLaMA-style workloads ($L$ up to
+4096, $d \in \{64,128\}$, $H$ up to 32). The auto-tuner finds
+configurations within Z\% of exhaustive search in under one second.
+\end{abstract}
+
+%% ============================================================
+%%  CCS CONCEPTS — generate at https://dl.acm.org/ccs
+%% ============================================================
+\begin{CCSXML}
+<ccs2012>
+ <concept>
+  <concept_id>10010520.10010521.10010537.10010540</concept_id>
+  <concept_desc>Computer systems organization~Multicore architectures</concept_desc>
+  <concept_significance>500</concept_significance>
+ </concept>
+ <concept>
+  <concept_id>10010520.10010575.10010755</concept_id>
+  <concept_desc>Computer systems organization~Interconnection architectures</concept_desc>
+  <concept_significance>300</concept_significance>
+ </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computer systems organization~Multicore architectures}
+\ccsdesc[300]{Computer systems organization~Interconnection architectures}
+
+\keywords{LLM inference, multi-head attention, decode, KV cache,
+many-core, multicast, on-chip network, auto-tuning, Tenstorrent, Wormhole}
+
+\maketitle
+
+%% ============================================================
+%%  1. INTRODUCTION
+%% ============================================================
+\section{Introduction}\label{sec:intro}
+
+%% OUTLINE:
+%% - 开场：LLM 推理需求爆发，decode 阶段逐 token 生成，注意力是核心瓶颈
+%% - 问题：decode attention 极度 memory-bound，KV cache 读取占主导
+%% - 众核机会：Tenstorrent Wormhole 等众核加速器有数百核与片上网络，
+%%   但朴素映射导致每核独立读 DRAM → 冗余流量线性增长
+%% - 缺口：FlatAttention 面向通用 tile / prefill / 仿真，
+%%   未针对 Tensix 架构特性（解耦 data mover, CB, 双 NoC）和 decode 场景
+%% - 本文方案一句话：多播感知数据流 + 解析代价模型 + 自动寻优
+%% - 贡献列表（4 条，与 abstract 对应）
+
+\textbf{TODO: Write full introduction.}
+
+We make the following contributions:
+\begin{itemize}
+  \item A \emph{Tensix-specific attention dataflow} that reads Q/K/V
+    from DRAM once and multicasts to consumer cores with decoupled
+    move-compute overlap.
+  \item A \emph{decode-phase KV cache multicast} design (producer–consumer
+    graph, block size, single-/multi-card) that reduces DRAM traffic
+    toward the theoretical minimum.
+  \item An \emph{analytical cost model and auto-tuner} for head/tile
+    grouping and pipeline layout that adapts to varying $(L, d, H, B)$
+    without manual tuning.
+  \item \emph{Evaluation on real Tenstorrent Wormhole hardware} showing
+    significant DRAM and latency improvements over baselines.
+\end{itemize}
+
+
+%% ============================================================
+%%  2. BACKGROUND AND RELATED WORK
+%% ============================================================
+\section{Background and Related Work}\label{sec:background}
+
+%%% ----- 2.1 Multi-Head Attention and the Decode Phase -----
+
+\subsection{Multi-Head Attention and the Decode Phase}\label{sec:bg-mha}
+
+The Transformer architecture~\cite{vaswani2017attention} employs
+multi-head attention (MHA) as its core sequence-modeling primitive.
+For each of the $H$ attention heads, a query, key, and value triple
+$(Q_h, K_h, V_h)$ is derived via learned linear projections, and
+attention is computed as
+\begin{equation}\label{eq:mha}
+  \mathrm{Attn}_h
+    = \mathrm{softmax}\!\Bigl(\frac{Q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h ,
+\end{equation}
+where $d$ denotes the per-head dimension and $L$ the sequence length,
+giving $Q_h, K_h, V_h \in \mathbb{R}^{L \times d}$.
+The outputs of all heads are concatenated and linearly projected to
+form the layer output.
+
+\paragraph{Prefill versus decode.}
+Autoregressive LLM inference proceeds in two distinct
+phases~\cite{pope2023efficiently}.
+The \emph{prefill} (prompt) phase processes the entire input prompt in
+a single forward pass, computing KV pairs for all $L$ input tokens
+simultaneously.  Because it executes $\mathcal{O}(L^2 d H)$ FLOPs over
+$\mathcal{O}(L d H)$ data elements, prefill is typically
+\emph{compute-bound}.
+The subsequent \emph{decode} phase generates one new token per step.
+At step~$t$, only the new token's query
+$q_h \in \mathbb{R}^{1 \times d}$ is produced, which attends over the
+full KV cache of length~$L$:
+\begin{equation}\label{eq:decode-attn}
+  o_h = \mathrm{softmax}\!\Bigl(\frac{q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h ,
+  \quad K_h, V_h \in \mathbb{R}^{L \times d}.
+\end{equation}
+This requires only $\mathcal{O}(L\,d)$ FLOPs per head but reads
+$\mathcal{O}(L\,d)$ elements of both $K$ and $V$ from memory, yielding
+an arithmetic intensity of $\mathcal{O}(1)$---firmly in the
+\emph{memory-bound} regime.
+
+\paragraph{KV cache traffic.}
+During decode, each step must read the K and V caches for all $H$
+heads from DRAM\@.  The total read volume per step is
+\begin{equation}\label{eq:kv-traffic}
+  D_{\mathrm{KV}} = 2\, L\, d\, H\, b_{\mathrm{elem}} ,
+\end{equation}
+where $b_{\mathrm{elem}}$ is the element size in bytes (\eg 2\,B for
+\texttt{bfloat16}).
+For a model with $H{=}32$ heads, $d{=}128$, and $L{=}4096$, this
+amounts to ${\approx}\,64$\,MB per step---imposing a hard latency floor
+set by available DRAM bandwidth.
+Variants such as grouped-query attention
+(GQA)~\cite{ainslie2023gqa} and multi-query attention
+(MQA)~\cite{shazeer2019mqa} reduce the number of distinct KV heads,
+lowering $D_{\mathrm{KV}}$ proportionally, yet the fundamental
+memory-bound character of decode attention persists at practical
+sequence lengths.
+
+%%% ----- 2.2 Tenstorrent Wormhole Architecture -----
+
+\subsection{Tenstorrent Wormhole Architecture}\label{sec:bg-wormhole}
+
+Tenstorrent Wormhole~\cite{tenstorrent2024wormhole} is a many-core
+accelerator designed for neural-network inference and training.
+We summarize the architectural features most relevant to our
+multicast-aware dataflow.
+
+\paragraph{Chip and card overview.}
+Each Wormhole chip integrates a grid of \emph{Tensix} processing cores
+connected by a pair of on-chip networks.
+The Wormhole N300 card used in our evaluation houses two chips with a
+total of $P{=}128$ usable Tensix cores and 12\,GB GDDR6 DRAM\@.
+Table~\ref{tab:hw-params} lists the key hardware parameters.
+
+\begin{table}[t]
+  \caption{Key hardware parameters of the Tenstorrent Wormhole N300.}
+  \label{tab:hw-params}
+  \centering
+  \small
+  \begin{tabular}{ll}
+    \toprule
+    \textbf{Parameter} & \textbf{Value} \\
+    \midrule
+    Tensix cores (N300)        & 128 (2 chips $\times$ 64 cores) \\
+    L1 SRAM per core           & 1\,MB scratchpad \\
+    DRAM capacity              & 12\,GB GDDR6 \\
+    DRAM bandwidth (aggregate) & ${\sim}$200\,GB/s \\
+    On-chip network            & Dual 2-D mesh (NoC\,0 \& NoC\,1) \\
+    Multicast support          & HW single-source rectangular \\
+    Compute per core           & BF16/FP16 matrix \& element-wise FMA \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\paragraph{Tensix core micro-architecture.}
+Each Tensix core contains five lightweight RISC-V processors
+(\emph{baby cores}) with dedicated roles:
+\begin{itemize}
+  \item \textbf{Two data movers} (BRISC and NCRISC) manage DMA
+    transfers between DRAM, NoC, and local L1 SRAM\@.
+  \item An \textbf{unpack} engine reads tiles from L1 into the compute
+    pipeline's source registers.
+  \item A \textbf{math/FPU} engine executes matrix-multiply and
+    element-wise operations.
+  \item A \textbf{pack} engine writes results from the compute pipeline
+    back to L1.
+\end{itemize}
+Because data movers, unpack, math, and pack operate as
+\emph{decoupled} pipeline stages, data transfer and computation can
+overlap---a property central to the pipelined schedule described in
+Section~\ref{sec:df-pipeline}.
+
+\paragraph{Circular buffers.}
+The stages within a Tensix core communicate through software-managed
+\emph{circular buffers} (CBs) allocated in L1.
+A producer (\eg a data mover receiving tiles from the NoC) pushes
+tiles into CB slots, and a consumer (\eg the unpack engine) pops them.
+By configuring the CB depth ($\geq 2$ slots), double-buffering or
+deeper pipelining is achieved transparently, enabling data movement
+to proceed concurrently with computation.
+
+\paragraph{Dual NoC and hardware multicast.}
+The two independent networks, NoC\,0 and NoC\,1, each span the full
+2-D mesh and support both unicast and \emph{hardware multicast}.
+In a multicast, a source core issues a single DMA command specifying
+a rectangular region of destinations; the network replicates the
+packet at branch points and delivers data to all targets in one
+traversal without the source transmitting separate copies.
+This multicast primitive is the \emph{key enabler} of our design:
+a producer core reads a KV-cache block from DRAM once and multicasts
+it to all consumer cores in its group, reducing total DRAM traffic
+toward the theoretical minimum.
+We assign NoC\,0 to KV distribution and NoC\,1 to partial-result
+reduction, fully utilizing both networks concurrently.
+
+%%% ----- 2.3 Related Work -----
+
+\subsection{Related Work}\label{sec:bg-related}
+
+\paragraph{Efficient attention on GPUs.}
+FlashAttention~\cite{dao2022flashattention} introduced IO-aware tiling
+to keep intermediate attention matrices in on-chip SRAM, dramatically
+reducing HBM traffic on NVIDIA GPUs.
+FlashAttention-2~\cite{dao2023flashattention2} improved parallelism
+and work partitioning across warps and thread blocks, while
+FlashAttention-3~\cite{shah2024flashattention3} further exploits
+Hopper-class asynchronous execution and low-precision accumulation.
+For the decode phase specifically,
+Flash-Decoding~\cite{flashdecoding2023} parallelizes across the KV
+sequence dimension rather than the batch or head dimension, improving
+GPU utilization when the batch size is small;
+FlashDecoding++~\cite{hong2024flashdecoding} extends this with a
+unified max-value technique that avoids synchronization overhead in
+the softmax reduction.
+Ring Attention~\cite{liu2023ringattention} distributes long sequences
+across multiple devices in a ring topology.
+All these techniques are deeply tied to the GPU execution model
+(warps, shared memory, tensor cores) and do not directly transfer to
+many-core architectures with fundamentally different memory hierarchies
+and communication primitives.
+
+\paragraph{KV cache management and attention variants.}
+PagedAttention~\cite{kwon2023pagedattention}, implemented in the vLLM
+serving system, addresses KV cache \emph{memory fragmentation} by
+borrowing virtual-memory paging concepts, enabling flexible cache
+sharing across requests.
+On the model-architecture side, GQA~\cite{ainslie2023gqa} and
+MQA~\cite{shazeer2019mqa} reduce the number of KV heads, directly
+shrinking cache footprint and per-step DRAM traffic.
+StreamingLLM~\cite{xiao2024streamingllm} and
+H\textsubscript{2}O~\cite{zhang2024h2o} selectively evict or compress
+KV cache entries to handle long contexts.
+These approaches are \emph{orthogonal} to our dataflow design: they
+reduce the logical volume of KV data, whereas \sysname minimizes the
+physical DRAM reads for a given cache volume via multicast.
+
+\paragraph{LLM serving systems.}
+Orca~\cite{yu2022orca} pioneered iteration-level scheduling with
+continuous batching to improve GPU throughput.
+DeepSpeed-Inference~\cite{aminabadi2022deepspeed} combines model
+parallelism, customized kernels, and heterogeneous execution for
+large-scale serving.
+More recently, Splitwise~\cite{patel2024splitwise} and
+DistServe~\cite{zhong2024distserve} propose \emph{disaggregating} the
+prefill and decode phases onto separate hardware pools, recognizing
+their distinct compute-vs-memory characteristics.
+These systems orchestrate resources at the \emph{cluster or model}
+level; our work is complementary, targeting kernel-level dataflow on a
+single accelerator card.
+
+\paragraph{Dataflow mapping and cost modeling.}
+A rich body of work formalizes dataflow mapping for DNN accelerators.
+MAESTRO~\cite{kwon2019maestro} provides an analytical framework for
+evaluating data reuse, bandwidth, and energy across mappings.
+Timeloop~\cite{parashar2019timeloop} and
+Eyeriss~v2~\cite{chen2019eyerissv2} similarly explore the mapping
+space for spatial architectures, primarily targeting convolution.
+FLAT~\cite{kao2023flat} extends dataflow analysis to the attention
+operator, proposing optimized mappings that mitigate the
+memory-bandwidth bottleneck of softmax.
+However, these tools target either generic spatial arrays or GPU-like
+architectures; none models the Tensix-specific features of decoupled
+data movers, per-core circular buffers, or hardware NoC multicast that
+are central to our design.
+
+\paragraph{Attention on many-core and non-GPU architectures.}
+The most closely related work is
+FlatAttention~\cite{flatattention2024}, which co-optimizes dataflow
+and fabric collectives for multi-head attention on tile-based many-PE
+accelerators.
+FlatAttention demonstrates significant speedups by orchestrating data
+movement across PEs via collective operations.
+However, it (i)~primarily targets the \emph{prefill} phase, where the
+workload is compute-bound and the optimal strategies differ from
+memory-bound decode;
+(ii)~employs a generic tile-PE abstraction without exploiting
+architecture-specific features such as Tensix's decoupled data movers,
+software-managed circular buffers, and dual-NoC hardware multicast;
+and (iii)~does not provide an auto-tuner that adapts to varying decode
+workload parameters.
+Cerebras~\cite{cerebras2024waferscale} and RISC-V kilo-core
+clusters~\cite{dynamic-alloc2024} also present many-core substrates
+for transformer workloads, but focus on wafer-scale integration and
+shared-memory management respectively, without addressing
+decode-specific multicast dataflows.
+Prior work on the Tenstorrent platform~\cite{tt-fft2025} has explored
+FFT acceleration and validated the effectiveness of Wormhole's
+multicast primitive for signal-processing kernels, but did not target
+attention workloads.
+
+\paragraph{Positioning of this work.}
+To the best of our knowledge, no prior work jointly addresses
+(i)~Tensix-specific dataflow with decoupled data movers and dual-NoC
+multicast,
+(ii)~the decode-phase KV-cache access pattern, and
+(iii)~automated configuration tuning driven by an analytical cost
+model.
+\sysname fills this gap.
+
+
+%% ============================================================
+%%  3. PROBLEM FORMULATION
+%% ============================================================
+\section{Problem Formulation}\label{sec:problem}
+
+%% OUTLINE:
+%% 3.1 负载参数定义
+%%   - Workload = (L, d, H, B, elem)：序列长、head 维度、head 数、batch、元素字节
+%%   - 解码步计算量与访存量分析
+%%
+%% 3.2 优化目标
+%%   - 主目标：最小化单步延迟 latency
+%%   - 次目标：最小化 DRAM 流量、最大化利用率
+%%   - 约束：SRAM 容量、核数、NoC 带宽
+%%
+%% 3.3 设计空间概览
+%%   - 分组维度：G_head, T_group
+%%   - 块大小：B_kv
+%%   - 流水参数：depth, overlap
+%%   - 归约策略：binary_tree, row_col
+%%   - 空间规模 ~O(百) 种合法配置
+
+\textbf{TODO: Formalize workload, objectives, constraints, design space.}
+
+
+%% ============================================================
+%%  4. MULTICAST-AWARE ATTENTION DATAFLOW
+%% ============================================================
+\section{Multicast-Aware Attention Dataflow}\label{sec:dataflow}
+
+%% OUTLINE:
+%% 4.1 总体架构
+%%   - 核角色划分：Producer（DRAM 读 + NoC 多播）、Consumer（计算）、Reducer
+%%   - 数据流示意图（Figure 1）：DRAM → Producer → multicast → Consumers → reduce → Output
+%%
+%% 4.2 生产者-消费者多播设计
+%%   - Producer 从 DRAM 按 B_kv 块读 K/V 到本地 CB
+%%   - 通过 NoC 0 单源多播到同组 T_group 个消费者核
+%%   - 消费者接收到 CB 后本地计算 QK^T 分块、partial softmax、AttnV 分块
+%%   - 双 NoC 利用：NoC 0 做 K/V 多播，NoC 1 做 partial result reduce
+%%
+%% 4.3 流水重叠调度
+%%   - Block-level pipeline: DRAM read → multicast → compute
+%%   - depth=1（串行）、depth=2（双缓冲）的时序图（Figure 2）
+%%   - overlap=1 时多播与上一块计算并行
+%%   - 稳态吞吐公式：t_steady = max(t_dram, t_mcast, t_comp)
+%%
+%% 4.4 片上归约
+%%   - Softmax 在线归约：每块计算 local max/sum，最终跨核 reduce
+%%   - binary tree reduce vs row-col reduce 策略
+%%   - 输出 O 归约后由单核写回 DRAM
+
+\subsection{Overall Architecture}\label{sec:df-arch}
+\textbf{TODO: Producer/consumer/reducer role assignment, data flow
+diagram (Figure~\ref{fig:dataflow}).}
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/dataflow_overview.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
+    \textbf{Figure Placeholder:} Dataflow overview\\
+    DRAM $\to$ Producer $\to$ Multicast $\to$ Consumers $\to$ Reduce $\to$ Output
+  \vspace{2cm}}}
+  \caption{Overview of the \sysname multicast-aware attention dataflow
+    on Tenstorrent Wormhole.}
+  \label{fig:dataflow}
+\end{figure}
+
+\subsection{Producer–Consumer Multicast}\label{sec:df-mcast}
+\textbf{TODO: Detail KV block multicast via NoC, CB usage, dual-NoC
+assignment.}
+
+\subsection{Pipelined Overlap Scheduling}\label{sec:df-pipeline}
+\textbf{TODO: Block-level pipeline timing diagram (Figure~\ref{fig:pipeline}),
+depth/overlap modes, steady-state throughput.}
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/pipeline_schedule.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
+    \textbf{Figure Placeholder:} Pipeline schedule\\
+    Block 0: [DRAM] [mcast] [comp]\\
+    Block 1: \hspace{2em} [DRAM] [mcast] [comp]\\
+    Block 2: \hspace{4em} [DRAM] [mcast] [comp]
+  \vspace{1cm}}}
+  \caption{Block-level pipelined schedule with double buffering
+    ($\text{depth}=2$, $\text{overlap}=1$).}
+  \label{fig:pipeline}
+\end{figure}
+
+\subsection{On-Chip Reduction}\label{sec:df-reduce}
+\textbf{TODO: Online softmax reduce, binary tree vs row-col, output write-back.}
+
+
+%% ============================================================
+%%  5. ANALYTICAL COST MODEL
+%% ============================================================
+\section{Analytical Cost Model}\label{sec:costmodel}
+
+%% OUTLINE:
+%% 5.1 DRAM 流量建模
+%%   - 基线（每核读）：DRAM_bytes = n_consumers × (K_bytes + V_bytes)
+%%   - 多播理想：DRAM_bytes = 1 × (K_bytes + V_bytes) + Q_bytes + O_bytes
+%%   - 实际：考虑 n_groups = H / G_head 组，每组有独立 producer
+%%
+%% 5.2 延迟建模
+%%   - 每块三阶段耗时：
+%%     t_dram = B_kv × d × 2 × elem / BW_dram
+%%     t_mcast = B_kv × d × 2 × elem / BW_noc (× hop factor)
+%%     t_comp = B_kv × d × FLOPs_factor / FLOPS_peak
+%%   - 流水稳态：t_steady 根据 (depth, overlap) 取不同 max 组合
+%%   - 总延迟 = t_first_block + (n_blocks - 1) × t_steady + t_reduce + t_qo
+%%
+%% 5.3 利用率
+%%   - utilization = t_comp_total / latency_total
+%%   - 瓶颈标识：argmax(t_dram, t_mcast, t_comp)
+%%
+%% 5.4 SRAM 约束
+%%   - 每核需缓存：2 × B_kv × d × G_head × elem × depth ≤ 45% × SRAM_per_core
+%%   - 此约束剔除不可行配置
+
+\subsection{DRAM Traffic Model}\label{sec:cm-dram}
+\textbf{TODO: Closed-form DRAM bytes for baseline vs multicast.}
+
+\subsection{Latency Model}\label{sec:cm-latency}
+\textbf{TODO: Per-block stage latencies, pipeline steady-state formula,
+total latency.}
+
+\subsection{Utilization and Bottleneck Identification}\label{sec:cm-util}
+\textbf{TODO: Utilization definition, bottleneck classification.}
+
+\subsection{SRAM Feasibility Constraints}\label{sec:cm-sram}
+\textbf{TODO: SRAM capacity check, infeasible config pruning.}
+
+
+%% ============================================================
+%%  6. AUTO-TUNER
+%% ============================================================
+\section{Auto-Tuner}\label{sec:tuner}
+
+%% OUTLINE:
+%% 6.1 设计空间定义
+%%   - 参数及其候选值表 (Table 1)
+%%     G_head ∈ {H 的因子}
+%%     T_group ∈ {4, 8, 16, 32, 64, 128}（P 的因子且 ≥ 4）
+%%     B_kv ∈ {32, 64, 128, 256, 512, 1024}
+%%     depth ∈ {1, 2}
+%%     overlap ∈ {0, 1}（需 depth ≥ 2）
+%%     reduce_strategy ∈ {binary_tree, row_col}
+%%   - 合法性约束过滤后空间规模约 300-500
+%%
+%% 6.2 搜索策略
+%%   - 枚举所有合法配置 → 代价模型打分 → 按目标排序
+%%   - 支持单目标（latency）和多目标（Pareto front: latency vs DRAM）
+%%   - 搜索时间 < 1 秒（得益于闭式模型）
+%%
+%% 6.3 标定（可选）
+%%   - 用少量硬件实测数据回归修正系数 β_dram, β_mcast, η_comp
+%%   - 标定后重新寻优以贴合真实硬件
+
+\subsection{Design Space}\label{sec:tuner-space}
+\textbf{TODO: Parameter table (Table~\ref{tab:design-space}), constraint
+filtering, space size.}
+
+\begin{table}[t]
+  \caption{Design space parameters and candidate values.}
+  \label{tab:design-space}
+  \begin{tabular}{lll}
+    \toprule
+    Parameter & Candidates & Constraint \\
+    \midrule
+    $\Ghead$ & Factors of $H$ & $H/\Ghead \times \Tgroup \leq P$ \\
+    $\Tgroup$ & $\{4, 8, 16, \ldots, 128\}$ & Factor of $P$, $\geq 4$ \\
+    $\Bkv$   & $\{32, 64, \ldots, 1024\}$ & SRAM capacity \\
+    depth    & $\{1, 2\}$ & — \\
+    overlap  & $\{0, 1\}$ & Requires depth $\geq 2$ \\
+    reduce   & \{binary, row-col\} & — \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Search Strategy}\label{sec:tuner-search}
+\textbf{TODO: Enumerate-and-score, single-/multi-objective, runtime.}
+
+\subsection{Calibration with Hardware Measurements}\label{sec:tuner-calib}
+\textbf{TODO: Coefficient regression, calibration workflow.}
+
+
+%% ============================================================
+%%  7. EVALUATION
+%% ============================================================
+\section{Evaluation}\label{sec:eval}
+
+%% OUTLINE:
+%% 7.1 实验设置
+%%   - 平台：Tenstorrent Wormhole N300 (128 Tensix cores, 12 GB DRAM)
+%%   - 软件栈：TT-Metalium / TT-NN
+%%   - 负载：decode attention, L ∈ {512, 1024, 2048, 4096},
+%%     d ∈ {64, 128}, H ∈ {8, 16, 32}, B = 1, FP16
+%%   - 基线：(1) Per-core DRAM read, (2) Fixed multicast (B_kv=64, 无重叠)
+%%
+%% 7.2 整体性能
+%%   - 延迟对比柱状图 (Figure 3)：baseline vs fixed vs auto-tuned
+%%   - DRAM 流量对比表 (Table 2)
+%%   - 不同 (L, H) 组合下的改善百分比热力图 (Figure 4)
+%%
+%% 7.3 代价模型精度
+%%   - 模型预测 vs 实测延迟散点图 (Figure 5)
+%%   - MAPE (Mean Absolute Percentage Error) 统计
+%%   - 标定前后精度对比
+%%
+%% 7.4 消融实验
+%%   - B_kv 敏感性：B_kv 对延迟的影响曲线 (Figure 6)
+%%   - T_group 敏感性：T_group 对延迟与归约开销的影响 (Figure 7)
+%%   - 流水深度消融：depth=1 vs depth=2, overlap=0 vs 1
+%%   - 各阶段耗时堆叠图 (Figure 8)
+%%
+%% 7.5 自动寻优器评估
+%%   - 寻优器推荐 vs 穷举最优的差距
+%%   - 推荐配置随 (L, d, H) 的变化趋势
+%%   - 寻优器运行时间
+
+\subsection{Experimental Setup}\label{sec:eval-setup}
+\textbf{TODO: Hardware platform, software stack, workloads, baselines.}
+
+\subsection{Overall Performance}\label{sec:eval-perf}
+\textbf{TODO: Latency comparison (Figure~\ref{fig:latency-cmp}),
+DRAM traffic table (Table~\ref{tab:dram}), improvement heatmap
+(Figure~\ref{fig:heatmap}).}
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/latency_comparison.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2.5cm}
+    \textbf{Figure Placeholder:} Latency comparison bar chart\\
+    Baseline / Fixed / Auto-tuned
+  \vspace{1cm}}}
+  \caption{Decode-step latency across workloads: per-core baseline,
+    fixed multicast, and \sysname auto-tuned.}
+  \label{fig:latency-cmp}
+\end{figure}
+
+\begin{table}[t]
+  \caption{DRAM read volume per decode step (MB).}
+  \label{tab:dram}
+  \begin{tabular}{lrrr}
+    \toprule
+    Workload & Baseline & Fixed & \sysname \\
+    \midrule
+    $L\!=\!512,\; H\!=\!8$   & — & — & — \\
+    $L\!=\!1024,\; H\!=\!8$  & — & — & — \\
+    $L\!=\!2048,\; H\!=\!32$ & — & — & — \\
+    $L\!=\!4096,\; H\!=\!32$ & — & — & — \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/improvement_heatmap.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
+    \textbf{Figure Placeholder:} Improvement heatmap\\
+    $L$ vs $H$, color = latency improvement \%
+  \vspace{1.5cm}}}
+  \caption{Latency improvement (\%) of \sysname over fixed baseline
+    across $(L, H)$ combinations.}
+  \label{fig:heatmap}
+\end{figure}
+
+\subsection{Cost Model Accuracy}\label{sec:eval-accuracy}
+\textbf{TODO: Predicted vs measured scatter plot, MAPE, pre-/post-calibration.}
+
+\subsection{Ablation Studies}\label{sec:eval-ablation}
+\textbf{TODO: Block size sensitivity, group size sensitivity, pipeline
+depth ablation, stage-breakdown stacked bar.}
+
+\subsection{Auto-Tuner Quality}\label{sec:eval-tuner}
+\textbf{TODO: Gap to exhaustive optimum, config trends, tuner runtime.}
+
+
+%% ============================================================
+%%  8. DISCUSSION
+%% ============================================================
+\section{Discussion}\label{sec:discussion}
+
+%% OUTLINE:
+%% - 局限性讨论
+%%   - 当前仅针对 decode；prefill 扩展展望
+%%   - 代价模型假设（带宽独占、无拥塞）的适用范围
+%%   - 多卡扩展（Ethernet/Warp 互连）初步分析
+%% - 与 GPU 方案的对比视角（FlashAttention on GPU vs 本方案 on Tensix）
+%% - 对其他众核架构的可迁移性
+
+\textbf{TODO: Limitations, multi-card outlook, comparison perspective
+with GPU solutions, portability to other many-core architectures.}
+
+
+%% ============================================================
+%%  9. CONCLUSION
+%% ============================================================
+\section{Conclusion}\label{sec:conclusion}
+
+%% OUTLINE:
+%% - 总结三大贡献：Tensix 专用数据流 + KV 多播 + 自动寻优
+%% - 关键数字回顾：DRAM 削减 X×, 延迟改善 Y%, 寻优 < 1s
+%% - 未来方向：
+%%   (1) 多卡 scale-out 支持
+%%   (2) Prefill / 长序列 attention 扩展
+%%   (3) 稀疏注意力 / MoE 场景适配
+%%   (4) 与 TT-NN 编译器的集成
+
+\textbf{TODO: Summarize contributions, key results, future work.}
+
+
+%% ============================================================
+%%  ACKNOWLEDGMENTS
+%% ============================================================
+\begin{acks}
+\textbf{TODO: Acknowledgments.}
+\end{acks}
+
+%% ============================================================
+%%  REFERENCES
+%% ============================================================
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\end{document}

@@ -1,0 +1,16 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_guardrail_smoke",
+  "preflight": {
+    "case": "decode_1k",
+    "status": "failed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+      "--child-run",
+      "--case",
+      "decode_1k"
+    ],
+    "error": "preflight timed out after 20s"
+  },
+  "cases": []
+}

@@ -1,0 +1,34 @@
+sequenceDiagram
+    participant DRAM as DRAM / KV cache
+    participant QOut as Output-core L1 / Q source
+    participant SRead as Sender core Reader / NCRISC
+    participant Sig as K mcast semaphore / CB state
+    participant R0Read as Receiver0 Reader / NCRISC
+    participant R0Comp as Receiver0 Compute / TRISC
+    participant R1Read as Receiver1 Reader / NCRISC
+    participant R1Comp as Receiver1 Compute / TRISC
+    participant W0 as Local Writer / BRISC
+
+    Note over DRAM,W0: 这是同一个 S block 内的 steady-state。重点看 sender core、receiver core、Q source、K multicast、CB 和 semaphore 如何串起来。
+
+    SRead->>DRAM: reserve/read paged K into local cb_k_in
+    SRead->>Sig: cb_push_back(cb_k_in) + k_mcast_semaphore_id ready
+
+    QOut-->>R0Read: q_locally_available / output-core L1 read
+    QOut-->>R1Read: q_locally_available / output-core L1 read
+
+    SRead->>R0Read: noc_async_write_multicast(K)
+    SRead->>R1Read: noc_async_write_multicast(K)
+    SRead->>Sig: noc_semaphore_inc(k_mcast ready)
+
+    R0Read->>Sig: cb_push_back(cb_k_in / cb_v_in / cb_mask_in)
+    R1Read->>Sig: cb_push_back(cb_k_in / cb_v_in / cb_mask_in)
+
+    R0Comp->>Sig: cb_wait_front(Q/K/V/mask)
+    R1Comp->>Sig: cb_wait_front(Q/K/V/mask)
+    R0Comp->>R0Comp: local SDPA tiles
+    R1Comp->>R1Comp: local SDPA tiles
+    R0Comp->>W0: cb_out_worker ready
+    R1Comp->>W0: cb_out_worker ready
+
+    W0-->>Sig: cb_wait_front(cb_out_worker) / cb_pop_front

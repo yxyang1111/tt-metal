@@ -1,0 +1,22 @@
+[
+  {
+    "name": "prefill_sblock_4core_horizontal_timeline",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/prefill_sblock_4core_horizontal_timeline.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/prefill_sblock_4core_horizontal_timeline.png"
+  },
+  {
+    "name": "decode_cross_sblock_reduction_horizontal_timeline",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_cross_sblock_reduction_horizontal_timeline.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_cross_sblock_reduction_horizontal_timeline.png"
+  },
+  {
+    "name": "decode_fullstack_horizontal_timeline",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_fullstack_horizontal_timeline.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_fullstack_horizontal_timeline.png"
+  },
+  {
+    "name": "decode_vs_prefill_horizontal_timeline",
+    "svg": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_vs_prefill_horizontal_timeline.svg",
+    "png": "mla_flash_attention_dev/docs/assets/flash-mla-wh-profile-swimlanes-detailed/decode_vs_prefill_horizontal_timeline.png"
+  }
+]

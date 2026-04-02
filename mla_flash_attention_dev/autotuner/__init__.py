@@ -21,6 +21,25 @@ from .basic_autotuner import (
     get_preset_workload,
     get_topology_preset,
 )
+from .profile_measurement_bridge import (
+    MeasurementDBBuildSummary,
+    MappedProfileMeasurement,
+    ReferenceCurrentAConfig,
+    ReferenceCurrentASource,
+    build_wh_profile_measurement_db,
+    map_wh_profile_measurements,
+)
+from .cost_model import (
+    CalibratedCostModel,
+    CalibrationReport,
+    apply_calibration_to_candidate,
+    build_candidate_map,
+    extract_feature_vector,
+    fit_calibrated_cost_model,
+    fit_calibrated_cost_model_from_wh_profile,
+    fit_calibrated_cost_model_for_workload,
+    fit_calibrated_cost_model_from_measurement_db,
+)
 
 __all__ = [
     "BasicMLAAutotuner",
@@ -42,4 +61,19 @@ __all__ = [
     "get_preset_hardware",
     "get_preset_workload",
     "get_topology_preset",
+    "MeasurementDBBuildSummary",
+    "MappedProfileMeasurement",
+    "ReferenceCurrentAConfig",
+    "ReferenceCurrentASource",
+    "build_wh_profile_measurement_db",
+    "map_wh_profile_measurements",
+    "CalibratedCostModel",
+    "CalibrationReport",
+    "apply_calibration_to_candidate",
+    "build_candidate_map",
+    "extract_feature_vector",
+    "fit_calibrated_cost_model",
+    "fit_calibrated_cost_model_from_wh_profile",
+    "fit_calibrated_cost_model_for_workload",
+    "fit_calibrated_cost_model_from_measurement_db",
 ]
