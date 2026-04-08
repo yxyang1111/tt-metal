@@ -153,3 +153,10 @@ models/experimental/petr/resources/*.pth
 
 .claude
 **/*.tracy
+
+# Local LaTeX build artifacts
+mla_flash_attention_dev/latex/*.bbl
+mla_flash_attention_dev/latex/*.blg
+mla_flash_attention_dev/latex/*.fls
+mla_flash_attention_dev/latex/*.out
+mla_flash_attention_dev/latex/ref/
