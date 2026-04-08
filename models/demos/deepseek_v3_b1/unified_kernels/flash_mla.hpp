@@ -695,7 +695,18 @@ struct FlashMLADecode {
             }
             if (!sdpa_output_is_final) {
                 PACK(TTI_STALLWAIT(p_stall::STALL_PACK, p_stall::WAIT_SFPU));
+#ifndef ARCH_BLACKHOLE
+                // WH: override DEST_OFFSET for contiguous tiny tile layout
+                PACK(TTI_STALLWAIT(p_stall::STALL_TDMA | p_stall::STALL_THCON, p_stall::PACK));
+                PACK(TT_SETDMAREG(0, max_dst_offset, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 0)));
+                PACK(TT_SETDMAREG(0, max_dst_offset + packed_tile_size / 2, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 1)));
+                PACK(TTI_WRCFG(p_gpr_pack::DEST_OFFSET_LO, p_cfg::WRCFG_128b, DEST_TARGET_REG_CFG_PACK_SEC0_Offset_ADDR32));
+                PACK(TTI_DMANOP);
+                PACK(TTI_DMANOP);
+                pack_tile(0, sdpa_ms_cb);
+#else
                 pack_tile(max_dst_tile_offset, sdpa_ms_cb);
+#endif
                 cb_push_back(sdpa_ms_cb, Sq_chunk_t);
             } else {
                 compute_sdpa_recip<out_chunk_tiles, exp_approx_mode, scale_bf16>(
@@ -703,10 +714,43 @@ struct FlashMLADecode {
             }
             for (uint32_t i = 0; i < out_chunk_tiles; i += 2) {
                 PACK(t6_semaphore_wait_on_zero<p_stall::STALL_PACK>(semaphore::FPU_SFPU));
+#ifndef ARCH_BLACKHOLE
+                // WH: set DEST_OFFSET to contiguous tiny tile locations
+                {
+                    PACK(TTI_STALLWAIT(p_stall::STALL_TDMA | p_stall::STALL_THCON, p_stall::PACK));
+                    uint32_t base = mm2_dst_offset + i * packed_tile_size;
+                    PACK(TT_SETDMAREG(0, base, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 0)));
+                    PACK(TT_SETDMAREG(0, base + packed_tile_size / 2, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 1)));
+                    PACK(TTI_WRCFG(p_gpr_pack::DEST_OFFSET_LO, p_cfg::WRCFG_128b, DEST_TARGET_REG_CFG_PACK_SEC0_Offset_ADDR32));
+                    PACK(TTI_DMANOP);
+                    PACK(TTI_DMANOP);
+                    pack_tile(0, sdpa_output_cb);
+                }
+                {
+                    PACK(TTI_STALLWAIT(p_stall::STALL_TDMA | p_stall::STALL_THCON, p_stall::PACK));
+                    uint32_t base = mm2_dst_offset + (i + 1) * packed_tile_size;
+                    PACK(TT_SETDMAREG(0, base, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 0)));
+                    PACK(TT_SETDMAREG(0, base + packed_tile_size / 2, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 1)));
+                    PACK(TTI_WRCFG(p_gpr_pack::DEST_OFFSET_LO, p_cfg::WRCFG_128b, DEST_TARGET_REG_CFG_PACK_SEC0_Offset_ADDR32));
+                    PACK(TTI_DMANOP);
+                    PACK(TTI_DMANOP);
+                    pack_tile(0, sdpa_output_cb);
+                }
+#else
                 pack_tile(mm2_dst_tile_offset + i, sdpa_output_cb);
                 pack_tile(mm2_dst_tile_offset + i + 1, sdpa_output_cb);
+#endif
                 PACK(t6_semaphore_get<p_stall::PACK>(semaphore::FPU_SFPU));
             }
+#ifndef ARCH_BLACKHOLE
+            // Restore standard sparse DEST_OFFSET for tree reduction packing
+            PACK(TTI_STALLWAIT(p_stall::STALL_TDMA | p_stall::STALL_THCON, p_stall::PACK));
+            PACK(TTI_SETDMAREG(0, 0x00, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 0)));
+            PACK(TTI_SETDMAREG(0, 0x10, 0, LO_16(p_gpr_pack::DEST_OFFSET_LO + 1)));
+            PACK(TTI_WRCFG(p_gpr_pack::DEST_OFFSET_LO, p_cfg::WRCFG_128b, DEST_TARGET_REG_CFG_PACK_SEC0_Offset_ADDR32));
+            PACK(TTI_DMANOP);
+            PACK(TTI_DMANOP);
+#endif
             cb_push_back(sdpa_output_cb, out_chunk_tiles);
             tile_regs_commit();
             tile_regs_release();

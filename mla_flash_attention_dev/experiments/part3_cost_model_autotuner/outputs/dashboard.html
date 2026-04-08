@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part III Cost Model And Autotuner</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #08111f;
+      --panel: #101b2c;
+      --panel-2: #0d1624;
+      --text: #f5f7fb;
+      --muted: #9fb0c3;
+      --border: #203149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #17243a 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+    }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 1080px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    figure {
+      margin: 0;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+    }
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Part III Cost Model And Autotuner</h1>
+    <p class="lead">这页把 current `TT 主线 FlashMLA` 的 cost-model calibration、mapped profile fidelity、decode preset top-1 与 measurement-db rerank 边界统一整理出来。由于 Part I 主方法已经切到 `DeepSeek FlashMLA`，本页结论应读作 `generic MLA backend planning proxy`，而不是 direct DeepSeek autotuning。</p>
+    <section class="cards">
+      <div class="card">
+        <div class="label">First-order MAPE</div>
+        <div class="value">38.62%</div>
+        <div class="hint">profile bridge 绑定到 reference-current-A candidate 后的原始 analytical 误差。</div>
+      </div>
+      <div class="card">
+        <div class="label">Second-order Fit MAPE</div>
+        <div class="value">19.58%</div>
+        <div class="hint">全样本拟合后的 in-sample 误差。</div>
+      </div>
+      <div class="card">
+        <div class="label">Second-order LOO MAPE</div>
+        <div class="value">24.65%</div>
+        <div class="hint">leave-one-out 更接近论文里“泛化能力”的口径。</div>
+      </div>
+      <div class="card">
+        <div class="label">Analytical Search Runtime</div>
+        <div class="value">2.622s</div>
+        <div class="hint">当前环境下 `flash_decode_wh` 枚举与排序的本地耗时。</div>
+      </div>
+      <div class="card">
+        <div class="label">Decode 4k Measured Rank</div>
+        <div class="value">65</div>
+        <div class="hint">exact-case 下，profiled A-path candidate 只被映射回 rank-65，而不是 empirically best top-1。</div>
+      </div>
+    </section>
+    <section class="grid">
+      <figure><img src="visuals/prediction_vs_measured.svg" alt="prediction_vs_measured"></figure>
+      <figure><img src="visuals/absolute_error_by_case.svg" alt="absolute_error_by_case"></figure>
+      <figure><img src="visuals/search_runtime.svg" alt="search_runtime"></figure>
+      <figure><img src="visuals/exact_case_gap.svg" alt="exact_case_gap"></figure>
+    </section>
+    <p class="footnote">说明：current rerank 仍是 offline measurement-db rerank。它能把 production-like measured path 锚回 candidate pool，但还不能替代 candidate-by-candidate benchmark-driven empirical search。</p>
+  </div>
+</body>
+</html>

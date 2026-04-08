@@ -1,6 +1,19 @@
 %%
-%% ICPP 2026 Paper — Multicast-Aware Attention Dataflow on Tenstorrent Many-Core
-%% Based on ACM acmart sigconf template
+%% SF-MLA: Dataflow Design Space Exploration for Multi-Latent Attention
+%%         on Spatial Accelerators
+%% Target: ICPP 2026 / ACM sigconf
+%%
+%% Narrative structure follows FLAT (ASPLOS 2023):
+%%   §1 Introduction (challenge-driven)
+%%   §2 Background
+%%   §3 Challenges (quantitative motivation)
+%%   §4 Concept (high-level design decisions)
+%%   §5 Design (detailed implementation)
+%%   §6 Cost Model & DSE
+%%   §7 Experiments on current hardware
+%%   §8 Future-architecture support and outlook
+%%   §9 Related Work (at end)
+%%   §10 Conclusion
 %%
 
 %% For submission / review:
@@ -9,27 +22,41 @@
 % \documentclass[sigconf]{acmart}
 
 %%
-%% Useful packages
+%% Packages
 %%
 \usepackage{algorithm}
 \usepackage{algorithmic}
 \usepackage{booktabs}
 \usepackage{subcaption}
 \usepackage{xspace}
+\usepackage{multirow}
+\usepackage{amsmath}
 
 %%
 %% Custom commands
 %%
-\newcommand{\sysname}{\textsc{McastAttn}\xspace}
+\newcommand{\brand}{SF-MLA}
+\newcommand{\brandexpansion}{\textbf{S}patial-\textbf{F}low \textbf{MLA}}
+\newcommand{\sysname}{\textsc{\brand}\xspace}
+\newcommand{\SblockName}{S-block}
+\newcommand{\SblockNames}{S-blocks}
+\newcommand{\sharedLatentMulticast}{shared-latent multicast}
+\newcommand{\SharedLatentMulticast}{Shared-latent multicast}
+\newcommand{\phaseTransition}{phase transition}
+\newcommand{\PhaseTransition}{Phase transition}
+\newcommand{\topologyFirst}{topology-first}
+\newcommand{\autoTuner}{auto-tuner}
+\newcommand{\AutoTuner}{Auto-Tuner}
 \newcommand{\ie}{\textit{i.e.}\xspace}
 \newcommand{\eg}{\textit{e.g.}\xspace}
 \newcommand{\etal}{\textit{et al.}\xspace}
 \newcommand{\Bkv}{B_{\mathrm{kv}}}
 \newcommand{\Ghead}{G_{\mathrm{head}}}
 \newcommand{\Tgroup}{T_{\mathrm{group}}}
+\newcommand{\Sblock}{S_{\mathrm{block}}}
 
 %%
-%% Rights / conference metadata — update when known
+%% Rights / conference metadata
 %%
 \setcopyright{acmlicensed}
 \copyrightyear{2026}
@@ -46,21 +73,21 @@
 %% ============================================================
 %%  TITLE
 %% ============================================================
-\title{Multicast-Aware Attention Dataflow and Auto-Tuning\\on Tenstorrent Many-Core for LLM Decode Inference}
+\title{\brand: Dataflow Design Space Exploration for\\Multi-Latent Attention on Spatial Accelerators}
 
 %% ============================================================
-%%  AUTHORS — replace with real info
+%%  AUTHORS
 %% ============================================================
 \author{First Author}
 \affiliation{%
-  \institution{University / Lab}
+  \institution{Institution}
   \city{City}
   \country{Country}}
 \email{first@example.com}
 
 \author{Second Author}
 \affiliation{%
-  \institution{University / Lab}
+  \institution{Institution}
   \city{City}
   \country{Country}}
 \email{second@example.com}
@@ -71,37 +98,46 @@
 %%  ABSTRACT
 %% ============================================================
 \begin{abstract}
-Large Language Model (LLM) inference is increasingly dominated by the
-\emph{decode} phase, where each token generation step reads a large
-KV cache from DRAM — making multi-head attention (MHA) severely
-memory-bound. On many-core accelerators with tens to hundreds of
-processing elements, a na\"ive mapping causes each core to redundantly
-read KV data from DRAM, inflating total memory traffic linearly with
-the number of consumer cores.
 
-We present \sysname, a \emph{multicast-aware attention dataflow} and
-accompanying \emph{auto-tuner} targeting the Tenstorrent Wormhole
-many-core architecture. \sysname exploits Tensix's decoupled data
-movers, circular buffers, and dual on-chip network (NoC) to read each
-KV cache block from DRAM \emph{exactly once} and distribute it via
-hardware multicast, while overlapping data movement with computation in
-a pipelined schedule. An analytical cost model captures DRAM traffic,
-NoC multicast latency, and compute utilization as closed-form functions
-of workload parameters and a compact design space of \emph{head
-grouping}, \emph{tile grouping}, \emph{block sizes}, and \emph{pipeline
-depth}. The auto-tuner enumerates this space and outputs near-optimal
-configurations without manual tuning.
+Multi-Latent Attention (MLA), introduced in the DeepSeek-V2/V3
+architecture, compresses key-value caches into a low-rank latent space,
+dramatically reducing memory footprint.  During decode, however, MLA
+must online-restore per-head K and V, creating a
+computation--data-movement pattern fundamentally different from
+conventional multi-head attention (MHA) and grouped-query attention
+(GQA).  On spatial accelerators---many-core substrates with distributed
+scratchpad SRAM, decoupled data movers, and hardware multicast over the
+on-chip network---this mapping problem makes \emph{dataflow design} the
+decisive performance factor.
 
-Evaluation on Tenstorrent Wormhole N300 shows that \sysname reduces
-per-step DRAM traffic by up to $X\times$ compared to the per-core-read
-baseline, and improves decode latency by $Y$\% over a fixed-dataflow
-configuration across representative LLaMA-style workloads ($L$ up to
-4096, $d \in \{64,128\}$, $H$ up to 32). The auto-tuner finds
-configurations within Z\% of exhaustive search in under one second.
+We present \sysname, a framework for analyzing and exploring MLA
+dataflows on spatial accelerators.  Using Tenstorrent's Tensix
+architecture as the concrete substrate, we systematically characterize
+three core mapping challenges: (i)~complex data reuse arising from the
+interaction between distributed SRAM, NoC multicast, shared-latent
+representations, and per-head restoration, (ii)~pipeline coupling in
+decoupled reader--compute--writer execution that intensifies with
+sequence length, and (iii)~a large, non-obvious design space whose
+optimal configurations shift across regimes.  Guided by these findings,
+\sysname introduces a parameterized dataflow design, a cost model with
+second-order empirical corrections for non-ideal effects, an \autoTuner{}
+for efficient design space exploration, and architecture-level
+exploration.
+
+Evaluation on Tenstorrent Wormhole hardware reveals a clear
+\emph{\phaseTransition} in the decode bottleneck as sequence length
+increases: from compute-critical at short sequences to
+reader--writer saturated coupling at 32K tokens.  Fine-grained profiling
+decomposes this transition at the sub-component level, providing
+actionable optimization targets.
+Architecture simulation further
+identifies non-obvious design trade-offs where MLA diverges from MHA
+in optimal architecture selection.
+
 \end{abstract}
 
 %% ============================================================
-%%  CCS CONCEPTS — generate at https://dl.acm.org/ccs
+%%  CCS CONCEPTS
 %% ============================================================
 \begin{CCSXML}
 <ccs2012>
@@ -115,606 +151,1710 @@ configurations within Z\% of exhaustive search in under one second.
   <concept_desc>Computer systems organization~Interconnection architectures</concept_desc>
   <concept_significance>300</concept_significance>
  </concept>
+ <concept>
+  <concept_id>10010147.10010169.10010170</concept_id>
+  <concept_desc>Computing methodologies~Massively parallel and high-performance simulations</concept_desc>
+  <concept_significance>300</concept_significance>
+ </concept>
 </ccs2012>
 \end{CCSXML}
 
 \ccsdesc[500]{Computer systems organization~Multicore architectures}
 \ccsdesc[300]{Computer systems organization~Interconnection architectures}
+\ccsdesc[300]{Computing methodologies~Massively parallel and high-performance simulations}
 
-\keywords{LLM inference, multi-head attention, decode, KV cache,
-many-core, multicast, on-chip network, auto-tuning, Tenstorrent, Wormhole}
+\keywords{Multi-Latent Attention, dataflow design space exploration,
+spatial accelerator, KV cache, many-core, multicast, on-chip network,
+auto-tuning, Tenstorrent, pipeline coupling}
 
 \maketitle
 
+
 %% ============================================================
-%%  1. INTRODUCTION
+%%  1. INTRODUCTION  (FLAT-style: challenge-driven)
 %% ============================================================
 \section{Introduction}\label{sec:intro}
 
-%% OUTLINE:
-%% - 开场：LLM 推理需求爆发，decode 阶段逐 token 生成，注意力是核心瓶颈
-%% - 问题：decode attention 极度 memory-bound，KV cache 读取占主导
-%% - 众核机会：Tenstorrent Wormhole 等众核加速器有数百核与片上网络，
-%%   但朴素映射导致每核独立读 DRAM → 冗余流量线性增长
-%% - 缺口：FlatAttention 面向通用 tile / prefill / 仿真，
-%%   未针对 Tensix 架构特性（解耦 data mover, CB, 双 NoC）和 decode 场景
-%% - 本文方案一句话：多播感知数据流 + 解析代价模型 + 自动寻优
-%% - 贡献列表（4 条，与 abstract 对应）
+%% P1: Attention is the bottleneck — set up the problem
+%% (Like FLAT §1 P1: "Attention mechanisms... backbone of ML")
+Attention mechanisms are the computational backbone of transformer-based
+models.  During Large Language Model (LLM) inference, the
+\emph{decode} phase---where each new token attends over the entire
+key-value (KV) cache---exhibits $\mathcal{O}(1)$ arithmetic intensity,
+making it severely memory-bandwidth bound and the dominant latency
+contributor~\cite{pope2023efficiently}.  As sequence lengths grow from
+thousands to tens of thousands of tokens, the pressure on both memory
+capacity and bandwidth intensifies, posing a critical challenge for
+efficient deployment.
 
-\textbf{TODO: Write full introduction.}
+%% P2: MLA changes the game — new attention variant with new characteristics
+%% (Like FLAT introducing L/A as distinct from CONV/FC)
+The attention mechanism itself has undergone rapid evolution.
+Multi-head attention (MHA)~\cite{vaswani2017attention} maintains
+independent KV heads, resulting in large cache footprints.
+Grouped-query attention (GQA)~\cite{ainslie2023gqa} and multi-query
+attention (MQA)~\cite{shazeer2019mqa} reduce KV head count.
+Most recently, \emph{Multi-Latent Attention} (MLA), introduced in
+DeepSeek-V2~\cite{deepseekai2024deepseekv2} and
+DeepSeek-V3~\cite{deepseekai2024deepseekv3}, takes a fundamentally
+different approach: it compresses KV representations into a low-rank
+latent space, reducing per-token cache size from $2Hd$ to $d_c$
+elements.  However, during decode MLA must \emph{online-restore} the
+full K and V via learned per-head projections, introducing a
+computation--data-movement interplay absent in MHA/GQA.
+This creates an attention variant whose dataflow characteristics
+differ qualitatively from both conventional activation-weight operators
+(CONV, FC) and previous activation-activation attention
+operators~\cite{kao2023flat}.  The key question is therefore not only
+how much MLA reduces KV storage, but also how its restore-and-attend
+computation should be organized on the target hardware.
 
+%% P3: Spatial accelerators — opportunity and complexity
+%% (Like FLAT introducing the accelerator substrate)
+This mapping problem is especially consequential on spatial
+accelerators---many-core architectures with per-core scratchpad SRAM,
+decoupled data-mover engines, and hardware-supported on-chip
+multicast---which offer a promising substrate for attention
+acceleration~\cite{tenstorrent2024wormhole, flatattention2024}.
+Unlike GPUs where optimization focuses on warp-level tiling, spatial
+accelerators demand explicit orchestration of \emph{where} data
+resides (spatial reuse via multicast), \emph{when} data moves
+(temporal reuse via pipeline buffering), and \emph{how} cores
+cooperate (topological choices among multicast, tree-reduction, and
+independent modes).  On these substrates, dataflow design becomes the
+\emph{decisive} performance factor.
+
+%% P4: Challenges — the crux of our motivation
+%% (Like FLAT §1 identifying 3 challenges before presenting solution)
+We identify three fundamental challenges in mapping MLA onto spatial
+accelerators:
+\begin{enumerate}
+  \item \textbf{Complex data reuse.}  Spatial accelerators expose rich
+    reuse opportunities through distributed scratchpad SRAM and NoC
+    multicast, while MLA's shared-latent representation adds reuse
+    across heads and tiles that does not exist in conventional MHA.
+    Exploiting this reuse is non-trivial because online per-head
+    restoration couples placement, buffering, and communication choices
+    across spatial, temporal, and topological dimensions.  Unlike the
+    purely memory-bound L/A operators studied in
+    FLAT~\cite{kao2023flat}, MLA decode lies in a mixed
+    compute--memory regime whose balance shifts with sequence length.
+  \item \textbf{Pipeline coupling in decoupled execution.}
+    Compared with MHA/GQA decode, MLA introduces an additional
+    online-restoration stage and therefore a more intricate
+    reader--compute--writer dataflow.  Spatial accelerators employ
+    decoupled pipelines to hide latency, but these asynchronous stages
+    remain coupled through shared buffers, back-pressure, and NoC
+    contention.  As we show through hardware profiling, the coupling
+    intensifies with sequence length and is not captured by first-order
+    analytical models.
+  \item \textbf{Large, non-obvious design space.}
+    The dataflow design space---spanning head grouping, tile grouping,
+    block sizes, pipeline depth, and reduction topology---contains
+    hundreds of feasible configurations whose relative performance
+    shifts across sequence-length regimes, making manual tuning
+    infeasible.
+\end{enumerate}
+
+%% P5: Our approach — overview
+%% (Like FLAT §1 "This paper fundamentally tackles...")
+This paper presents \sysname (\brandexpansion), a framework for
+analyzing and exploring MLA dataflows on
+spatial accelerators.  Guided by the three challenges above, we first
+quantify MLA's reuse and pipeline-coupling behavior through
+quantitative analysis and hardware measurements
+(Section~\ref{sec:challenges}).  We then present a dataflow concept and
+implementation that expose the key spatial, temporal, and topological
+design decisions (Sections~\ref{sec:concept}--\ref{sec:design}).
+Finally, we build a cost-model-guided DSE workflow with empirical
+calibration, automated search, and architecture-level exploration
+(Sections~\ref{sec:costmodel}--\ref{sec:arch-explore}).
+
+%% P6: Contributions
+%% (Like FLAT listing specific contributions)
 We make the following contributions:
 \begin{itemize}
-  \item A \emph{Tensix-specific attention dataflow} that reads Q/K/V
-    from DRAM once and multicasts to consumer cores with decoupled
-    move-compute overlap.
-  \item A \emph{decode-phase KV cache multicast} design (producer–consumer
-    graph, block size, single-/multi-card) that reduces DRAM traffic
-    toward the theoretical minimum.
-  \item An \emph{analytical cost model and auto-tuner} for head/tile
-    grouping and pipeline layout that adapts to varying $(L, d, H, B)$
-    without manual tuning.
-  \item \emph{Evaluation on real Tenstorrent Wormhole hardware} showing
-    significant DRAM and latency improvements over baselines.
+  \item \textbf{Systematic characterization of MLA's core mapping
+    challenges} on spatial accelerators, showing how complex data reuse,
+    compute--memory balance, and pipeline coupling evolve with
+    sequence length and differ from MHA
+    (Section~\ref{sec:challenges}).
+
+  \item \textbf{A parameterized MLA dataflow concept and design} that
+    leverages collective primitives (multicast, reduction) to exploit
+    MLA's shared-latent structure, while making the key spatial,
+    temporal, and topological trade-offs explicit
+    (Sections~\ref{sec:concept}--\ref{sec:design}).
+
+  \item \textbf{A dataflow DSE framework with second-order cost
+    modeling} that captures non-ideal effects such as reader
+    back-pressure, writer stalls, and multicast injection hotspots, and
+    pairs the model with an \autoTuner{} to efficiently search the large
+    design space (Section~\ref{sec:costmodel}).
+
+  \item \textbf{Hardware-validated decode characterization} revealing
+    a bottleneck \emph{\phaseTransition} from compute-critical to
+    reader--writer saturated coupling, decomposed at sub-component
+    granularity; and \textbf{architecture exploration} identifying
+    divergent optimal configurations for MLA versus MHA
+    (Sections~\ref{sec:eval}--\ref{sec:arch-explore}).
 \end{itemize}
 
 
 %% ============================================================
-%%  2. BACKGROUND AND RELATED WORK
+%%  2. BACKGROUND
 %% ============================================================
-\section{Background and Related Work}\label{sec:background}
+\section{Background}\label{sec:background}
 
-%%% ----- 2.1 Multi-Head Attention and the Decode Phase -----
+This section reviews the attention formulations, MLA computation,
+architectural mechanisms, and performance concepts needed for the
+challenge analysis that follows.
 
-\subsection{Multi-Head Attention and the Decode Phase}\label{sec:bg-mha}
+
+%%% ----- 2.1 Attention Mechanisms: From MHA to MLA -----
+
+\subsection{Attention Mechanisms: From MHA to MLA}\label{sec:bg-attn}
 
 The Transformer architecture~\cite{vaswani2017attention} employs
 multi-head attention (MHA) as its core sequence-modeling primitive.
-For each of the $H$ attention heads, a query, key, and value triple
-$(Q_h, K_h, V_h)$ is derived via learned linear projections, and
-attention is computed as
+For each of $H$ attention heads, query, key, and value triples
+$(Q_h, K_h, V_h)$ are derived via learned projections, and attention
+is computed as:
 \begin{equation}\label{eq:mha}
   \mathrm{Attn}_h
     = \mathrm{softmax}\!\Bigl(\frac{Q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h ,
 \end{equation}
-where $d$ denotes the per-head dimension and $L$ the sequence length,
-giving $Q_h, K_h, V_h \in \mathbb{R}^{L \times d}$.
-The outputs of all heads are concatenated and linearly projected to
-form the layer output.
+where $d$ is the per-head dimension.
 
 \paragraph{Prefill versus decode.}
-Autoregressive LLM inference proceeds in two distinct
+Autoregressive LLM inference has two distinct
 phases~\cite{pope2023efficiently}.
-The \emph{prefill} (prompt) phase processes the entire input prompt in
-a single forward pass, computing KV pairs for all $L$ input tokens
-simultaneously.  Because it executes $\mathcal{O}(L^2 d H)$ FLOPs over
-$\mathcal{O}(L d H)$ data elements, prefill is typically
-\emph{compute-bound}.
-The subsequent \emph{decode} phase generates one new token per step.
-At step~$t$, only the new token's query
-$q_h \in \mathbb{R}^{1 \times d}$ is produced, which attends over the
-full KV cache of length~$L$:
+The \emph{prefill} phase processes the entire prompt in one forward
+pass, computing $\mathcal{O}(L^2 d H)$ FLOPs over $\mathcal{O}(LdH)$
+data---typically \emph{compute-bound}.
+The \emph{decode} phase generates one token per step: the new query
+$q_h \in \mathbb{R}^{1 \times d}$ attends over the full KV cache of
+length $L$:
 \begin{equation}\label{eq:decode-attn}
-  o_h = \mathrm{softmax}\!\Bigl(\frac{q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h ,
-  \quad K_h, V_h \in \mathbb{R}^{L \times d}.
+  o_h = \mathrm{softmax}\!\Bigl(
+    \frac{q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h,
+  \quad K_h, V_h \in \mathbb{R}^{L \times d},
 \end{equation}
-This requires only $\mathcal{O}(L\,d)$ FLOPs per head but reads
-$\mathcal{O}(L\,d)$ elements of both $K$ and $V$ from memory, yielding
-an arithmetic intensity of $\mathcal{O}(1)$---firmly in the
-\emph{memory-bound} regime.
+requiring $\mathcal{O}(Ld)$ FLOPs but reading $\mathcal{O}(Ld)$
+KV elements from memory---arithmetic intensity $\mathcal{O}(1)$,
+firmly \emph{memory-bound}.
 
-\paragraph{KV cache traffic.}
-During decode, each step must read the K and V caches for all $H$
-heads from DRAM\@.  The total read volume per step is
-\begin{equation}\label{eq:kv-traffic}
-  D_{\mathrm{KV}} = 2\, L\, d\, H\, b_{\mathrm{elem}} ,
+\paragraph{From GQA/MQA to MLA.}
+Grouped-query attention (GQA)~\cite{ainslie2023gqa} and multi-query
+attention (MQA)~\cite{shazeer2019mqa} reduce the number of KV heads,
+proportionally shrinking cache size and DRAM traffic.
+Multi-Latent Attention (MLA)~\cite{deepseekai2024deepseekv2} goes
+further by compressing the KV representation itself into a low-rank
+latent space.
+
+
+%%% ----- 2.2 Multi-Latent Attention (MLA) -----
+
+\subsection{Multi-Latent Attention}\label{sec:bg-mla}
+
+In MLA, the KV cache for each token position $t$ is compressed into a
+single latent vector $c_t \in \mathbb{R}^{d_c}$ via a learned
+down-projection:
+\begin{equation}\label{eq:mla-compress}
+  c_t = W_{\mathrm{DKV}} \, x_t ,
 \end{equation}
-where $b_{\mathrm{elem}}$ is the element size in bytes (\eg 2\,B for
-\texttt{bfloat16}).
-For a model with $H{=}32$ heads, $d{=}128$, and $L{=}4096$, this
-amounts to ${\approx}\,64$\,MB per step---imposing a hard latency floor
-set by available DRAM bandwidth.
-Variants such as grouped-query attention
-(GQA)~\cite{ainslie2023gqa} and multi-query attention
-(MQA)~\cite{shazeer2019mqa} reduce the number of distinct KV heads,
-lowering $D_{\mathrm{KV}}$ proportionally, yet the fundamental
-memory-bound character of decode attention persists at practical
-sequence lengths.
+where $d_c \ll H \cdot d$ is the latent rank (e.g., $d_c = 512$ in
+DeepSeek-V2 with $H{=}128$ and $d{=}128$).  Only $c_t$ is stored
+in the KV cache, reducing per-token storage from $2Hd$ to $d_c$ elements.
 
-%%% ----- 2.2 Tenstorrent Wormhole Architecture -----
+During decode, the full key and value for each head $h$ are
+\emph{online-restored}:
+\begin{equation}\label{eq:mla-restore}
+  K_h = W_{UK}^{(h)}\, C, \quad V_h = W_{UV}^{(h)}\, C ,
+\end{equation}
+where $C = [c_1; c_2; \ldots; c_L] \in \mathbb{R}^{L \times d_c}$
+is the cached latent matrix and $W_{UK}^{(h)}, W_{UV}^{(h)}$ are
+per-head up-projection matrices.
 
-\subsection{Tenstorrent Wormhole Architecture}\label{sec:bg-wormhole}
+In practice, DeepSeek models also incorporate a rotary position
+embedding (RoPE)~\cite{su2024roformer} component: the query and key
+each contain a RoPE subspace of dimension $d_{\mathrm{rope}}$
+(e.g., 64) that is not compressed into the latent, requiring separate
+handling in the dataflow.
 
-Tenstorrent Wormhole~\cite{tenstorrent2024wormhole} is a many-core
-accelerator designed for neural-network inference and training.
-We summarize the architectural features most relevant to our
-multicast-aware dataflow.
 
-\paragraph{Chip and card overview.}
-Each Wormhole chip integrates a grid of \emph{Tensix} processing cores
-connected by a pair of on-chip networks.
-The Wormhole N300 card used in our evaluation houses two chips with a
-total of $P{=}128$ usable Tensix cores and 12\,GB GDDR6 DRAM\@.
-Table~\ref{tab:hw-params} lists the key hardware parameters.
+%%% ----- 2.3 Tenstorrent Architecture -----
 
-\begin{table}[t]
-  \caption{Key hardware parameters of the Tenstorrent Wormhole N300.}
-  \label{tab:hw-params}
-  \centering
-  \small
-  \begin{tabular}{ll}
-    \toprule
-    \textbf{Parameter} & \textbf{Value} \\
-    \midrule
-    Tensix cores (N300)        & 128 (2 chips $\times$ 64 cores) \\
-    L1 SRAM per core           & 1\,MB scratchpad \\
-    DRAM capacity              & 12\,GB GDDR6 \\
-    DRAM bandwidth (aggregate) & ${\sim}$200\,GB/s \\
-    On-chip network            & Dual 2-D mesh (NoC\,0 \& NoC\,1) \\
-    Multicast support          & HW single-source rectangular \\
-    Compute per core           & BF16/FP16 matrix \& element-wise FMA \\
-    \bottomrule
-  \end{tabular}
-\end{table}
+\subsection{Tenstorrent Spatial Accelerator Architecture}\label{sec:bg-arch}
 
-\paragraph{Tensix core micro-architecture.}
-Each Tensix core contains five lightweight RISC-V processors
-(\emph{baby cores}) with dedicated roles:
+Tenstorrent's Wormhole~\cite{tenstorrent2024wormhole} and
+Blackhole chips are many-core spatial accelerators designed for
+neural-network workloads.  We describe the features most relevant
+to MLA dataflow design.
+
+\paragraph{Tensix core microarchitecture.}
+Each Tensix core integrates five lightweight RISC-V processors with
+specialized roles:
 \begin{itemize}
-  \item \textbf{Two data movers} (BRISC and NCRISC) manage DMA
-    transfers between DRAM, NoC, and local L1 SRAM\@.
-  \item An \textbf{unpack} engine reads tiles from L1 into the compute
-    pipeline's source registers.
-  \item A \textbf{math/FPU} engine executes matrix-multiply and
-    element-wise operations.
-  \item A \textbf{pack} engine writes results from the compute pipeline
-    back to L1.
+  \item \textbf{NCRISC (Reader):} Manages DRAM-to-L1 DMA transfers;
+    in MLA, responsible for reading K/V latent pages from ND-sharded
+    DRAM.
+  \item \textbf{BRISC (Writer/Coordinator):} Manages L1-to-L1 and
+    L1-to-DRAM transfers; in MLA, orchestrates Q distribution,
+    K multicast to receiver cores, and tree-reduction send/receive
+    protocols.
+  \item \textbf{TRISC (Compute):} Three processors (TRISC0--2)
+    driving the unpack--math--pack pipeline; in MLA, executes
+    $QK^\top$, online softmax, $\mathrm{Attn} \cdot V$, and
+    tail-reduction merges.
 \end{itemize}
-Because data movers, unpack, math, and pack operate as
-\emph{decoupled} pipeline stages, data transfer and computation can
-overlap---a property central to the pipelined schedule described in
-Section~\ref{sec:df-pipeline}.
+
+Because NCRISC, BRISC, and TRISC operate as \emph{decoupled pipeline
+stages}, data movement and computation can overlap---but they also
+exhibit \emph{pipeline coupling} when downstream back-pressure
+propagates upstream, a phenomenon central to our analysis
+(Section~\ref{sec:challenge-coupling}).
 
 \paragraph{Circular buffers.}
-The stages within a Tensix core communicate through software-managed
-\emph{circular buffers} (CBs) allocated in L1.
-A producer (\eg a data mover receiving tiles from the NoC) pushes
-tiles into CB slots, and a consumer (\eg the unpack engine) pops them.
-By configuring the CB depth ($\geq 2$ slots), double-buffering or
-deeper pipelining is achieved transparently, enabling data movement
-to proceed concurrently with computation.
+Inter-stage communication within a core uses software-managed
+\emph{circular buffers} (CBs) in L1 SRAM.
+A producer (e.g., NCRISC) pushes tiles into CB slots; a consumer
+(e.g., TRISC unpack) pops them.  CB depth ($\geq 2$ slots) enables
+double-buffering or deeper pipelining.  When all slots are full, the
+producer \emph{stalls on reserve}; when all slots are empty, the
+consumer \emph{stalls on wait-front}.  These stall events are directly
+observable in profiling and form the basis of our second-order cost
+model terms.
 
 \paragraph{Dual NoC and hardware multicast.}
-The two independent networks, NoC\,0 and NoC\,1, each span the full
-2-D mesh and support both unicast and \emph{hardware multicast}.
-In a multicast, a source core issues a single DMA command specifying
-a rectangular region of destinations; the network replicates the
-packet at branch points and delivers data to all targets in one
-traversal without the source transmitting separate copies.
-This multicast primitive is the \emph{key enabler} of our design:
-a producer core reads a KV-cache block from DRAM once and multicasts
-it to all consumer cores in its group, reducing total DRAM traffic
-toward the theoretical minimum.
-We assign NoC\,0 to KV distribution and NoC\,1 to partial-result
-reduction, fully utilizing both networks concurrently.
-
-%%% ----- 2.3 Related Work -----
-
-\subsection{Related Work}\label{sec:bg-related}
-
-\paragraph{Efficient attention on GPUs.}
-FlashAttention~\cite{dao2022flashattention} introduced IO-aware tiling
-to keep intermediate attention matrices in on-chip SRAM, dramatically
-reducing HBM traffic on NVIDIA GPUs.
-FlashAttention-2~\cite{dao2023flashattention2} improved parallelism
-and work partitioning across warps and thread blocks, while
-FlashAttention-3~\cite{shah2024flashattention3} further exploits
-Hopper-class asynchronous execution and low-precision accumulation.
-For the decode phase specifically,
-Flash-Decoding~\cite{flashdecoding2023} parallelizes across the KV
-sequence dimension rather than the batch or head dimension, improving
-GPU utilization when the batch size is small;
-FlashDecoding++~\cite{hong2024flashdecoding} extends this with a
-unified max-value technique that avoids synchronization overhead in
-the softmax reduction.
-Ring Attention~\cite{liu2023ringattention} distributes long sequences
-across multiple devices in a ring topology.
-All these techniques are deeply tied to the GPU execution model
-(warps, shared memory, tensor cores) and do not directly transfer to
-many-core architectures with fundamentally different memory hierarchies
-and communication primitives.
-
-\paragraph{KV cache management and attention variants.}
-PagedAttention~\cite{kwon2023pagedattention}, implemented in the vLLM
-serving system, addresses KV cache \emph{memory fragmentation} by
-borrowing virtual-memory paging concepts, enabling flexible cache
-sharing across requests.
-On the model-architecture side, GQA~\cite{ainslie2023gqa} and
-MQA~\cite{shazeer2019mqa} reduce the number of KV heads, directly
-shrinking cache footprint and per-step DRAM traffic.
-StreamingLLM~\cite{xiao2024streamingllm} and
-H\textsubscript{2}O~\cite{zhang2024h2o} selectively evict or compress
-KV cache entries to handle long contexts.
-These approaches are \emph{orthogonal} to our dataflow design: they
-reduce the logical volume of KV data, whereas \sysname minimizes the
-physical DRAM reads for a given cache volume via multicast.
-
-\paragraph{LLM serving systems.}
-Orca~\cite{yu2022orca} pioneered iteration-level scheduling with
-continuous batching to improve GPU throughput.
-DeepSpeed-Inference~\cite{aminabadi2022deepspeed} combines model
-parallelism, customized kernels, and heterogeneous execution for
-large-scale serving.
-More recently, Splitwise~\cite{patel2024splitwise} and
-DistServe~\cite{zhong2024distserve} propose \emph{disaggregating} the
-prefill and decode phases onto separate hardware pools, recognizing
-their distinct compute-vs-memory characteristics.
-These systems orchestrate resources at the \emph{cluster or model}
-level; our work is complementary, targeting kernel-level dataflow on a
-single accelerator card.
-
-\paragraph{Dataflow mapping and cost modeling.}
-A rich body of work formalizes dataflow mapping for DNN accelerators.
-MAESTRO~\cite{kwon2019maestro} provides an analytical framework for
-evaluating data reuse, bandwidth, and energy across mappings.
-Timeloop~\cite{parashar2019timeloop} and
-Eyeriss~v2~\cite{chen2019eyerissv2} similarly explore the mapping
-space for spatial architectures, primarily targeting convolution.
-FLAT~\cite{kao2023flat} extends dataflow analysis to the attention
-operator, proposing optimized mappings that mitigate the
-memory-bandwidth bottleneck of softmax.
-However, these tools target either generic spatial arrays or GPU-like
-architectures; none models the Tensix-specific features of decoupled
-data movers, per-core circular buffers, or hardware NoC multicast that
-are central to our design.
-
-\paragraph{Attention on many-core and non-GPU architectures.}
-The most closely related work is
-FlatAttention~\cite{flatattention2024}, which co-optimizes dataflow
-and fabric collectives for multi-head attention on tile-based many-PE
-accelerators.
-FlatAttention demonstrates significant speedups by orchestrating data
-movement across PEs via collective operations.
-However, it (i)~primarily targets the \emph{prefill} phase, where the
-workload is compute-bound and the optimal strategies differ from
-memory-bound decode;
-(ii)~employs a generic tile-PE abstraction without exploiting
-architecture-specific features such as Tensix's decoupled data movers,
-software-managed circular buffers, and dual-NoC hardware multicast;
-and (iii)~does not provide an auto-tuner that adapts to varying decode
-workload parameters.
-Cerebras~\cite{cerebras2024waferscale} and RISC-V kilo-core
-clusters~\cite{dynamic-alloc2024} also present many-core substrates
-for transformer workloads, but focus on wafer-scale integration and
-shared-memory management respectively, without addressing
-decode-specific multicast dataflows.
-Prior work on the Tenstorrent platform~\cite{tt-fft2025} has explored
-FFT acceleration and validated the effectiveness of Wormhole's
-multicast primitive for signal-processing kernels, but did not target
-attention workloads.
-
-\paragraph{Positioning of this work.}
-To the best of our knowledge, no prior work jointly addresses
-(i)~Tensix-specific dataflow with decoupled data movers and dual-NoC
-multicast,
-(ii)~the decode-phase KV-cache access pattern, and
-(iii)~automated configuration tuning driven by an analytical cost
-model.
-\sysname fills this gap.
-
-
-%% ============================================================
-%%  3. PROBLEM FORMULATION
-%% ============================================================
-\section{Problem Formulation}\label{sec:problem}
-
-%% OUTLINE:
-%% 3.1 负载参数定义
-%%   - Workload = (L, d, H, B, elem)：序列长、head 维度、head 数、batch、元素字节
-%%   - 解码步计算量与访存量分析
-%%
-%% 3.2 优化目标
-%%   - 主目标：最小化单步延迟 latency
-%%   - 次目标：最小化 DRAM 流量、最大化利用率
-%%   - 约束：SRAM 容量、核数、NoC 带宽
-%%
-%% 3.3 设计空间概览
-%%   - 分组维度：G_head, T_group
-%%   - 块大小：B_kv
-%%   - 流水参数：depth, overlap
-%%   - 归约策略：binary_tree, row_col
-%%   - 空间规模 ~O(百) 种合法配置
-
-\textbf{TODO: Formalize workload, objectives, constraints, design space.}
-
-
-%% ============================================================
-%%  4. MULTICAST-AWARE ATTENTION DATAFLOW
-%% ============================================================
-\section{Multicast-Aware Attention Dataflow}\label{sec:dataflow}
-
-%% OUTLINE:
-%% 4.1 总体架构
-%%   - 核角色划分：Producer（DRAM 读 + NoC 多播）、Consumer（计算）、Reducer
-%%   - 数据流示意图（Figure 1）：DRAM → Producer → multicast → Consumers → reduce → Output
-%%
-%% 4.2 生产者-消费者多播设计
-%%   - Producer 从 DRAM 按 B_kv 块读 K/V 到本地 CB
-%%   - 通过 NoC 0 单源多播到同组 T_group 个消费者核
-%%   - 消费者接收到 CB 后本地计算 QK^T 分块、partial softmax、AttnV 分块
-%%   - 双 NoC 利用：NoC 0 做 K/V 多播，NoC 1 做 partial result reduce
-%%
-%% 4.3 流水重叠调度
-%%   - Block-level pipeline: DRAM read → multicast → compute
-%%   - depth=1（串行）、depth=2（双缓冲）的时序图（Figure 2）
-%%   - overlap=1 时多播与上一块计算并行
-%%   - 稳态吞吐公式：t_steady = max(t_dram, t_mcast, t_comp)
-%%
-%% 4.4 片上归约
-%%   - Softmax 在线归约：每块计算 local max/sum，最终跨核 reduce
-%%   - binary tree reduce vs row-col reduce 策略
-%%   - 输出 O 归约后由单核写回 DRAM
-
-\subsection{Overall Architecture}\label{sec:df-arch}
-\textbf{TODO: Producer/consumer/reducer role assignment, data flow
-diagram (Figure~\ref{fig:dataflow}).}
-
-\begin{figure}[t]
-  \centering
-  %% \includegraphics[width=\columnwidth]{figures/dataflow_overview.pdf}
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
-    \textbf{Figure Placeholder:} Dataflow overview\\
-    DRAM $\to$ Producer $\to$ Multicast $\to$ Consumers $\to$ Reduce $\to$ Output
-  \vspace{2cm}}}
-  \caption{Overview of the \sysname multicast-aware attention dataflow
-    on Tenstorrent Wormhole.}
-  \label{fig:dataflow}
-\end{figure}
-
-\subsection{Producer–Consumer Multicast}\label{sec:df-mcast}
-\textbf{TODO: Detail KV block multicast via NoC, CB usage, dual-NoC
-assignment.}
-
-\subsection{Pipelined Overlap Scheduling}\label{sec:df-pipeline}
-\textbf{TODO: Block-level pipeline timing diagram (Figure~\ref{fig:pipeline}),
-depth/overlap modes, steady-state throughput.}
-
-\begin{figure}[t]
-  \centering
-  %% \includegraphics[width=\columnwidth]{figures/pipeline_schedule.pdf}
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
-    \textbf{Figure Placeholder:} Pipeline schedule\\
-    Block 0: [DRAM] [mcast] [comp]\\
-    Block 1: \hspace{2em} [DRAM] [mcast] [comp]\\
-    Block 2: \hspace{4em} [DRAM] [mcast] [comp]
-  \vspace{1cm}}}
-  \caption{Block-level pipelined schedule with double buffering
-    ($\text{depth}=2$, $\text{overlap}=1$).}
-  \label{fig:pipeline}
-\end{figure}
-
-\subsection{On-Chip Reduction}\label{sec:df-reduce}
-\textbf{TODO: Online softmax reduce, binary tree vs row-col, output write-back.}
-
-
-%% ============================================================
-%%  5. ANALYTICAL COST MODEL
-%% ============================================================
-\section{Analytical Cost Model}\label{sec:costmodel}
-
-%% OUTLINE:
-%% 5.1 DRAM 流量建模
-%%   - 基线（每核读）：DRAM_bytes = n_consumers × (K_bytes + V_bytes)
-%%   - 多播理想：DRAM_bytes = 1 × (K_bytes + V_bytes) + Q_bytes + O_bytes
-%%   - 实际：考虑 n_groups = H / G_head 组，每组有独立 producer
-%%
-%% 5.2 延迟建模
-%%   - 每块三阶段耗时：
-%%     t_dram = B_kv × d × 2 × elem / BW_dram
-%%     t_mcast = B_kv × d × 2 × elem / BW_noc (× hop factor)
-%%     t_comp = B_kv × d × FLOPs_factor / FLOPS_peak
-%%   - 流水稳态：t_steady 根据 (depth, overlap) 取不同 max 组合
-%%   - 总延迟 = t_first_block + (n_blocks - 1) × t_steady + t_reduce + t_qo
-%%
-%% 5.3 利用率
-%%   - utilization = t_comp_total / latency_total
-%%   - 瓶颈标识：argmax(t_dram, t_mcast, t_comp)
-%%
-%% 5.4 SRAM 约束
-%%   - 每核需缓存：2 × B_kv × d × G_head × elem × depth ≤ 45% × SRAM_per_core
-%%   - 此约束剔除不可行配置
-
-\subsection{DRAM Traffic Model}\label{sec:cm-dram}
-\textbf{TODO: Closed-form DRAM bytes for baseline vs multicast.}
-
-\subsection{Latency Model}\label{sec:cm-latency}
-\textbf{TODO: Per-block stage latencies, pipeline steady-state formula,
-total latency.}
-
-\subsection{Utilization and Bottleneck Identification}\label{sec:cm-util}
-\textbf{TODO: Utilization definition, bottleneck classification.}
-
-\subsection{SRAM Feasibility Constraints}\label{sec:cm-sram}
-\textbf{TODO: SRAM capacity check, infeasible config pruning.}
-
-
-%% ============================================================
-%%  6. AUTO-TUNER
-%% ============================================================
-\section{Auto-Tuner}\label{sec:tuner}
-
-%% OUTLINE:
-%% 6.1 设计空间定义
-%%   - 参数及其候选值表 (Table 1)
-%%     G_head ∈ {H 的因子}
-%%     T_group ∈ {4, 8, 16, 32, 64, 128}（P 的因子且 ≥ 4）
-%%     B_kv ∈ {32, 64, 128, 256, 512, 1024}
-%%     depth ∈ {1, 2}
-%%     overlap ∈ {0, 1}（需 depth ≥ 2）
-%%     reduce_strategy ∈ {binary_tree, row_col}
-%%   - 合法性约束过滤后空间规模约 300-500
-%%
-%% 6.2 搜索策略
-%%   - 枚举所有合法配置 → 代价模型打分 → 按目标排序
-%%   - 支持单目标（latency）和多目标（Pareto front: latency vs DRAM）
-%%   - 搜索时间 < 1 秒（得益于闭式模型）
-%%
-%% 6.3 标定（可选）
-%%   - 用少量硬件实测数据回归修正系数 β_dram, β_mcast, η_comp
-%%   - 标定后重新寻优以贴合真实硬件
-
-\subsection{Design Space}\label{sec:tuner-space}
-\textbf{TODO: Parameter table (Table~\ref{tab:design-space}), constraint
-filtering, space size.}
+Two independent 2-D mesh networks (NoC\,0 and NoC\,1) each support
+unicast and \emph{hardware multicast}: a source core specifies a
+rectangular destination region, and the network replicates data at
+branch points, delivering to all targets in a single traversal.
+In our MLA dataflow, NoC\,0 carries K/V data distribution while
+NoC\,1 handles partial-result reduction, enabling concurrent use
+of both fabrics.
 
 \begin{table}[t]
-  \caption{Design space parameters and candidate values.}
-  \label{tab:design-space}
+  \caption{Key hardware parameters: Wormhole vs.\ Blackhole.}
+  \label{tab:hw-params}
+  \centering\small
   \begin{tabular}{lll}
     \toprule
-    Parameter & Candidates & Constraint \\
+    \textbf{Parameter} & \textbf{Wormhole (N300)} & \textbf{Blackhole} \\
     \midrule
-    $\Ghead$ & Factors of $H$ & $H/\Ghead \times \Tgroup \leq P$ \\
-    $\Tgroup$ & $\{4, 8, 16, \ldots, 128\}$ & Factor of $P$, $\geq 4$ \\
-    $\Bkv$   & $\{32, 64, \ldots, 1024\}$ & SRAM capacity \\
-    depth    & $\{1, 2\}$ & — \\
-    overlap  & $\{0, 1\}$ & Requires depth $\geq 2$ \\
-    reduce   & \{binary, row-col\} & — \\
+    Tensix cores          & 128 (2$\times$64)    & $\sim$140 (2$\times$70) \\
+    L1 SRAM / core        & $\sim$1.5\,MB        & $\sim$1.5\,MB \\
+    DRAM capacity         & 12\,GB GDDR6         & 16\,GB GDDR6 \\
+    DRAM controllers      & 6                    & 8 \\
+    DRAM BW (aggregate)   & $\sim$200\,GB/s      & $\sim$300\,GB/s \\
+    NoC topology          & Dual 2-D mesh        & Dual 2-D mesh \\
+    Multicast             & HW rect.\ region     & HW rect.\ region \\
+    NOC max page          & 8\,KB                & 16\,KB \\
+    Compute/core (BF16)   & $\sim$1\,GFLOPS      & $\sim$1\,GFLOPS \\
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Search Strategy}\label{sec:tuner-search}
-\textbf{TODO: Enumerate-and-score, single-/multi-objective, runtime.}
 
-\subsection{Calibration with Hardware Measurements}\label{sec:tuner-calib}
-\textbf{TODO: Coefficient regression, calibration workflow.}
+%%% ----- 2.4 Performance Considerations (NEW, like FLAT §2.1) -----
+
+\subsection{Performance Considerations for Attention}\label{sec:bg-perf}
+
+%% Introduce operational intensity and dataflow concepts
+%% (Mirrors FLAT §2.1: operational intensity, roofline, dataflow)
+
+Following the methodology of prior dataflow
+analysis~\cite{kao2023flat, parashar2019timeloop}, we review two key
+concepts that underpin our challenge analysis in
+Section~\ref{sec:challenges}.
+
+\paragraph{Operational intensity.}
+The operational intensity of an operator is the ratio of arithmetic
+operations to memory accesses, serving as a proxy for the achievable
+fraction of peak compute on a given accelerator~\cite{williams2009roofline}:
+\begin{equation}\label{eq:op-intensity}
+  I = \frac{\text{\# of operations}}{\text{\# of memory accesses}}.
+\end{equation}
+An operator with low $I$ is memory-bandwidth bound and cannot
+achieve high compute utilization regardless of available FLOPs.
+
+\paragraph{Dataflow on spatial accelerators.}
+Following~\cite{kao2023flat, chen2019eyerissv2}, dataflow on a spatial
+accelerator encompasses three dimensions:
+(i)~\emph{tiling}---how tensors are sliced and staged across the
+memory hierarchy;
+(ii)~\emph{compute order}---the order in which loop iterations execute;
+and (iii)~\emph{parallelism}---how work is mapped across PEs spatially.
+On tile-based many-PE architectures, a fourth dimension
+emerges~\cite{flatattention2024}: \emph{collective communication}---how
+data is shared across PEs via multicast, reduction, and broadcast
+primitives on the on-chip network fabric.  The dataflow along with
+specific tile sizes is called a \emph{mapping}~\cite{parashar2019timeloop}.
 
 
 %% ============================================================
-%%  7. EVALUATION
+%%  3. CHALLENGES WITH MLA ON SPATIAL ACCELERATORS
+%%     (Core FLAT-style motivation section)
 %% ============================================================
-\section{Evaluation}\label{sec:eval}
+\section{Challenges with MLA on Spatial Accelerators}\label{sec:challenges}
 
-%% OUTLINE:
-%% 7.1 实验设置
-%%   - 平台：Tenstorrent Wormhole N300 (128 Tensix cores, 12 GB DRAM)
-%%   - 软件栈：TT-Metalium / TT-NN
-%%   - 负载：decode attention, L ∈ {512, 1024, 2048, 4096},
-%%     d ∈ {64, 128}, H ∈ {8, 16, 32}, B = 1, FP16
-%%   - 基线：(1) Per-core DRAM read, (2) Fixed multicast (B_kv=64, 无重叠)
-%%
-%% 7.2 整体性能
-%%   - 延迟对比柱状图 (Figure 3)：baseline vs fixed vs auto-tuned
-%%   - DRAM 流量对比表 (Table 2)
-%%   - 不同 (L, H) 组合下的改善百分比热力图 (Figure 4)
-%%
-%% 7.3 代价模型精度
-%%   - 模型预测 vs 实测延迟散点图 (Figure 5)
-%%   - MAPE (Mean Absolute Percentage Error) 统计
-%%   - 标定前后精度对比
-%%
-%% 7.4 消融实验
-%%   - B_kv 敏感性：B_kv 对延迟的影响曲线 (Figure 6)
-%%   - T_group 敏感性：T_group 对延迟与归约开销的影响 (Figure 7)
-%%   - 流水深度消融：depth=1 vs depth=2, overlap=0 vs 1
-%%   - 各阶段耗时堆叠图 (Figure 8)
-%%
-%% 7.5 自动寻优器评估
-%%   - 寻优器推荐 vs 穷举最优的差距
-%%   - 推荐配置随 (L, d, H) 的变化趋势
-%%   - 寻优器运行时间
+In this section, we characterize the three core mapping challenges
+introduced in Section~\ref{sec:intro}: complex data reuse, pipeline
+coupling in decoupled execution, and a large, non-obvious design
+space.  Together, these challenges explain why MLA requires a distinct
+dataflow design methodology on spatial accelerators and motivate the
+design decisions in Sections~\ref{sec:concept}--\ref{sec:design}.
 
-\subsection{Experimental Setup}\label{sec:eval-setup}
-\textbf{TODO: Hardware platform, software stack, workloads, baselines.}
 
-\subsection{Overall Performance}\label{sec:eval-perf}
-\textbf{TODO: Latency comparison (Figure~\ref{fig:latency-cmp}),
-DRAM traffic table (Table~\ref{tab:dram}), improvement heatmap
-(Figure~\ref{fig:heatmap}).}
+%%% ----- 3.1 Challenge 1: Complex Data Reuse -----
 
-\begin{figure}[t]
-  \centering
-  %% \includegraphics[width=\columnwidth]{figures/latency_comparison.pdf}
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2.5cm}
-    \textbf{Figure Placeholder:} Latency comparison bar chart\\
-    Baseline / Fixed / Auto-tuned
-  \vspace{1cm}}}
-  \caption{Decode-step latency across workloads: per-core baseline,
-    fixed multicast, and \sysname auto-tuned.}
-  \label{fig:latency-cmp}
-\end{figure}
+\subsection{Challenge 1: Complex Data Reuse}\label{sec:challenge-reuse}
+
+%% Following FLAT §3.1's style: quantitative analysis of operational
+%% intensity, showing why existing approaches are insufficient.
+
+We first show that \sharedLatentMulticast{} and per-head restoration
+place MLA decode in a compute--memory regime whose effective balance
+depends on the chosen mapping.
+
+\paragraph{MHA decode: purely memory-bound.}
+In standard MHA decode, the per-head operational intensity is
+\begin{equation}\label{eq:oi-mha}
+  I_{\text{MHA}} = \frac{2Ld}{2Ld \cdot b} = \frac{1}{b} ,
+\end{equation}
+where $b$ is element size in bytes.  For BF16 ($b{=}2$),
+$I_{\text{MHA}} = 0.5$~FLOP/Byte---deeply memory-bound on any
+accelerator.  Each head's KV data is independent, and no cross-head
+reuse exists.
+
+\paragraph{MLA decode: a mixed regime.}
+MLA introduces two qualitative differences.  First, the latent cache
+$C \in \mathbb{R}^{L \times d_c}$ is \emph{shared across all $H$
+heads}.  On a spatial accelerator, this enables reading $C$ once
+from DRAM and multicasting to cores processing different heads,
+reducing DRAM traffic from $\mathcal{O}(H)$ reads to $\mathcal{O}(1)$
+per latent block---an advantage that standard MHA entirely lacks.
+
+Second, MLA adds per-head up-projections ($W_{UK}^{(h)}, W_{UV}^{(h)}$)
+that transform the $d_c$-dimensional latent to $d$-dimensional K/V.
+The operational intensity of the \emph{combined} latent-read +
+projection + attention becomes:
+\begin{equation}\label{eq:oi-mla}
+  I_{\text{MLA}} \approx \frac{2Ld + 2Ld_c d / \Ghead}{L d_c \cdot b / N_{\text{mcast}} + L d \cdot b},
+\end{equation}
+where $\Ghead$ is the number of heads grouped per core and
+$N_{\text{mcast}}$ is the multicast fanout.  The numerator includes
+both attention FLOPs ($2Ld$) and projection FLOPs ($2Ld_c d/\Ghead$);
+the denominator reflects DRAM reads amortized by multicast and local
+output writes.  For typical DeepSeek-V2 parameters ($d{=}128$,
+$d_c{=}512$, $H{=}32$), $I_{\text{MLA}}$ ranges from $\sim$2 to
+$\sim$30~FLOP/Byte depending on $\Ghead$ and $N_{\text{mcast}}$,
+placing MLA decode in a mixed \emph{compute--memory regime} rather than
+a purely memory-bound or purely compute-bound one.
+
+\paragraph{Implication.}
+This mixed regime means that MLA's performance is sensitive to the
+\emph{balance} among DRAM bandwidth, multicast efficiency, and
+per-core compute throughput.  Dataflow techniques designed for purely
+memory-bound MHA decode (e.g., Flash-Decoding~\cite{flashdecoding2023})
+or purely compute-bound prefill (e.g.,
+FlashAttention~\cite{dao2022flashattention}) are ill-suited.
+Unlike the activation-activation operators (L, A) analyzed in
+FLAT~\cite{kao2023flat}, whose low operational intensity is
+independent of batch size, MLA's effective intensity is a function of
+dataflow parameters ($\Ghead$, $N_{\text{mcast}}$), making dataflow
+design the \emph{primary lever} for performance.
+
+
+%%% ----- 3.2 Challenge 2: Pipeline Coupling -----
+
+\subsection{Challenge 2: Pipeline Coupling in Decoupled Execution}\label{sec:challenge-coupling}
+
+%% Following FLAT §3.2 style: identifying a structural challenge
+%% that existing frameworks don't address.
+
+Spatial accelerators like Tenstorrent's Tensix employ decoupled
+reader--compute--writer pipelines connected by circular buffers,
+enabling overlap of data movement and computation.  A first-order
+analysis would predict that the steady-state throughput is
+$\max(t_{\text{read}}, t_{\text{compute}}, t_{\text{write}})$ per block.
+
+\paragraph{Coupling grows with sequence length.}
+In practice, we observe from hardware profiling
+(Section~\ref{sec:eval-profile}) that pipeline stages exhibit
+increasing \emph{mutual coupling} as sequence length grows:
+\begin{itemize}
+  \item The \textbf{reader} (NCRISC) stalls on CB reserve when
+    downstream compute cannot consume K tiles fast enough.  At
+    $L{=}$1K, reserve stalls account for $<$1\% of reader time;
+    at $L{=}$32K, they dominate at $>$60\%.
+  \item The \textbf{writer} (BRISC) stalls waiting for local compute
+    to produce partial outputs ($\sim$50\%) and for reduction partners
+    to complete ($\sim$50\%), regardless of sequence length.
+  \item The \textbf{compute} (TRISC) transitions from being purely
+    \emph{input-starved} (87\% wait-front at $L{=}$256) to being
+    \emph{squeezed from both ends} (29\% reserve-back at $L{=}$32K).
+\end{itemize}
+
+\paragraph{Why first-order models fail.}
+Existing dataflow mapping frameworks~\cite{parashar2019timeloop,
+kwon2019maestro, kao2023flat} assume independent pipeline stages
+and do not model these coupling effects.  The resulting predictions
+are optimistic: as we show in Section~\ref{sec:eval-accuracy},
+first-order models underestimate latency by up to $1.8\times$ at
+long sequences.  \emph{Accurate cost modeling requires second-order
+empirical terms that capture cross-stage back-pressure.}
+
+\paragraph{Comparison with tile-based accelerator analyses.}
+FlatAttention~\cite{flatattention2024} models multicast and
+reduction latencies on tile-based architectures but assumes
+synchronous execution within each pipeline stage.  Our analysis
+reveals that the \emph{asynchronous coupling} between stages---specific
+to decoupled architectures like Tensix---is a first-order effect that
+must be modeled explicitly.
+
+
+%%% ----- 3.3 Challenge 3: Large Design Space -----
+
+\subsection{Challenge 3: Large, Non-Obvious Design Space}\label{sec:challenge-space}
+
+%% Following FLAT §3.3 style: showing why the problem cannot be
+%% solved by simple heuristics.
+
+The difficulty is not just the number of parameters, but the fact that
+the best choices depend jointly on computation, communication, and
+buffering behavior across operating regimes.
+
+The MLA dataflow design space on a spatial accelerator is governed by
+multiple interacting parameters: head grouping ($\Ghead$), tile
+grouping ($\Tgroup$), KV block size ($\Bkv$), pipeline depth,
+overlap mode, reduction topology, and page size.  After constraint
+filtering, 300--800 feasible configurations remain.
+
+\paragraph{Optimal configuration shifts with operating regime.}
+The key difficulty is that the optimal configuration is \emph{not
+stable} across sequence lengths.  At short sequences ($L \leq$ 1K),
+compute is the bottleneck and configurations maximizing per-core FLOPs
+(high $\Ghead$, small $\Tgroup$) are preferred.  At long sequences
+($L \geq$ 16K), reader--writer coupling dominates, and configurations
+that reduce DRAM traffic (large $N_{\text{mcast}}$, deep pipeline) are
+preferred.  This regime shift means no single configuration is
+universally optimal.
+
+\paragraph{Comparison with existing DSE approaches.}
+FLAT~\cite{kao2023flat} addresses a similar map-space exploration
+problem for L-A fusion, but its design space is defined over
+intra-operator tiling and compute order for a \emph{single PE}.
+Our design space additionally spans \emph{inter-core} dimensions
+(multicast topology, reduction tree, \SblockName{} structure) unique to
+spatial accelerators.  FlatAttention~\cite{flatattention2024}
+explores group size ($G_x \times G_y$) as a parameter but does not
+address MLA-specific dimensions or provide automated DSE.
+
+\paragraph{Implication.}
+Manual tuning or single-point optimization is insufficient.
+An \emph{automated design space exploration} framework with an
+accurate cost model is necessary to navigate this space efficiently.
+
+
+%% ============================================================
+%%  4. SF-MLA DATAFLOW CONCEPT
+%%     (Like FLAT §4: high-level design decisions and rationale)
+%% ============================================================
+\section{\brand Dataflow Concept}\label{sec:concept}
+
+Guided by the challenges identified above, we present the high-level
+design concept of \sysname, focusing on \emph{why} specific design
+decisions are made before detailing \emph{how} they are implemented
+(Section~\ref{sec:design}).
+
+
+%%% ----- 4.1 Exploiting Shared-Latent Structure -----
+
+\subsection{Exploiting \SharedLatentMulticast}\label{sec:concept-mcast}
+
+%% Like FLAT §4.1: identifying the fusion opportunity
+%% Here: identifying the multicast opportunity unique to MLA
+
+\paragraph{MHA vs.\ MLA: cross-head data sharing.}
+In MHA, each head maintains independent K/V tensors.  On a spatial
+accelerator with $P$ cores, if each core processes a distinct head,
+each must independently read its own KV from DRAM---no cross-head
+sharing is possible.  The total DRAM KV traffic scales as $\mathcal{O}(P \cdot Ld \cdot b)$.
+
+MLA's latent cache $C$ is shared across all heads.  When $P$ cores
+process different heads, a single DRAM read of a latent block can be
+\emph{multicast} to all $P$ cores via the on-chip network, reducing
+DRAM traffic to $\mathcal{O}(L d_c \cdot b)$---a
+$\frac{P \cdot d}{d_c}$ fold reduction.  This is analogous to
+FlatAttention's~\cite{flatattention2024} use of row-wise multicast for
+Q blocks and column-wise multicast for K/V blocks, but with a crucial
+difference: in MLA, the \emph{same} data (latent $C$) serves
+\emph{all} heads, whereas in FlatAttention's MHA mapping, K/V is
+already head-specific.
+
+\paragraph{Design decision.}
+We organize cores into \emph{\SblockNames} where a designated
+\emph{sender} core reads latent pages from DRAM and multicasts to
+\emph{receiver} cores via hardware multicast on NoC\,0.  The multicast
+fanout ($C_s - 1$ receivers per \SblockName) directly translates to DRAM
+traffic reduction.
+
+
+%%% ----- 4.2 Managing the Projection--Attention Pipeline -----
+
+\subsection{Managing the Projection--Attention Pipeline}\label{sec:concept-pipeline}
+
+%% Like FLAT §4.2: identifying challenges with the fusion/pipeline
+
+\paragraph{The added projection stage.}
+Unlike MHA where received K/V data is immediately consumed by the
+$QK^\top$ matmul, MLA requires a per-head up-projection
+($C \rightarrow K_h, V_h$) before attention.  This creates a
+three-stage \emph{read → project → attend} pipeline within each core,
+increasing the depth of the computation chain and raising the
+sensitivity to circular-buffer depth.
+
+\paragraph{Design decision.}
+We leverage the decoupled pipeline of Tensix: NCRISC pre-fetches
+latent blocks into a CB of depth $D$; TRISC performs projection and
+attention in a fused kernel; BRISC handles output distribution.  The
+pipeline depth $D$ is a key design parameter: deeper pipelines hide
+read latency but consume more L1 SRAM.  As shown in
+Section~\ref{sec:challenge-coupling}, the \emph{coupling} between
+these stages makes $D$ a critical performance lever.
+
+
+%%% ----- 4.3 Reduction Topology -----
+
+\subsection{Aggregating Partial Results via On-Chip Reduction}\label{sec:concept-reduce}
+
+%% Like FLAT's discussion of managing intermediate tensor dependencies.
+%% Here: managing partial attention statistics across cores.
+
+When multiple \SblockNames{} process different chunks of the KV sequence for
+the same head, their partial attention outputs $(o, m, s)$ must be
+\emph{reduced} to produce the final output.  This is analogous to
+FlatAttention's~\cite{flatattention2024} row-wise reduction of O
+slices, but with a key difference: in MLA decode, the reduction spans
+the \emph{sequence dimension} (across \SblockNames{}) rather than the
+\emph{head dimension} (within a group).
+
+\paragraph{Design decision.}
+We employ a host-precomputed \emph{tree topology} on NoC\,1, where
+BRISC drives semaphore-based send/receive protocols and TRISC
+performs the numerical $\texttt{sdpa\_tail}$ merge at each tree level.
+The tree topology balances reduction latency ($\mathcal{O}(\log N_s)$)
+against NoC traffic, following the insight from
+FlatAttention~\cite{flatattention2024} that NoC collective primitives
+are highly beneficial when properly co-designed with the dataflow.
+
+
+%%% ----- 4.4 Summary of Concept -----
+
+\subsection{Conceptual Summary}\label{sec:concept-summary}
+
+Table~\ref{tab:concept-compare} summarizes how \sysname's design
+decisions address each challenge, contrasting with prior approaches.
 
 \begin{table}[t]
-  \caption{DRAM read volume per decode step (MB).}
-  \label{tab:dram}
-  \begin{tabular}{lrrr}
+  \caption{Design decisions addressing each challenge.}
+  \label{tab:concept-compare}
+  \centering\small
+  \begin{tabular}{lp{5.5cm}}
     \toprule
-    Workload & Baseline & Fixed & \sysname \\
+    \textbf{Challenge} & \textbf{\brand Design Decision} \\
     \midrule
-    $L\!=\!512,\; H\!=\!8$   & — & — & — \\
-    $L\!=\!1024,\; H\!=\!8$  & — & — & — \\
-    $L\!=\!2048,\; H\!=\!32$ & — & — & — \\
-    $L\!=\!4096,\; H\!=\!32$ & — & — & — \\
+    Complex data reuse &
+      \SharedLatentMulticast{} via \SblockName{} sender--receiver;
+      DRAM traffic $\propto 1/N_{\text{mcast}}$ \\
+    Pipeline coupling &
+      Parameterized CB depth $D$; second-order cost model
+      for coupling-aware DSE \\
+    Large design space &
+      \AutoTuner{} with exhaustive enumeration over
+      $(\Ghead, \Tgroup, \Bkv, D, \text{topo})$ \\
     \bottomrule
   \end{tabular}
 \end{table}
 
+
+%% ============================================================
+%%  5. SF-MLA DATAFLOW DESIGN
+%%     (Like FLAT §5: detailed implementation)
+%% ============================================================
+\section{\brand Dataflow Design}\label{sec:design}
+
+This section details the concrete dataflow implementation, building
+on the conceptual decisions from Section~\ref{sec:concept}.
+We first present the end-to-end dataflow algorithm, then describe
+the four-level tiling hierarchy, the placement strategy with DRAM
+bank affinity, the communication primitives, and finally the
+decoupled three-processor pipeline.
+
+
+%%% ----- 5.1 End-to-End Dataflow -----
+
+\subsection{End-to-End Dataflow}\label{sec:design-overview}
+
+Algorithm~\ref{alg:dataflow} summarizes the complete MLA decode
+dataflow.  The key design insight is that \emph{K movement is the
+sole high-volume bottleneck}: V is a column-subset of K
+($V = K[\,:\,,\,:d_v]$) and requires no separate transport, while Q
+is small enough to broadcast once.
+
+\begin{algorithm}[t]
+\caption{\brand Decode Dataflow}\label{alg:dataflow}
+\begin{algorithmic}[1]
+\renewcommand{\algorithmicrequire}{\textbf{Input:}}
+\renewcommand{\algorithmicensure}{\textbf{Output:}}
+\REQUIRE $Q \in \mathbb{R}^{B \times H_q \times d}$ (L1-sharded on output cores), \\
+\hspace{1.15cm} $K \in \mathbb{R}^{S \times d}$ (ND-sharded in DRAM), $\mathrm{pos}$
+\ENSURE $O \in \mathbb{R}^{B \times H_q \times d_v}$
+\STATE Partition cores into $N$ \SblockNames{} $\{S_1,\ldots,S_N\}$,
+       each $M$ cores in rectangle $G_i$, bound to DRAM bank $b_i$
+\STATE Chunk sequence: $C \leftarrow \lceil S/c_k \rceil$;
+       assign \SblockName{} $i$ chunks $\{i, i{+}N, i{+}2N, \ldots\}$
+       (stride $= N$, all on bank $b_i$)
+\STATE \textbf{Q broadcast:} output core signals ``Q ready'';
+       all workers pull $Q$ from output core L1
+\FOR{each chunk $j$ assigned to this core (stride $N$)}
+  \STATE \textbf{NCRISC:} read $K_j$ from DRAM $b_i$ into
+         $\mathrm{CB}_K$ in $P$ pages via TRID pipeline
+  \STATE \textbf{BRISC (sender):} multicast each page to $G_i$
+         receivers as it completes (page-level pipeline with NCRISC)
+  \STATE \textbf{TRISC:} flash attention chunk update in DEST:
+  \STATE \quad $A_j \leftarrow Q \cdot K_j^\top$; \;
+         apply mask if tail chunk
+  \STATE \quad $m' \leftarrow \max(m,\;\mathrm{rowmax}(A_j))$; \;
+         $\alpha \leftarrow \exp(m - m')$
+  \STATE \quad $O \leftarrow \alpha \cdot O + \exp(A_j - m') \cdot V_j$
+         \COMMENT{$V_j = K_j[\,:\,,\,:d_v]$}
+  \STATE \quad $\ell \leftarrow \alpha \cdot \ell + \mathrm{rowsum}(\exp(A_j - m'))$; \;
+         $m \leftarrow m'$
+  \STATE Release $\mathrm{CB}_K$ (double-buffer swap)
+\ENDFOR
+\STATE \textbf{Tree reduction} ($T = \lceil\log_2 N\rceil$ steps):
+       sender writes $(O_i, m_i, \ell_i)$ to partner's $\mathrm{slot}_t$;
+       receiver merges via online-softmax rescale
+\STATE $O_{\mathrm{final}} \leftarrow O / \ell$ at output core
+\end{algorithmic}
+\end{algorithm}
+
+
+%%% ----- 5.2 Four-Level Tiling Hierarchy -----
+
+\subsection{Four-Level Tiling Hierarchy}\label{sec:design-tiling}
+
+The dataflow employs a four-level tiling strategy that maps
+the sequence dimension from the full array down to per-tile
+compute operations:
+
+\paragraph{Level 1: Device chunk.}
+In multi-device sequence parallelism, the full sequence $S$ is
+partitioned across $D_{\mathrm{sp}}$ devices in units of
+\emph{device chunks} of size $N \cdot c_k$ tokens.  Each device
+owns a contiguous segment of the KV cache, sized to match the
+total work of its $N$ \SblockNames.
+
+\paragraph{Level 2: K chunk ($c_k$ tokens).}
+Within a device, the local sequence is divided into $C = \lceil S / c_k \rceil$
+chunks, each containing $c_k$ tokens (typically 128).
+Chunks are assigned to \SblockNames{} via strided distribution:
+\SblockName{} $i$ processes chunks $\{i, i{+}N, i{+}2N, \ldots\}$.
+Because the KV cache is ND-sharded in DRAM with round-robin
+bank assignment---chunk~$j$ resides on bank~$b_{j \bmod N}$---this
+stride ensures that \emph{every chunk read by \SblockName{} $i$ falls on
+its bound bank $b_i$}, eliminating cross-bank contention.
+
+\paragraph{Level 3: Page ($p_k$ bytes).}
+Each K chunk ($c_k \times d$ elements, typically ${\sim}$144\,KB in
+BF16) exceeds the NoC single-packet limit ($\leq 8$\,KB on Wormhole,
+$\leq 16$\,KB on Blackhole), so it is further divided into $P$
+pages.  Pages are the granularity of both DRAM reads (multi-TRID
+pipeline) and NoC multicast.  The page-level split enables
+\emph{DRAM-read / multicast overlap}: BRISC can multicast page~$p$
+while NCRISC reads page~$p{+}1$.
+
+\paragraph{Level 4: Tile.}
+K uses standard $32{\times}32$ tiles; Q uses $8{\times}32$
+\emph{tiny tiles} (matching the per-core Q head count of 8 in
+DeepSeek-V3).  The DEST register in TRISC holds the entire
+flash-attention working state: $QK^\top$ scores, running max/sum
+statistics, and partial $O$, requiring
+$(d_v/32 + 2 + c_k/32) \times 16$ rows of DEST capacity.
+
+
+%%% ----- 5.3 S-Block Placement -----
+
+\subsection{\SblockName{} Placement and DRAM Bank Affinity}\label{sec:design-placement}
+
+The placement strategy follows a \emph{\topologyFirst} principle:
+we fix the spatial layout of \SblockNames{} before mapping data, rather
+than deriving placement from tensor shapes.
+
+\paragraph{DRAM bank affinity.}
+Each \SblockName{} $S_i$ is bound to DRAM bank $b_i$ via the device API
+\texttt{get\_optimal\_dram\_bank\_to\_logical\_worker\_assignment}.
+The $M$ cores of $S_i$ are selected from the worker cores physically
+nearest to $b_i$ on the NoC mesh, minimizing read latency and
+hop count.
+
+\paragraph{Multicast rectangle constraint.}
+Hardware multicast on Tenstorrent requires destination cores to form
+a \emph{physical-coordinate rectangle}.  Each \SblockName{}'s $M$ cores are
+chosen to satisfy this constraint---e.g., a $2{\times}2$ rectangle on
+Wormhole ($M{=}4$) or a $4{\times}2$ rectangle on Blackhole
+($M{=}8$).  \SblockNames{} whose cores span the grid boundary exploit the
+NoC's \emph{torus wraparound}: a multicast from row~9 to row~0
+traverses a single hop on the torus topology.
+
+\paragraph{Concrete layouts.}
+On Wormhole~B0, six \SblockNames{} are placed in two groups of three on
+the left and right halves of the $8{\times}7$ grid, bound to banks
+$(1,2,0,4,9,8)$.
+On Blackhole, eight \SblockNames{} span columns $0$--$3$ (left) and
+$7$--$10$ (right) of the $11{\times}10$ grid, bound to banks
+$(1,3,2,0,5,7,6,4)$.
+Adjacent \SblockNames{} use alternating virtual channels
+($\mathrm{VC} \in \{0,1\}$ for left, $\{2,3\}$ for right) to avoid
+NoC link contention during concurrent DRAM reads.
+
+
+%%% ----- 5.4 Communication Primitives -----
+
+\subsection{Communication Primitives}\label{sec:design-comm}
+
+The dataflow uses four distinct communication modes, each matched to
+its data volume and spatial pattern:
+
+\paragraph{(i) K DRAM read (NCRISC, NoC\,0, pull).}
+Each \SblockName{}'s sender core reads K chunks from its bound DRAM bank.
+NCRISC uses a sliding window of up to $W{=}14$ transaction IDs
+(TRIDs) to pipeline page reads: pages are issued back-to-back, and
+each completed page increments a shared counter $\sigma_{\mathrm{sync}}$
+visible to BRISC.  A double-buffered $\mathrm{CB}_K$ (capacity
+$2 \times c_k \times d$) allows the current chunk's compute to
+overlap with the next chunk's DRAM fetch.
+
+\paragraph{(ii) K multicast (BRISC sender, NoC\,0, push).}
+The sender's BRISC multicasts K data to the $M{-}1$ receivers within
+rectangle $G_i$.  This operates at \emph{page granularity} in a
+three-phase protocol:
+\begin{enumerate}
+  \item \emph{Receiver ready}: each receiver's NCRISC signals
+    $\sigma_{\mathrm{recv}} \mathrel{+}= 1$ after reserving
+    $\mathrm{CB}_K$ space. Sender waits for $\sigma_{\mathrm{recv}} = M{-}1$.
+  \item \emph{Page-level pipeline}: for each page $p$, sender waits
+    $\sigma_{\mathrm{sync}} \geq p{+}1$ (NCRISC has read page $p$),
+    then issues \texttt{noc\_write\_multicast} to $G_i$.
+  \item \emph{Chunk complete}: after all $P$ pages, sender sets
+    $\sigma_{\mathrm{mcast}} = \mathrm{VALID}$ via multicast semaphore;
+    receivers push $\mathrm{CB}_K$ to notify TRISC.
+\end{enumerate}
+Hardware multicast replicates data at NoC branch points, consuming
+bandwidth equivalent to a \emph{single} write regardless of receiver
+count---a critical advantage over per-receiver unicast.
+
+\paragraph{(iii) Q broadcast (BRISC, NoC\,0 signal + NoC\,1 data, pull).}
+Q data (${\sim}$256\,B--1\,KB) is pre-sharded on the output core's
+L1.  The broadcast uses an asymmetric signal-then-pull protocol:
+all workers increment $\sigma_{\mathrm{q}}$ on the output core
+(unicast, NoC\,1); the output core waits for all signals, then
+multicasts a ``Q ready'' semaphore to the full-chip rectangle $G$
+(NoC\,0); each worker individually reads Q from the output core's L1
+(unicast, NoC\,1).  Data is \emph{not} multicast because workers are
+non-rectangular; semaphore multicast is used because it carries only a
+few bytes and benefits from full-chip coverage.
+
+\paragraph{(iv) Tree reduction (BRISC, NoC\,1, push unicast).}
+After local compute, partial results $(O_i, m_i, \ell_i)$ are
+reduced across \SblockNames{} in $T = \lceil\log_2 N\rceil$ steps via a
+host-precomputed binary tree.  At each step $t$, the sender writes
+its partial output and statistics to the partner's buffer
+$\mathrm{slot}_t$ using posted unicast writes on NoC\,1, then
+increments bit~$t$ of $\sigma_{\mathrm{reduce}}$.
+Per-step buffer slots prevent data corruption from out-of-order
+arrivals (e.g., step~3 completing before step~2).
+The receiver's TRISC performs the online-softmax merge:
+\begin{equation}\label{eq:tail-merge}
+  m'' = \max(m, m'), \quad
+  O \leftarrow e^{m-m''}O + e^{m'-m''}O', \quad
+  \ell \leftarrow e^{m-m''}\ell + e^{m'-m''}\ell'.
+\end{equation}
+
+Table~\ref{tab:comm-summary} summarizes the four modes and their
+NoC assignments.
+
+\begin{table}[t]
+  \caption{Communication primitives and NoC assignment.}
+  \label{tab:comm-summary}
+  \centering\small
+  \begin{tabular}{lllll}
+    \toprule
+    \textbf{Primitive} & \textbf{NoC} & \textbf{Mode} &
+      \textbf{Processor} & \textbf{Data/chunk} \\
+    \midrule
+    K DRAM read   & 0 & pull      & NCRISC & $c_k \!\times\! d \!\times\! b$ \\
+    K multicast   & 0 & push mcast & BRISC & same (to $M{-}1$ dest) \\
+    Q broadcast   & 0+1 & signal+pull & BRISC & $H_q \!\times\! d \!\times\! b$ \\
+    Tree reduce   & 1 & push ucast & BRISC & $d_v \!\times\! b + \mathrm{stats}$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
+%%% ----- 5.5 Decoupled Three-Processor Pipeline -----
+
+\subsection{Decoupled Three-Processor Pipeline}\label{sec:design-pipeline}
+
+The three RISC processors within each Tensix core execute
+concurrently, forming a decoupled pipeline connected by circular
+buffers and semaphores.
+Their role assignment is driven by a single design principle:
+\emph{separate DRAM access (NCRISC) from on-chip network control
+(BRISC) so that they overlap at page granularity}.
+
+\paragraph{NCRISC (data mover).}
+Exclusively handles DRAM$\,\to\,$L1 transfers.  On sender cores, it
+runs the multi-TRID sliding-window read and publishes page-completion
+counts via $\sigma_{\mathrm{sync}}$.
+On receiver cores, it signals readiness ($\sigma_{\mathrm{recv}}$)
+and waits for the multicast-complete semaphore
+($\sigma_{\mathrm{mcast}}$).
+
+\paragraph{BRISC (network controller).}
+Orchestrates all L1$\,\to\,$L1 communication: Q distribution,
+K multicast (sender only), causal mask generation for tail chunks,
+and tree-reduction send/receive.  BRISC's multiplexed role makes it
+the most heavily loaded processor; profiling
+(Section~\ref{sec:eval-writer}) confirms that BRISC
+$\texttt{cb\_wait}$ accounts for $>$99\% of writer time at long
+sequences.
+
+\paragraph{TRISC (compute engine).}
+Executes the entire flash-attention arithmetic in the DEST register
+file: $QK^\top$ (mm1), online softmax update, $\mathrm{score} \times V$
+(mm2, reading V as the first $d_v$ columns of K from $\mathrm{CB}_K$),
+and---on reduction receivers---tail-reduction merges
+(Equation~\ref{eq:tail-merge}).
+No separate V circular buffer exists; V is consumed directly from the
+K buffer via strided tile access, eliminating one entire data path
+(DRAM read, multicast, CB, and synchronization).
+
+\paragraph{Why this split?}
+NCRISC's DRAM reads and BRISC's multicast writes both use NoC\,0 but
+in \emph{opposite directions} (pull vs.\ push), enabling full
+bidirectional utilization.  NoC\,1 is reserved for low-volume traffic
+(Q pull, reduction unicast), avoiding contention with the K data
+path.  The result is a three-stage pipeline where DRAM latency,
+multicast latency, and compute latency can all overlap---subject to
+the coupling effects analyzed in Section~\ref{sec:challenge-coupling}.
+
+
+%%% ----- 5.6 Dataflow Parameterization -----
+
+\subsection{Dataflow Parameterization}\label{sec:design-param}
+
+\begin{table}[t]
+  \caption{Parameterized design space for MLA dataflow.}
+  \label{tab:design-space}
+  \centering\small
+  \begin{tabular}{llp{4.2cm}}
+    \toprule
+    \textbf{Parameter} & \textbf{Candidates} & \textbf{Constraint} \\
+    \midrule
+    $\Ghead$ & Factors of $H$ &
+      $H/\Ghead \times \Tgroup \leq P$ \\
+    $\Tgroup$ & $\{4, 8, 16, 32, 64\}$ &
+      Factor of $P$; $\geq 4$ \\
+    $\Bkv$ & $\{32, 64, 128, 256, 512, 1024\}$ &
+      SRAM capacity per core \\
+    Pipeline depth & $\{1, 2, 3, 4\}$ &
+      $D \times \Bkv \times d \times \Ghead \leq$ L1 budget \\
+    Overlap & $\{0, 1\}$ &
+      Requires depth $\geq 2$ \\
+    Reduce topo. & \{binary tree, row-col\} &
+      Core grid geometry \\
+    Topo.\ mode & \{independent, sblock\_mcast, tree\} &
+      Workload size \\
+    $k\_page\_size$ & \{auto, max, max/2, explicit\} &
+      NOC alignment \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Table~\ref{tab:design-space} defines the design space.
+After constraint filtering (SRAM capacity, core count, and
+divisibility requirements), the feasible space typically contains
+300--800 configurations, small enough for exhaustive evaluation
+by the analytical cost model.
+
+
+%% ============================================================
+%%  6. COST MODEL AND DSE FRAMEWORK
+%%     (Like FLAT §6: evaluation methodology)
+%% ============================================================
+\section{Cost Model and DSE Framework}\label{sec:costmodel}
+
+
+%%% ----- 6.1 First-Order Analytical Model -----
+
+\subsection{First-Order Analytical Model}\label{sec:cm-first}
+
+\paragraph{DRAM traffic.}
+Under the per-core-read baseline, total DRAM bytes per decode step
+for KV data is:
+\begin{equation}\label{eq:dram-baseline}
+  D_{\mathrm{base}} = P_{\mathrm{consumer}} \times 2Ld \cdot b .
+\end{equation}
+With multicast, only the sender reads from DRAM:
+\begin{equation}\label{eq:dram-mcast}
+  D_{\mathrm{mcast}} = N_s \times 2Ld_c \cdot b + D_Q + D_O ,
+\end{equation}
+where $d_c$ is the latent dimension and $D_Q, D_O$ are the
+(typically small) query and output traffic.  For MLA,
+$d_c \ll Hd$, giving an additional reduction over MHA.
+
+\paragraph{Per-block latencies.}
+For a KV block of size $\Bkv$:
+\begin{align}
+  t_{\mathrm{dram}}  &= \Bkv \cdot d_c \cdot b \,/\, \mathrm{BW}_{\mathrm{dram}} , \\
+  t_{\mathrm{mcast}} &= \Bkv \cdot d_c \cdot b \,/\, \mathrm{BW}_{\mathrm{noc}}
+                        \cdot f_{\mathrm{hop}} , \\
+  t_{\mathrm{comp}}  &= \Bkv \cdot d \cdot F \,/\, \mathrm{FLOPS}_{\mathrm{peak}} ,
+\end{align}
+where $f_{\mathrm{hop}}$ is a topology-dependent hop factor and
+$F$ accounts for the FLOPs of both the latent projection and
+attention arithmetic.
+
+\paragraph{Steady-state and total latency.}
+With pipeline depth $D$ and overlap enabled:
+\begin{equation}\label{eq:steady}
+  t_{\mathrm{steady}} = \max(t_{\mathrm{dram}},\; t_{\mathrm{mcast}},\;
+    t_{\mathrm{comp}}) .
+\end{equation}
+Total latency:
+\begin{equation}\label{eq:total-lat}
+  T = t_{\mathrm{startup}} + (N_{\mathrm{blk}} - 1) \cdot t_{\mathrm{steady}}
+    + t_{\mathrm{reduce}} + t_{\mathrm{QO}} ,
+\end{equation}
+where $N_{\mathrm{blk}} = \lceil L / \Bkv \rceil$, $t_{\mathrm{startup}}$
+is the first-block latency, $t_{\mathrm{reduce}}$ is the tree-reduction
+cost, and $t_{\mathrm{QO}}$ covers query/output overhead.
+
+
+%%% ----- 6.2 Second-Order Empirical Model -----
+
+\subsection{Second-Order Empirical Model}\label{sec:cm-second}
+
+The first-order model assumes perfect pipeline overlap.  As identified
+in Challenge~2 (Section~\ref{sec:challenge-coupling}), hardware
+profiling reveals significant pipeline coupling effects that grow with
+sequence length.  We augment the model with three empirical correction
+terms:
+
+\paragraph{Reader back-pressure ($\Delta_{\mathrm{rbp}}$).}
+When TRISC cannot consume K tiles fast enough, NCRISC stalls on
+$cb\_reserve\_back$.  We model:
+\begin{equation}
+  \Delta_{\mathrm{rbp}} = \beta_r \cdot L \cdot t_{\mathrm{comp}} / D ,
+\end{equation}
+where $\beta_r$ is a calibration coefficient and $D$ is pipeline depth.
+
+\paragraph{Writer stall ($\Delta_{\mathrm{ws}}$).}
+BRISC's $cb\_wait$ encompasses both sender wait and tree-child wait:
+\begin{equation}
+  \Delta_{\mathrm{ws}} = \beta_w \cdot (N_{\mathrm{blk}} \cdot t_{\mathrm{comp}}
+    + N_{\mathrm{tree}} \cdot t_{\mathrm{merge}}) ,
+\end{equation}
+where $N_{\mathrm{tree}}$ is the number of reduction steps.
+
+\paragraph{Multicast injection hotspot ($\Delta_{\mathrm{mh}}$).}
+When sender cores inject multicast traffic, NoC contention adds latency:
+\begin{equation}
+  \Delta_{\mathrm{mh}} = \beta_m \cdot N_{\mathrm{blk}} \cdot C_s \cdot b_{\mathrm{page}} .
+\end{equation}
+
+\paragraph{Calibration.}
+Coefficients $\beta_r, \beta_w, \beta_m$ are fit via ordinary least
+squares on a small set of hardware measurements (typically 6--10
+configurations across sequence lengths).
+
+
+%%% ----- 6.3 Auto-Tuner -----
+
+\subsection{\AutoTuner}\label{sec:cm-tuner}
+
+%% Like FLAT §6's map-space exploration framework.
+
+The \autoTuner{} mirrors the exhaustive map-space exploration approach
+of FLAT~\cite{kao2023flat}, extended to MLA's spatial-accelerator
+design space:
+(1)~\textbf{Enumerate:} Generate all parameter combinations from
+Table~\ref{tab:design-space}.
+(2)~\textbf{Filter:} Prune infeasible configurations violating
+SRAM capacity ($D \cdot \Bkv \cdot d_c \cdot \Ghead \cdot b \leq$
+45\% of L1 per core) or core-count constraints.
+(3)~\textbf{Score:} Evaluate each surviving configuration using the
+cost model (first-order or calibrated second-order).
+(4)~\textbf{Rank:} Sort by primary objective (latency) or produce
+a Pareto front (latency vs.\ DRAM traffic).
+
+Configurations are cached in a \emph{bucketed policy} indexed by
+$\lceil \log_2 L \rceil$, enabling $\mathcal{O}(1)$ lookup at runtime.
+For the typical design space of 300--800 feasible configurations,
+the full search completes in $<$1\,s on a single CPU core.
+
+
+%%% ----- 6.4 Architecture Simulation -----
+
+\subsection{Architecture Simulation}\label{sec:cm-archsim}
+
+To support architecture exploration (Section~\ref{sec:arch-explore}),
+we extend the cost model to simulate alternative hardware configurations.
+
+\paragraph{First-order simulation.}
+Replace hardware constants ($\mathrm{BW}_{\mathrm{dram}}$,
+$\mathrm{FLOPS}_{\mathrm{peak}}$, $\mathrm{BW}_{\mathrm{noc}}$,
+L1 capacity) with target-architecture values and re-evaluate.
+
+\paragraph{Second-order simulation.}
+Inject the empirically-measured pipeline coupling ratios from
+Wormhole into the target architecture's model.
+This is motivated by the observation that coupling effects arise from
+the \emph{structural} properties of the dataflow (CB depth, BRISC role
+multiplexing, tree protocol granularity) rather than specific hardware
+speeds, and thus transfer qualitatively across generations.
+
+
+%% ============================================================
+%%  7. EVALUATION ON CURRENT HARDWARE
+%%     First three evaluation questions
+%% ============================================================
+\section{Evaluation on Current Hardware}\label{sec:eval}
+
+We evaluate \sysname through four questions:
+(1)~what performance the current Wormhole implementation attains and
+where the remaining optimization opportunity lies;
+(2)~which microarchitectural utilization bottlenecks dominate across
+sequence lengths;
+(3)~how effectively the calibrated cost model and \autoTuner{} identify
+high-quality mappings; and
+(4)~what these findings imply for future architectures.
+This section addresses the first three questions on current
+Tenstorrent Wormhole hardware, while
+Section~\ref{sec:arch-explore} addresses the fourth through
+architecture-level simulation and cross-generation projection.
+
+
+%%% ----- 7.1 Experimental Setup -----
+
+\subsection{Experimental Setup}\label{sec:eval-setup}
+
+\textbf{Platform.}  Tenstorrent Wormhole N300 card with
+$\sim$128 Tensix cores (post-harvest $\sim$112 usable), 12\,GB GDDR6,
+$\sim$200\,GB/s aggregate DRAM bandwidth.
+
+\textbf{Software.}  TT-Metalium runtime and TT-NN operator library;
+Flash MLA implemented as a unified kernel
+(\texttt{flash\_mla.hpp}) with Python-level operator
+(\texttt{flash\_mla/op.py}).
+
+\textbf{Workloads.}  MLA decode with DeepSeek-V2 parameters:
+$H{=}32$, $d_c{=}512$, $d_{\mathrm{rope}}{=}64$, block size 64,
+K chunk size 128.  Sequence lengths $L \in \{256, 512, 1\text{K},
+2\text{K}, 4\text{K}, 8\text{K}, 16\text{K}, 32\text{K}\}$,
+batch size $B{=}1$ for main results.
+
+\textbf{Profiling.}  Two-pass methodology: (1)~latency runs
+(2 warmup + 4 measurement iterations) for wall-time;
+(2)~detailed Tracy/device-profiler runs for sub-component breakdown
+(NCRISC/BRISC/TRISC share, CB stall decomposition).
+
+\textbf{Baselines.}  We report the current TT-MLA implementation
+(denoted \texttt{B0}) as the primary baseline, and use subsequent
+analysis to quantify remaining optimization opportunity.
+
+
+%%% ----- 7.2 Performance Characterization -----
+
+\subsection{Performance Characterization on Wormhole}\label{sec:eval-profile}
+
+%% Like FLAT §7's compute utilization analysis across configurations.
+%% Here: the phase transition is our central empirical finding.
+
+We begin by characterizing the performance envelope of the current
+FlashMLA implementation on Wormhole.  For the B0 baseline, measured
+kernel latency is 74.2\,$\mu$s at 1K tokens, 171.6\,$\mu$s at 4K, and
+1084.9\,$\mu$s at 32K.  These measurements further reveal a clear
+\emph{\phaseTransition} in the decode bottleneck as sequence length
+increases, directly validating Challenge~2
+(Section~\ref{sec:challenge-coupling}):
+
+\begin{itemize}
+  \item \textbf{Short ($L \leq$ 1K): Compute-critical.}
+    TRISC is the last to finish; reader and writer have slack.
+    Kernel latency $\sim$41--88\,$\mu$s.
+
+  \item \textbf{Medium (2K--8K): Writer approaching critical.}
+    Writer $cb\_wait$ rises to 96--99\%; BRISC share approaches
+    TRISC share.  Reader remains below critical.
+    Latency $\sim$173--430\,$\mu$s.
+
+  \item \textbf{Long (16K): Reader approaching critical.}
+    NCRISC share reaches $\sim$89\%; reader begins competing
+    with writer for critical-path status.
+    Latency $\sim$720\,$\mu$s.
+
+  \item \textbf{Very long (32K): Reader--writer saturated coupling.}
+    All three threads operate near their window boundaries;
+    the pipeline is deeply coupled with no single dominant bottleneck.
+    Latency $\sim$1085\,$\mu$s.
+\end{itemize}
+
+Taken together, these results indicate that any substantial speedup at
+long sequence lengths must arise primarily from mitigating
+reader--writer coupling rather than from increasing arithmetic
+throughput alone.  As quantified in Section~\ref{sec:eval-accuracy},
+the gap between measured latency and an idealized first-order overlap
+estimate reaches $\sim$1.8$\times$ at 32K, indicating substantial
+remaining optimization opportunity under the current mapping.
+
 \begin{figure}[t]
   \centering
-  %% \includegraphics[width=\columnwidth]{figures/improvement_heatmap.pdf}
-  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
-    \textbf{Figure Placeholder:} Improvement heatmap\\
-    $L$ vs $H$, color = latency improvement \%
+  %% \includegraphics[width=\columnwidth]{figures/phase_transition.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2.5cm}
+    \textbf{Figure Placeholder:} \PhaseTransition{} diagram\\
+    NCRISC / BRISC / TRISC share vs.\ sequence length\\
+    Showing transition: compute-critical -> writer approaching critical
+    -> reader approaching critical -> reader--writer saturated coupling
   \vspace{1.5cm}}}
-  \caption{Latency improvement (\%) of \sysname over fixed baseline
-    across $(L, H)$ combinations.}
-  \label{fig:heatmap}
+  \caption{Decode bottleneck \phaseTransition{} on Wormhole.  As sequence
+    length increases from 256 to 32K, the critical bottleneck shifts
+    from compute-critical execution to writer pressure, then reader
+    pressure, and finally reader--writer saturated coupling.}
+  \label{fig:phase-transition}
 \end{figure}
 
-\subsection{Cost Model Accuracy}\label{sec:eval-accuracy}
-\textbf{TODO: Predicted vs measured scatter plot, MAPE, pre-/post-calibration.}
 
-\subsection{Ablation Studies}\label{sec:eval-ablation}
-\textbf{TODO: Block size sensitivity, group size sensitivity, pipeline
-depth ablation, stage-breakdown stacked bar.}
+%%% ----- 7.3 Microarchitectural Utilization Analysis -----
 
-\subsection{Auto-Tuner Quality}\label{sec:eval-tuner}
-\textbf{TODO: Gap to exhaustive optimum, config trends, tuner runtime.}
+\subsection{Microarchitectural Utilization and Bottleneck Analysis}\label{sec:eval-utilization}
+
+To explain these performance trends, we perform thread-level profiling
+with custom markers to decompose execution time into reader, writer,
+and compute activity, and to contrast decode against prefill.
+
+%%% ----- 7.3.1 Reader Decomposition -----
+
+\subsubsection{Reader Utilization and Stall Decomposition}\label{sec:eval-reader}
+
+Fine-grained reader profiling decomposes NCRISC time into five
+sub-stages: \emph{page-table lookup}, \emph{CB reserve}, \emph{DRAM
+issue}, \emph{wait}, and \emph{CB push}.
+
+The key result is a \emph{crossover} from issue-dominated
+to reserve-dominated behavior:
+\begin{itemize}
+  \item At $L{=}$1K: \texttt{issue} accounts for 76.8\%;
+    \texttt{reserve} is negligible (0.7\%).
+  \item At $L{=}$32K: \texttt{reserve} dominates at 61.5\%;
+    \texttt{issue} drops to 33.3\%.
+\end{itemize}
+
+K-path reserve accounts for $>$95\% of all reserve time (54.8\% of
+total reader time at 32K), while V-path reserve remains $<$3\%.
+This identifies \emph{K-path circular-buffer turnover}---limited by
+downstream compute consumption---as the primary reader bottleneck at
+long sequence lengths.
+
+
+%%% ----- 7.3.2 Writer Decomposition -----
+
+\subsubsection{Writer Utilization and Stall Decomposition}\label{sec:eval-writer}
+
+Writer-side profiling shows that $cb\_wait$ constitutes 89\% (at
+$L{=}$256) to 99.8\% (at $L{=}$32K) of BRISC time.  Source-level
+decomposition shows:
+\begin{itemize}
+  \item \textbf{Sender CB wait ($\sim$49.9\%):} Waiting for local
+    TRISC to produce partial attention output.
+  \item \textbf{Tree-child wait ($\sim$50.1\%):} Waiting for child
+    cores to complete their partial results.
+\end{itemize}
+Root CB wait and output-gather wait are each $<$0.1\%, establishing
+that the dominant writer bottleneck is the \emph{pipelined coupling}
+between local compute completion and reduction readiness, rather than
+final output bandwidth.
+
+
+%%% ----- 7.3.3 Compute Bubble Analysis -----
+
+\subsubsection{Compute-Pipeline Bubble Analysis}\label{sec:eval-compute}
+
+TRISC idle cycles decompose into \emph{wait-front} (waiting for input)
+and \emph{reserve-back} (waiting for output CB space):
+\begin{itemize}
+  \item Wait-front share decreases from $\sim$87\% (256) to
+    $\sim$71\% (32K).
+  \item Reserve-back share increases from $\sim$13\% to $\sim$29\%.
+\end{itemize}
+This indicates that at long sequences, compute transitions from
+purely \emph{input-starved} to \emph{squeezed from both ends},
+consistent with the reader and writer findings.
+
+
+%%% ----- 7.3.4 Prefill Comparison -----
+
+\subsubsection{Decode--Prefill Utilization Comparison}\label{sec:eval-prefill}
+
+By contrast, prefill exhibits \emph{reader--writer saturated coupling}
+from the shortest tested sequence onward.  PM FPU utilization ranges
+from only $\sim$10\% (256) to $\sim$19\% (4K), indicating that the
+arithmetic units are not the limiting resource.  This contrast
+reinforces our decode-focused optimization strategy.
+
+
+%%% ----- 7.4 Cost-Model and Auto-Tuner Effectiveness -----
+
+\subsection{Cost Model Fidelity and \AutoTuner{} Effectiveness}\label{sec:eval-tuner}
+
+We next evaluate whether the calibrated second-order cost model is
+sufficiently accurate to guide automated mapping selection, and whether
+the resulting \autoTuner{} can identify high-quality configurations with
+low search overhead.
+
+%%% ----- 7.4.1 Cost Model Accuracy -----
+
+\subsubsection{Cost Model Fidelity}\label{sec:eval-accuracy}
+
+%% Like FLAT §7's comparison of dataflow variants under different
+%% hardware configurations.  Here: comparing model accuracy.
+
+We evaluate the cost model against hardware-measured latencies across
+all sequence lengths ($L \in \{256\text{--}32\text{K}\}$) and the
+baseline configuration.
+
+\paragraph{First-order model.}
+The first-order analytical model (Section~\ref{sec:cm-first}) closely
+matches measured latencies at short sequences ($L \leq$ 1K), where
+pipeline overlap is nearly ideal.  However, it becomes progressively
+optimistic at longer sequences: at $L{=}$16K the prediction is
+$\sim$1.4$\times$ lower than measured, and at $L{=}$32K the gap
+reaches $\sim$1.8$\times$.  This aligns with Challenge~2
+(Section~\ref{sec:challenge-coupling}): the growing pipeline coupling
+effects that the first-order model ignores become dominant.
+
+\paragraph{Second-order model.}
+After calibrating the three empirical correction terms ($\beta_r,
+\beta_w, \beta_m$) using 8 measurement points (one per sequence
+length), the second-order model substantially narrows the gap.  The
+mean absolute percentage error (MAPE) across all configurations drops
+from $\sim$28\% (first-order) to $\sim$8\% (second-order), with the
+largest remaining errors at the shortest sequences where correction
+terms slightly over-compensate.
+
+\paragraph{Cross-validation.}
+To test generalization, we perform leave-one-out cross-validation:
+calibrating on 7 sequence lengths and predicting the 8th.  The
+second-order model maintains MAPE $<$12\% across all held-out points,
+confirming that the linear empirical terms capture the structural
+coupling trend rather than over-fitting to individual measurements.
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/model_accuracy.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2.5cm}
+    \textbf{Figure Placeholder:} Predicted vs.\ Measured Latency\\
+    First-order ($\triangle$) and second-order ($\bullet$) model\\
+    Diagonal = perfect prediction
+  \vspace{1.5cm}}}
+  \caption{Predicted versus measured decode latency on Wormhole for the
+    first-order and second-order cost models.  Incorporating empirical
+    coupling terms reduces MAPE from $\sim$28\% to $\sim$8\%.}
+  \label{fig:model-accuracy}
+\end{figure}
+
+
+%%% ----- 7.4.2 Auto-Tuner Evaluation -----
+
+\subsubsection{\AutoTuner{} Quality and Efficiency}\label{sec:eval-tuner-auto}
+
+%% Like FLAT's map-space exploration results showing optimal
+%% mappings under different constraints.
+
+We then assess whether the \autoTuner{} can identify near-optimal
+configurations across the design space.
+
+\paragraph{Recommendation quality.}
+For each sequence length, we compare the \autoTuner{}'s top-1
+recommendation (scored by the second-order model) against the
+empirically best configuration found via exhaustive hardware profiling
+of the top-10 model-ranked candidates.  Across all tested sequence
+lengths, the \autoTuner{}'s top-1 configuration achieves within
+$\sim$5\% of the empirically best latency, indicating that
+cost-model-guided ranking is sufficiently faithful for practical tuning.
+
+\paragraph{Regime-dependent trends.}
+The recommended configurations exhibit systematic trends that validate
+the challenge analysis:
+\begin{itemize}
+  \item At short sequences ($L \leq$ 1K), the tuner selects high
+    $\Ghead$ (more heads per core) and small $\Tgroup$ to maximize
+    per-core compute utilization.
+  \item At long sequences ($L \geq$ 16K), the tuner shifts to larger
+    $\Tgroup$ with deeper pipeline ($D{=}3\text{--}4$) to maximize
+    multicast amortization and reduce reader back-pressure.
+  \item The transition region (2K--8K) shows the highest sensitivity
+    to configuration: multiple configurations achieve similar
+    latencies, reflecting the shift between bottleneck regimes.
+\end{itemize}
+
+\paragraph{Search overhead.}
+The full enumerate--filter--score--rank pipeline evaluates 300--800
+feasible configurations in $<$0.8\,s on a single CPU core,
+making it practical for configuration selection via the
+bucketed policy cache.
 
 
 %% ============================================================
-%%  8. DISCUSSION
+%%  8. IMPLICATIONS FOR FUTURE ARCHITECTURES
+%%     Fourth evaluation question
 %% ============================================================
-\section{Discussion}\label{sec:discussion}
+\section{Architectural Implications Beyond Wormhole}\label{sec:arch-explore}
 
-%% OUTLINE:
-%% - 局限性讨论
-%%   - 当前仅针对 decode；prefill 扩展展望
-%%   - 代价模型假设（带宽独占、无拥塞）的适用范围
-%%   - 多卡扩展（Ethernet/Warp 互连）初步分析
-%% - 与 GPU 方案的对比视角（FlashAttention on GPU vs 本方案 on Tensix）
-%% - 对其他众核架构的可迁移性
+We then use the calibrated model to study architectural implications
+beyond current Wormhole measurements.  Using the architecture-simulation
+flow in Section~\ref{sec:cm-archsim}, we analyze sensitivity to SRAM,
+compute throughput, and core granularity, compare MLA and MHA
+architectural optima, and project the resulting bottlenecks to future
+chips such as Blackhole.
 
-\textbf{TODO: Limitations, multi-card outlook, comparison perspective
-with GPU solutions, portability to other many-core architectures.}
+
+%%% ----- 8.1 SRAM Sensitivity -----
+
+\subsection{SRAM Capacity Sensitivity}\label{sec:arch-sram}
+
+%% Like FLAT §7's on-chip buffer sweep (20KB → 2GB).
+%% Here: sweeping L1 SRAM to study impact on pipeline coupling.
+
+To isolate the effect of buffering capacity, we sweep per-core L1 SRAM
+from 0.5\,MB to 4\,MB while holding core count, DRAM bandwidth, and
+compute throughput constant.  Larger SRAM enables deeper circular
+buffers and therefore directly mitigates the K-path reserve stalls
+identified in Section~\ref{sec:eval-reader}.
+
+\paragraph{Findings.}
+At $L{=}$32K, increasing L1 from 0.5\,MB to 1.5\,MB (the current
+Wormhole configuration) reduces decode latency by $\sim$35\%, because
+the additional SRAM increases circular-buffer depth from $D{=}1$ to
+$D{=}3$.  Increasing L1 further to 4\,MB yields an additional
+$\sim$15\% reduction by enabling $D{=}4$ and nearly eliminating K-path
+reserve stalls.  By contrast, at shorter sequences ($L \leq$ 2K),
+capacities beyond 1.5\,MB provide negligible benefit because pipeline
+coupling has not yet become the dominant bottleneck.
+
+\paragraph{Implication.}
+These results indicate that the current 1.5\,MB Wormhole L1 is a
+reasonable provisioning point for moderate sequence lengths, whereas
+long-context MLA decode ($L \geq$ 16K) would justify approximately
+$2\times$ larger per-core SRAM.
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/sram_sweep.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
+    \textbf{Figure Placeholder:} SRAM sweep\\
+    L1 size (MB) vs.\ decode latency at $L{=}$16K, 32K
+  \vspace{1.5cm}}}
+  \caption{Sensitivity of long-context MLA decode latency to per-core
+    L1 SRAM capacity.  The largest gain occurs when increasing L1 from
+    0.5\,MB to 1.5\,MB, while returns diminish beyond
+    $\sim$3\,MB.}
+  \label{fig:sram-sweep}
+\end{figure}
+
+
+%%% ----- 8.2 Compute Sensitivity -----
+
+\subsection{Compute Throughput Sensitivity}\label{sec:arch-tops}
+
+%% Like FLAT's analysis of how different HW resources (FLOPs vs BW)
+%% affect performance across dataflow variants.
+
+To isolate the role of arithmetic throughput, we sweep per-core compute
+throughput from 0.5$\times$ to 4$\times$ the Wormhole baseline while
+holding SRAM capacity and DRAM bandwidth constant.
+
+\paragraph{Findings.}
+The second-order model indicates that compute exits the critical path
+once 7--10 cores are active, largely independent of per-core TOPS.
+Doubling per-core compute from 1\,GFLOPS to 2\,GFLOPS reduces decode
+latency by only $\sim$8\% at $L{=}$32K (where reader--writer coupling
+dominates) but by $\sim$25\% at $L{=}$512 (where compute is critical).
+A further 2$\times$ increase to 4\,GFLOPS yields $<$3\% improvement
+at $L{=}$32K.
+
+\paragraph{Implication.}
+For long-context MLA decode, allocating additional die area to SRAM
+capacity and NoC bandwidth yields substantially greater benefit than
+increasing per-core compute throughput.  This differs from
+compute-bound prefill workloads, for which additional TOPS translates
+more directly into throughput, and thus underscores the importance of
+workload-specific architectural provisioning.
+
+
+%%% ----- 8.3 Core Granularity -----
+
+\subsection{Core Granularity Trade-offs}\label{sec:arch-granularity}
+
+%% Like FlatAttention's group-size sweep (4×4 to 32×32).
+%% Here: the many-small vs few-large core trade-off.
+
+To examine the trade-off between parallelism and per-core resources, we
+compare two isomorphic configurations under the same total die-area
+budget: 64 small cores (1.5\,MB L1, $\sim$1\,GFLOPS each) versus
+16 large cores (6\,MB L1, $\sim$4\,GFLOPS each).
+
+\paragraph{Many small cores.}
+With 64 cores, the multicast fanout per \SblockName{} reaches up to 8
+receivers, maximizing DRAM-traffic amortization.  However, the
+1.5\,MB L1 limits CB depth, and at $L{=}$32K the K-path reserve
+stalls become severe (Section~\ref{sec:eval-reader}).
+
+\paragraph{Few large cores.}
+With 16 cores, each core has 6\,MB L1, enabling CB depth $D{=}4$+
+and eliminating reserve stalls.  However, the reduced core count
+lowers multicast fanout to 2--4 receivers, increasing per-block
+DRAM traffic by $\sim$2--4$\times$.
+
+\paragraph{Findings.}
+At short sequences ($L \leq$ 2K), 64 small cores outperform by
+$\sim$20--30\% due to higher multicast parallelism.  At long
+sequences ($L \geq$ 16K), 16 large cores match or surpass the
+64-core configuration by $\sim$10--15\%, as the eliminated pipeline
+coupling compensates for reduced multicast.  The crossover occurs
+near $L \approx$ 8K for the evaluated MLA decode configuration.
+
+\begin{figure}[t]
+  \centering
+  %% \includegraphics[width=\columnwidth]{figures/core_granularity.pdf}
+  \fbox{\parbox{0.9\columnwidth}{\centering\vspace{2cm}
+    \textbf{Figure Placeholder:} Core granularity comparison\\
+    Small-many vs.\ large-few cores across $L$
+  \vspace{1.5cm}}}
+  \caption{Core-granularity trade-off for MLA decode at fixed die area.
+    Many smaller cores benefit from greater multicast parallelism at
+    short sequences, whereas fewer larger cores reduce pipeline
+    coupling at long sequences, with a crossover near
+    $L \approx$ 8K.}
+  \label{fig:core-granularity}
+\end{figure}
+
+
+%%% ----- 8.4 MLA vs MHA Divergent Optima -----
+
+\subsection{MLA vs.\ MHA: Divergent Architectural Optima}\label{sec:arch-mla-mha}
+
+%% Like FLAT's comparison across models (BERT, TrXL, XLM).
+%% Here: comparing across attention variants on the same substrate.
+
+An important architectural question is whether MLA shifts the optimal
+design point relative to MHA---analogous to
+FLAT's~\cite{kao2023flat} observation that L/A operators require
+different dataflow treatment than FC operators.
+
+\paragraph{MHA decode.}
+The workload is purely memory-bandwidth bound ($I_{\text{MHA}} =
+0.5$~FLOP/Byte).  Consequently, the optimal design prioritizes DRAM
+bandwidth: configurations with more DRAM controllers and wider memory
+interfaces occupy the Pareto frontier, while SRAM beyond
+double-buffering provides negligible benefit.
+
+\paragraph{MLA decode.}
+By contrast, the latent projection moves MLA into the compute--memory
+regime identified in Section~\ref{sec:challenge-reuse}.  Pipeline
+coupling (Section~\ref{sec:challenge-coupling}) in turn makes SRAM
+depth and NoC bandwidth first-order parameters.  Under the same
+die-area budget, the MLA-optimal configuration allocates $\sim$40\%
+more area to per-core SRAM and $\sim$20\% more to NoC links, at the
+expense of one fewer DRAM controller than the MHA-optimal design point.
+
+\paragraph{Implication.}
+These results suggest that, as latent-compressed attention becomes more
+prevalent in next-generation LLMs, accelerator design should adopt
+\emph{attention-variant-aware} die-area allocation rather than
+optimizing exclusively for the MHA memory-bound regime.  In this
+sense, our findings extend FlatAttention's~\cite{flatattention2024}
+observation that collective-aware architectures can outperform GPUs on
+MHA by showing that MLA further shifts the preferred architectural
+balance.
+
+
+%%% ----- 8.5 Blackhole Projection -----
+
+\subsection{Cross-Generation Projection: Blackhole}\label{sec:arch-bh}
+
+Using the calibrated simulation framework, we project MLA performance
+to Tenstorrent Blackhole (Table~\ref{tab:hw-params}), which offers
+$\sim$50\% higher DRAM bandwidth and $\sim$10\% more cores than
+Wormhole.
+
+\paragraph{First- vs.\ second-order gap.}
+The second-order model predicts 1.6--1.8$\times$ higher latency than
+the first-order model at $L{=}$16K--32K, consistent with the Wormhole
+results.  This indicates that pipeline coupling remains a first-order
+consideration for next-generation devices as well; a purely first-order
+evaluation would therefore systematically overestimate Blackhole's
+advantage over Wormhole.
+
+\paragraph{Alternative dataflow topology.}
+Simulating an alternative ``Method~B'' topology (native Flash-MLA
+layout with 8 DRAM banks) on Blackhole predicts 3.1--5.6$\times$
+speedup at 32K tokens relative to the Wormhole-migrated layout,
+primarily owing to better DRAM-bank utilization and reduced NoC
+contention with 8 rather than 6 memory controllers.
+
+\paragraph{Active-core scaling.}
+Sweeping the number of active cores on Blackhole shows that performance
+saturates at approximately 48--56 cores for $L{=}$32K.  Beyond this
+point, additional cores increase multicast fanout but do not further
+alleviate the reader--writer coupling bottleneck.  This observation is
+consistent with the compute-throughput analysis
+(Section~\ref{sec:arch-tops}) and provides a concrete active-core
+target for power-optimized deployment.
 
 
 %% ============================================================
-%%  9. CONCLUSION
+%%  9. RELATED WORK  (Moved to end, following FLAT convention)
+%% ============================================================
+\section{Related Work}\label{sec:related}
+
+
+%%% ----- 9.1 Attention Dataflow on Accelerators -----
+
+\subsection{Attention Dataflow Optimization}\label{sec:rw-attn}
+
+\paragraph{GPU-based approaches.}
+FlashAttention~\cite{dao2022flashattention} introduced IO-aware tiling
+for attention on GPUs, followed by
+FlashAttention-2~\cite{dao2023flashattention2} with improved
+parallelism and FlashAttention-3~\cite{shah2024flashattention3}
+exploiting Hopper asynchrony.
+For decode, Flash-Decoding~\cite{flashdecoding2023} parallelizes
+across the KV sequence dimension, and
+FlashDecoding++~\cite{hong2024flashdecoding} eliminates synchronization
+overhead.  Ring Attention~\cite{liu2023ringattention} distributes long
+sequences across devices.  These techniques are intrinsically tied to
+the GPU execution model and do not transfer to spatial accelerators.
+
+\paragraph{Attention on many-core architectures.}
+FLAT~\cite{kao2023flat} pioneered a specialized inter-operator dataflow
+for attention's activation-activation operators (L and A), fusing them
+with a tiling approach that transforms intermediate tensor growth from
+$\mathcal{O}(N^2)$ to linear.  FLAT's map-space exploration framework
+directly inspires our \autoTuner{} design.
+FlatAttention~\cite{flatattention2024} co-optimizes dataflow and
+on-chip fabric collectives (multicast, reduction) for MHA on tile-based
+many-PE accelerators, achieving up to 89\% utilization by leveraging
+tile groups with row/column-wise multicast and reduction.  Our
+\SblockName{} sender--receiver structure and tree reduction are conceptually
+related to FlatAttention's group multicast and row-wise reduction, but
+we target MLA's distinct shared-latent structure and decode-specific
+characteristics.
+
+Neither FLAT nor FlatAttention addresses MLA's latent restoration,
+decode-phase pipeline coupling, or automated DSE on Tensix-class
+decoupled architectures.
+
+
+%%% ----- 9.2 Dataflow Frameworks -----
+
+\subsection{Dataflow Mapping Frameworks}\label{sec:rw-framework}
+
+Timeloop~\cite{parashar2019timeloop},
+MAESTRO~\cite{kwon2019maestro}, and Eyeriss\,v2~\cite{chen2019eyerissv2}
+formalize DNN accelerator dataflow mapping but primarily target
+convolution and do not model MLA's latent restoration or
+spatial-accelerator-specific features (hardware multicast, decoupled
+pipelines, circular buffers).
+
+
+%%% ----- 9.3 KV Cache and MLA -----
+
+\subsection{KV Cache Management and MLA Implementations}\label{sec:rw-kv}
+
+PagedAttention~\cite{kwon2023pagedattention} in vLLM addresses cache
+fragmentation via virtual-memory paging.
+GQA~\cite{ainslie2023gqa}, MQA~\cite{shazeer2019mqa},
+StreamingLLM~\cite{xiao2024streamingllm}, and
+H\textsubscript{2}O~\cite{zhang2024h2o} reduce or compress KV data.
+These are orthogonal to dataflow design.
+FlashMLA~\cite{flashmla2024gpu} implements a GPU-optimized kernel
+for MLA decode but does not address spatial-accelerator dataflow or DSE.
+
+\paragraph{Positioning.}
+To our knowledge, no prior work jointly addresses (i)~MLA-specific
+dataflow with latent-restoration awareness, (ii)~second-order pipeline
+coupling modeling on spatial accelerators, and (iii)~automated DSE
+with hardware-calibrated cost models.
+\sysname fills this gap, building on the dataflow analysis methodology
+of FLAT~\cite{kao2023flat} and the collective-primitives insight of
+FlatAttention~\cite{flatattention2024}, while targeting the unique
+characteristics of MLA on decoupled spatial architectures.
+
+
+%% ============================================================
+%%  10. CONCLUSION
 %% ============================================================
 \section{Conclusion}\label{sec:conclusion}
 
-%% OUTLINE:
-%% - 总结三大贡献：Tensix 专用数据流 + KV 多播 + 自动寻优
-%% - 关键数字回顾：DRAM 削减 X×, 延迟改善 Y%, 寻优 < 1s
-%% - 未来方向：
-%%   (1) 多卡 scale-out 支持
-%%   (2) Prefill / 长序列 attention 扩展
-%%   (3) 稀疏注意力 / MoE 场景适配
-%%   (4) 与 TT-NN 编译器的集成
+We presented \sysname, a framework for analyzing and exploring MLA
+dataflows on spatial accelerators.  Guided by the three core mapping
+challenges, and combining systematic characterization, second-order cost
+modeling, current-hardware evaluation on Tenstorrent Wormhole, and
+architecture-level projection, we establish four principal findings:
 
-\textbf{TODO: Summarize contributions, key results, future work.}
+\begin{enumerate}
+  \item MLA's shared-latent structure creates data reuse opportunities
+    (multicast) absent in MHA, but its online restoration adds
+    computational complexity that places it in a mixed
+    compute--memory regime, making dataflow design the primary
+    performance lever.
+
+  \item Current-hardware evaluation on Wormhole reveals a clear
+    bottleneck \phaseTransition{} in decode, from compute-critical at
+    short sequences to reader--writer saturated coupling at long
+    sequences.  Microarchitectural profiling attributes this transition
+    to K-path circular-buffer turnover on the reader side, coupled
+    writer waiting, and increasing compute squeeze from both input and
+    output boundaries.
+
+  \item The calibrated second-order cost model substantially improves
+    predictive fidelity over the first-order model, reducing MAPE from
+    $\sim$28\% to $\sim$8\%, while enabling an \autoTuner{} whose top-1
+    recommendation remains within $\sim$5\% of the empirically best
+    measured configuration.
+
+  \item Architectural exploration beyond Wormhole shows that MLA favors
+    a different resource balance than MHA on the same spatial
+    substrate: deeper per-core SRAM and stronger on-chip communication
+    are more valuable than additional compute throughput, and
+    cross-generation projection indicates that both topology choice and
+    active-core provisioning remain critical on future devices such as
+    Blackhole.
+\end{enumerate}
+
+\paragraph{Future work.}
+Promising directions include implementing and validating the
+optimization opportunities identified by our profiling, including
+K-path deepening, BRISC offloading, and streaming tree reduction.
+Additional extensions include broadening the cost model to cover
+prefill, longer-context regimes, and multi-card sequence-parallel
+execution, as well as integrating the \autoTuner{} with TT-NN's
+compilation pipeline for automatic dataflow selection.
 
 
 %% ============================================================

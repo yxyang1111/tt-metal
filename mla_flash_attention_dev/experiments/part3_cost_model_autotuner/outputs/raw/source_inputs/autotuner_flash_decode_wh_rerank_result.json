@@ -1,0 +1,733 @@
+{
+  "best_plan": {
+    "candidate_key": "635b1cc29f23a9cc92f6654a1104a01187983532",
+    "compile_time_config": {
+      "bank_map": [
+        1,
+        2,
+        0,
+        4,
+        9,
+        8
+      ],
+      "dual_noc_policy": true,
+      "k_cb_depth": 3,
+      "k_chunk_size": 128,
+      "k_num_pages": 9,
+      "k_page_size_bytes": 8192,
+      "lane_group_capacity": 4,
+      "layout_policy": "bandwidth_balanced",
+      "math_fidelity": "LoFi",
+      "page_size_strategy": "auto_max_divisor",
+      "pipeline_depth": 3,
+      "q_chunk_size": 32,
+      "sblock_topology_name": "wh_sblock_6x4",
+      "topology_mode": "tree",
+      "tree_order": [
+        [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            5
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ]
+        ],
+        [
+          [
+            0,
+            4
+          ]
+        ]
+      ],
+      "trid_window": 14,
+      "v_cb_depth": 3
+    },
+    "metrics": {
+      "active_core_ratio": 0.375,
+      "active_cores": 24,
+      "analytical_score": 0.24329711763776055,
+      "complexity_penalty_ms": 0.0019642401529751867,
+      "compute_ms": 0.00400183908045977,
+      "dram_bytes": 2428928,
+      "dram_ms": 0.010578033272363034,
+      "dual_noc_effectiveness": 0.5190779932546374,
+      "estimated_latency_ms": 0.06938983683776057,
+      "imbalance_score": 0.03125,
+      "k_reuse_groups": 1,
+      "kv_num_chunks": 32,
+      "l1_pressure_ms": 0.0006649590163934427,
+      "l1_usage_bytes_per_core": 664576,
+      "l1_usage_ratio": 0.44330601092896177,
+      "measured_latency_ms": null,
+      "noc_bytes": 1188311.0399999998,
+      "noc_ms": 0.02944108774765469,
+      "overlap_residual_ms": 0.0009573874969510186,
+      "page_control_ms": 0.007824600000000001,
+      "pipeline_bubble_ms": 0.001700978323756271,
+      "provisioned_core_ratio": 0.375,
+      "provisioned_cores": 24,
+      "q_num_chunks": 1,
+      "q_preamble_ms": 0.0007614003436031708,
+      "reader_backpressure_ms": 0.012254145538475456,
+      "reader_ms": 0.03507893525542229,
+      "reduction_ms": 0.003887730815988668,
+      "selected_latency_ms": 0.06938983683776057,
+      "selection_source": "analytical",
+      "sender_hotspot_ms": 0.007015016360664648,
+      "sync_ms": 0.0045000000000000005,
+      "unused_trid_ratio": 0.6428571428571429,
+      "writer_backpressure_ms": 0.002306021857286674
+    },
+    "runtime_config": {
+      "grouping": {
+        "active_lane_count": 4,
+        "batch_group_size": 1,
+        "effective_kv_parallel_factor": 6,
+        "effective_s_block_count": 6,
+        "head_group_size": 8,
+        "kv_chunk_group_size": 6,
+        "provisioned_kv_parallel_factor": 6,
+        "q_chunk_group_size": 1
+      },
+      "k_reuse_groups": 1,
+      "parallelism_5d": {
+        "batch_parallel_factor": 1,
+        "device_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "kv_parallel_factor": 6,
+        "q_parallel_factor": 1
+      },
+      "reduction_tree_depth": 3,
+      "use_balanced_q_parallel": false
+    }
+  },
+  "cache_hit": false,
+  "cache_key_mode": "sequence_pow2",
+  "cache_source_signature": null,
+  "hardware": {
+    "arch": "wormhole_b0",
+    "clock_GHz": 1.0,
+    "compute_grid_x": 8,
+    "compute_grid_y": 8,
+    "dram_bandwidth_GBs": 258.0,
+    "dram_bank_endpoints": 6,
+    "l1_bytes_per_core": 1499136,
+    "max_noc_page_size": 8192,
+    "max_trid_window": 14,
+    "name": "wormhole_b0",
+    "noc_bandwidth_GBs": 32.0,
+    "noc_count": 2,
+    "num_devices": 1,
+    "supports_dual_noc": true,
+    "supports_multicast": true,
+    "supports_tree": true
+  },
+  "measured_candidate_count": 0,
+  "policy_cache_key": "7c03dafacad71df627bcc05badbe03c2837b17e5",
+  "reranked_top_k": 64,
+  "searched_candidate_count": 14688,
+  "top_candidates": [
+    {
+      "candidate_key": "635b1cc29f23a9cc92f6654a1104a01187983532",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 128,
+        "k_num_pages": 9,
+        "k_page_size_bytes": 8192,
+        "lane_group_capacity": 4,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "wh_sblock_6x4",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 14,
+        "v_cb_depth": 3
+      },
+      "metrics": {
+        "active_core_ratio": 0.375,
+        "active_cores": 24,
+        "analytical_score": 0.24329711763776055,
+        "complexity_penalty_ms": 0.0019642401529751867,
+        "compute_ms": 0.00400183908045977,
+        "dram_bytes": 2428928,
+        "dram_ms": 0.010578033272363034,
+        "dual_noc_effectiveness": 0.5190779932546374,
+        "estimated_latency_ms": 0.06938983683776057,
+        "imbalance_score": 0.03125,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 32,
+        "l1_pressure_ms": 0.0006649590163934427,
+        "l1_usage_bytes_per_core": 664576,
+        "l1_usage_ratio": 0.44330601092896177,
+        "measured_latency_ms": null,
+        "noc_bytes": 1188311.0399999998,
+        "noc_ms": 0.02944108774765469,
+        "overlap_residual_ms": 0.0009573874969510186,
+        "page_control_ms": 0.007824600000000001,
+        "pipeline_bubble_ms": 0.001700978323756271,
+        "provisioned_core_ratio": 0.375,
+        "provisioned_cores": 24,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0007614003436031708,
+        "reader_backpressure_ms": 0.012254145538475456,
+        "reader_ms": 0.03507893525542229,
+        "reduction_ms": 0.003887730815988668,
+        "selected_latency_ms": 0.06938983683776057,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.007015016360664648,
+        "sync_ms": 0.0045000000000000005,
+        "unused_trid_ratio": 0.6428571428571429,
+        "writer_backpressure_ms": 0.002306021857286674
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 4,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 6,
+          "effective_s_block_count": 6,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 6,
+          "provisioned_kv_parallel_factor": 6,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 4,
+          "kv_parallel_factor": 6,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "69ddcd9d3434ec9acf5c487de1e4057038c34742",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 128,
+        "k_num_pages": 9,
+        "k_page_size_bytes": 8192,
+        "lane_group_capacity": 4,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "wh_sblock_6x4",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 8,
+        "v_cb_depth": 3
+      },
+      "metrics": {
+        "active_core_ratio": 0.375,
+        "active_cores": 24,
+        "analytical_score": 0.24355675578908367,
+        "complexity_penalty_ms": 0.0015523353910704247,
+        "compute_ms": 0.00400183908045977,
+        "dram_bytes": 2428928,
+        "dram_ms": 0.010657867485739358,
+        "dual_noc_effectiveness": 0.5079668821435264,
+        "estimated_latency_ms": 0.06964947498908369,
+        "imbalance_score": 0.03125,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 32,
+        "l1_pressure_ms": 0.0006649590163934427,
+        "l1_usage_bytes_per_core": 664576,
+        "l1_usage_ratio": 0.44330601092896177,
+        "measured_latency_ms": null,
+        "noc_bytes": 1188311.0399999998,
+        "noc_ms": 0.029808090381900684,
+        "overlap_residual_ms": 0.0009769520435665997,
+        "page_control_ms": 0.007824600000000001,
+        "pipeline_bubble_ms": 0.0017221751250634208,
+        "provisioned_core_ratio": 0.375,
+        "provisioned_cores": 24,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0007711398116315663,
+        "reader_backpressure_ms": 0.012375734626157719,
+        "reader_ms": 0.03542699834323042,
+        "reduction_ms": 0.003927867163733684,
+        "selected_latency_ms": 0.06964947498908369,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.007120084742988132,
+        "sync_ms": 0.0045000000000000005,
+        "unused_trid_ratio": 0.21428571428571427,
+        "writer_backpressure_ms": 0.002333403850311687
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 4,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 6,
+          "effective_s_block_count": 6,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 6,
+          "provisioned_kv_parallel_factor": 6,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 4,
+          "kv_parallel_factor": 6,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "73067ecd10cd82becd412d89ad3c3888164ac9a1",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 128,
+        "k_num_pages": 9,
+        "k_page_size_bytes": 8192,
+        "lane_group_capacity": 4,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "wh_sblock_6x4",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 14,
+        "v_cb_depth": 2
+      },
+      "metrics": {
+        "active_core_ratio": 0.375,
+        "active_cores": 24,
+        "analytical_score": 0.24392810818344163,
+        "complexity_penalty_ms": 0.0013642401529751868,
+        "compute_ms": 0.00400183908045977,
+        "dram_bytes": 2428928,
+        "dram_ms": 0.010578033272363034,
+        "dual_noc_effectiveness": 0.5190779932546374,
+        "estimated_latency_ms": 0.07002082738344163,
+        "imbalance_score": 0.03125,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 32,
+        "l1_pressure_ms": 0.0005338114754098361,
+        "l1_usage_bytes_per_core": 533504,
+        "l1_usage_ratio": 0.3558743169398907,
+        "measured_latency_ms": null,
+        "noc_bytes": 1188311.0399999998,
+        "noc_ms": 0.02944108774765469,
+        "overlap_residual_ms": 0.0009573874969510186,
+        "page_control_ms": 0.007824600000000001,
+        "pipeline_bubble_ms": 0.001700978323756271,
+        "provisioned_core_ratio": 0.375,
+        "provisioned_cores": 24,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0007614003436031708,
+        "reader_backpressure_ms": 0.012999812522866673,
+        "reader_ms": 0.03507893525542229,
+        "reduction_ms": 0.003887730815988668,
+        "selected_latency_ms": 0.07002082738344163,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.007015016360664648,
+        "sync_ms": 0.0045000000000000005,
+        "unused_trid_ratio": 0.6428571428571429,
+        "writer_backpressure_ms": 0.0029224929595601376
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 4,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 6,
+          "effective_s_block_count": 6,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 6,
+          "provisioned_kv_parallel_factor": 6,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 4,
+          "kv_parallel_factor": 6,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "709ea9b15fd317679c8c2e5eec8da8a51023abe8",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 128,
+        "k_num_pages": 9,
+        "k_page_size_bytes": 8192,
+        "lane_group_capacity": 4,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "wh_sblock_6x4",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 8,
+        "v_cb_depth": 2
+      },
+      "metrics": {
+        "active_core_ratio": 0.375,
+        "active_cores": 24,
+        "analytical_score": 0.24420136704110446,
+        "complexity_penalty_ms": 0.0009523353910704248,
+        "compute_ms": 0.00400183908045977,
+        "dram_bytes": 2428928,
+        "dram_ms": 0.010657867485739358,
+        "dual_noc_effectiveness": 0.5079668821435264,
+        "estimated_latency_ms": 0.07029408624110448,
+        "imbalance_score": 0.03125,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 32,
+        "l1_pressure_ms": 0.0005338114754098361,
+        "l1_usage_bytes_per_core": 533504,
+        "l1_usage_ratio": 0.3558743169398907,
+        "measured_latency_ms": null,
+        "noc_bytes": 1188311.0399999998,
+        "noc_ms": 0.029808090381900684,
+        "overlap_residual_ms": 0.0009769520435665997,
+        "page_control_ms": 0.007824600000000001,
+        "pipeline_bubble_ms": 0.0017221751250634208,
+        "provisioned_core_ratio": 0.375,
+        "provisioned_cores": 24,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0007711398116315663,
+        "reader_backpressure_ms": 0.013128800328644967,
+        "reader_ms": 0.03542699834323042,
+        "reduction_ms": 0.003927867163733684,
+        "selected_latency_ms": 0.07029408624110448,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.007120084742988132,
+        "sync_ms": 0.0045000000000000005,
+        "unused_trid_ratio": 0.21428571428571427,
+        "writer_backpressure_ms": 0.0029560969408288507
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 4,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 6,
+          "effective_s_block_count": 6,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 6,
+          "provisioned_kv_parallel_factor": 6,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 4,
+          "kv_parallel_factor": 6,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "134d97dec330ea7f07d4346aeb83f4e46892fc9f",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 128,
+        "k_num_pages": 9,
+        "k_page_size_bytes": 8192,
+        "lane_group_capacity": 4,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "HiFi2",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "wh_sblock_6x4",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 14,
+        "v_cb_depth": 3
+      },
+      "metrics": {
+        "active_core_ratio": 0.375,
+        "active_cores": 24,
+        "analytical_score": 0.24425450513471159,
+        "complexity_penalty_ms": 0.0019642401529751867,
+        "compute_ms": 0.00800367816091954,
+        "dram_bytes": 2428928,
+        "dram_ms": 0.010578033272363034,
+        "dual_noc_effectiveness": 0.5190779932546374,
+        "estimated_latency_ms": 0.07034722433471159,
+        "imbalance_score": 0.03125,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 32,
+        "l1_pressure_ms": 0.0006649590163934427,
+        "l1_usage_bytes_per_core": 664576,
+        "l1_usage_ratio": 0.44330601092896177,
+        "measured_latency_ms": null,
+        "noc_bytes": 1188311.0399999998,
+        "noc_ms": 0.02944108774765469,
+        "overlap_residual_ms": 0.0019147749939020372,
+        "page_control_ms": 0.007824600000000001,
+        "pipeline_bubble_ms": 0.001700978323756271,
+        "provisioned_core_ratio": 0.375,
+        "provisioned_cores": 24,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0007614003436031708,
+        "reader_backpressure_ms": 0.012254145538475456,
+        "reader_ms": 0.03507893525542229,
+        "reduction_ms": 0.003887730815988668,
+        "selected_latency_ms": 0.07034722433471159,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.007015016360664648,
+        "sync_ms": 0.0045000000000000005,
+        "unused_trid_ratio": 0.6428571428571429,
+        "writer_backpressure_ms": 0.002306021857286674
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 4,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 6,
+          "effective_s_block_count": 6,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 6,
+          "provisioned_kv_parallel_factor": 6,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 4,
+          "kv_parallel_factor": 6,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    }
+  ],
+  "workload": {
+    "batch_size": 1,
+    "block_size": 64,
+    "causal": false,
+    "d_rope": 64,
+    "head_dim_qk": 576,
+    "head_dim_v": 512,
+    "kv_dtype_bytes": 1,
+    "kv_lora_rank": 512,
+    "mode": "decode",
+    "name": "flash_decode_wh",
+    "num_kv_heads": 1,
+    "num_q_heads": 32,
+    "output_dtype_bytes": 2,
+    "paged": false,
+    "q_dtype_bytes": 2,
+    "seq_len_kv": 4096,
+    "seq_len_q": 1
+  },
+  "workload_signature": "7cb9dbc9f02a75ebf166b189daa9707fdee0ac7b"
+}

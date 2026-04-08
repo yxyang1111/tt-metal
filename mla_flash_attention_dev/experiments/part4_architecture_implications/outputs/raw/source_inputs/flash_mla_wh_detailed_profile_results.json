@@ -1,0 +1,4765 @@
+{
+  "metadata": {
+    "arch": "wormhole_b0",
+    "aiclk_mhz": 1000.0,
+    "selected_cases": [
+      "decode_1k",
+      "decode_4k",
+      "decode_8k",
+      "decode_16k",
+      "decode_32k"
+    ],
+    "reused_existing": true,
+    "reused_existing_source": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed",
+    "detail_note": "reused existing stable cpp_device_perf_report.csv/profile_log_device.csv assets because local tracy post-processing is known to hang on this machine",
+    "batch_note": "decode_1k/decode_4k/decode_8k come from historical detailed runs with batch=2; decode_16k/decode_32k use batch=1"
+  },
+  "profiles": [
+    {
+      "case": "decode_1k",
+      "mode": "decode",
+      "variant": "paged_decode",
+      "workload": {
+        "name": "decode_1k",
+        "mode": "decode",
+        "variant": "paged_decode",
+        "batch": 2,
+        "seq_len": 1024,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "kv_lora_rank": 512,
+        "qk_rope_head_dim": 64,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "iterations": 6,
+        "warmup_iterations": 2
+      },
+      "rows_profiled": 6,
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144,
+        7168,
+        8192
+      ],
+      "csv_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_1k/.logs/cpp_device_perf_report.csv",
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 74466.66666666667,
+          "min_ns": 73475.0,
+          "max_ns": 75638.0,
+          "std_ns": 855.858568274507
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 73530.83333333333,
+          "min_ns": 72554.0,
+          "max_ns": 74703.0,
+          "std_ns": 855.1443185542167
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1065.3333333333333,
+          "min_ns": 1036.0,
+          "max_ns": 1090.0,
+          "std_ns": 18.363611361119094
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 61376.333333333336,
+          "min_ns": 60385.0,
+          "max_ns": 62583.0,
+          "std_ns": 881.4296467797202
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 27253.5,
+          "min_ns": 26885.0,
+          "max_ns": 27810.0,
+          "std_ns": 348.6616076752166
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 72534.0,
+          "min_ns": 71574.0,
+          "max_ns": 73684.0,
+          "std_ns": 846.7976932735075
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 73267.33333333333,
+          "min_ns": 72282.0,
+          "max_ns": 74438.0,
+          "std_ns": 854.8098553999532
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 72724.66666666667,
+          "min_ns": 71759.0,
+          "max_ns": 73884.0,
+          "std_ns": 852.6174731704456
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 332412.6666666667,
+          "min_ns": 168706.0,
+          "max_ns": 963857.0,
+          "std_ns": 284122.8334134532
+        }
+      },
+      "analysis": {
+        "classification": "compute_on_critical_path",
+        "reasons": [
+          "trisc1 is the last stage to retire"
+        ],
+        "ratios": {
+          "ncrisc_share": 0.3706404342849372,
+          "brisc_share": 0.8347019957614153,
+          "compute_share": 0.9964164692815939,
+          "compute_wait_front_share": null,
+          "compute_reserve_back_share": null
+        },
+        "compute_stage": "trisc1",
+        "effective_single_pass_k_read_gbps": 43.284275414166984,
+        "effective_output_write_gbps": 1.0677731373113415,
+        "pm_dram_bw_util_pct": null,
+        "pm_noc_util_pct": null,
+        "pm_multicast_noc_util_pct": null
+      },
+      "custom_reader_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_1k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 419.9375,
+            "min_cycles": 313.0,
+            "max_cycles": 1949.0,
+            "std_cycles": 230.49226363101647
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 7870.958333333333,
+            "min_cycles": 7793.0,
+            "max_cycles": 8719.0,
+            "std_cycles": 135.5147529381539
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 145.16666666666666,
+            "min_cycles": 143.0,
+            "max_cycles": 153.0,
+            "std_cycles": 2.153807997220014
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 70.89583333333333,
+            "min_cycles": 68.0,
+            "max_cycles": 74.0,
+            "std_cycles": 1.5577706203275101
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 1679.7083333333333,
+            "min_cycles": 1545.0,
+            "max_cycles": 2267.0,
+            "std_cycles": 110.01078703422174
+          }
+        },
+        "avg_profiled_cycles_per_core": 10186.666666666666,
+        "max_profiled_cycles_per_run": 10735.166666666666,
+        "avg_profiled_cycles_per_core_stage_sum": 10186.666666666666,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.04122423102094241,
+          "SDPA-PAGED-RESERVE-SUM": 0.006959669502617801,
+          "SDPA-PAGED-ISSUE-SUM": 0.7726726112565445,
+          "SDPA-PAGED-WAIT-SUM": 0.1648928337696335,
+          "SDPA-PAGED-PUSH-SUM": 0.01425065445026178
+        }
+      },
+      "custom_reader_source_breakdown": {},
+      "custom_writer_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_1k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 652.5,
+            "min_cycles": 20.0,
+            "max_cycles": 1546.0,
+            "std_cycles": 416.3140841560211
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 23298.791666666668,
+            "min_cycles": 0.0,
+            "max_cycles": 43166.0,
+            "std_cycles": 18913.626989949087
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 744.1875,
+            "min_cycles": 0.0,
+            "max_cycles": 2161.0,
+            "std_cycles": 535.8468242048438
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.020833333333336,
+            "min_cycles": 0.0,
+            "max_cycles": 71.0,
+            "std_cycles": 30.039203262385122
+          }
+        },
+        "avg_profiled_cycles_per_core": 24747.5,
+        "max_profiled_cycles_per_run": 44961.833333333336,
+        "avg_profiled_cycles_per_core_stage_sum": 24747.5,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9414604168771257,
+          "SDPA-WRITER-ISSUE-SUM": 0.03007121931508233,
+          "SDPA-WRITER-BARRIER-SUM": 0.02636629962622487,
+          "SDPA-WRITER-POP-SUM": 0.0021020641815671618
+        }
+      },
+      "custom_writer_source_breakdown": {}
+    },
+    {
+      "case": "decode_4k",
+      "mode": "decode",
+      "variant": "paged_decode",
+      "workload": {
+        "name": "decode_4k",
+        "mode": "decode",
+        "variant": "paged_decode",
+        "batch": 2,
+        "seq_len": 4096,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "kv_lora_rank": 512,
+        "qk_rope_head_dim": 64,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "iterations": 6,
+        "warmup_iterations": 2
+      },
+      "rows_profiled": 6,
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144,
+        7168,
+        8192
+      ],
+      "csv_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_4k/.logs/cpp_device_perf_report.csv",
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 174021.83333333334,
+          "min_ns": 173303.0,
+          "max_ns": 175119.0,
+          "std_ns": 644.772418937273
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 173101.5,
+          "min_ns": 172386.0,
+          "max_ns": 174205.0,
+          "std_ns": 643.1914567218691
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1066.3333333333333,
+          "min_ns": 1043.0,
+          "max_ns": 1090.0,
+          "std_ns": 16.35712552851373
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 161069.5,
+          "min_ns": 160367.0,
+          "max_ns": 162163.0,
+          "std_ns": 642.8770618607159
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 109347.0,
+          "min_ns": 109021.0,
+          "max_ns": 109703.0,
+          "std_ns": 241.42700760271208
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 172091.33333333334,
+          "min_ns": 171370.0,
+          "max_ns": 173201.0,
+          "std_ns": 642.3245977610455
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 172838.5,
+          "min_ns": 172123.0,
+          "max_ns": 173942.0,
+          "std_ns": 642.8117272317508
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 172290.0,
+          "min_ns": 171577.0,
+          "max_ns": 173394.0,
+          "std_ns": 642.6847334943212
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 340301.8333333333,
+          "min_ns": 149813.0,
+          "max_ns": 986089.0,
+          "std_ns": 299903.67932633345
+        }
+      },
+      "analysis": {
+        "classification": "writer_close_to_critical_path",
+        "reasons": [
+          "brisc is close to the kernel window"
+        ],
+        "ratios": {
+          "ncrisc_share": 0.631692966265457,
+          "brisc_share": 0.9304916479637669,
+          "compute_share": 0.9984806601906974,
+          "compute_wait_front_share": null,
+          "compute_reserve_back_share": null
+        },
+        "compute_stage": "trisc1",
+        "effective_single_pass_k_read_gbps": 43.15245960108645,
+        "effective_output_write_gbps": 0.4068802597636424,
+        "pm_dram_bw_util_pct": null,
+        "pm_noc_util_pct": null,
+        "pm_multicast_noc_util_pct": null
+      },
+      "custom_reader_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_4k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 488.8541666666667,
+            "min_cycles": 327.0,
+            "max_cycles": 1560.0,
+            "std_cycles": 262.25051553677747
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 33688.541666666664,
+            "min_cycles": 33402.0,
+            "max_cycles": 33997.0,
+            "std_cycles": 267.05164593617883
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 594.6666666666666,
+            "min_cycles": 583.0,
+            "max_cycles": 605.0,
+            "std_cycles": 4.758034141206734
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 17545.0,
+            "min_cycles": 16814.0,
+            "max_cycles": 18081.0,
+            "std_cycles": 349.7350783092825
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 6393.9375,
+            "min_cycles": 6107.0,
+            "max_cycles": 6802.0,
+            "std_cycles": 162.21120571778224
+          }
+        },
+        "avg_profiled_cycles_per_core": 58711.0,
+        "max_profiled_cycles_per_run": 59406.166666666664,
+        "avg_profiled_cycles_per_core_stage_sum": 58710.99999999999,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.008326449330903353,
+          "SDPA-PAGED-RESERVE-SUM": 0.2988366745584303,
+          "SDPA-PAGED-ISSUE-SUM": 0.5738028932681554,
+          "SDPA-PAGED-WAIT-SUM": 0.10890527328779957,
+          "SDPA-PAGED-PUSH-SUM": 0.010128709554711497
+        }
+      },
+      "custom_reader_source_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_4k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 23218.666666666668,
+            "min_cycles": 23079.0,
+            "max_cycles": 23375.0,
+            "std_cycles": 128.21211807868326
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 326.1458333333333,
+            "min_cycles": 319.0,
+            "max_cycles": 334.0,
+            "std_cycles": 3.564814063251484
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 17212.104166666668,
+            "min_cycles": 16481.0,
+            "max_cycles": 17749.0,
+            "std_cycles": 350.247783694114
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 6048.770833333333,
+            "min_cycles": 5721.0,
+            "max_cycles": 6434.0,
+            "std_cycles": 159.4928472251098
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 10469.875,
+            "min_cycles": 10318.0,
+            "max_cycles": 10633.0,
+            "std_cycles": 139.41105662153677
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 268.5208333333333,
+            "min_cycles": 263.0,
+            "max_cycles": 276.0,
+            "std_cycles": 2.8722057677370927
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 332.8958333333333,
+            "min_cycles": 332.0,
+            "max_cycles": 336.0,
+            "std_cycles": 1.103773514912467
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 345.1666666666667,
+            "min_cycles": 316.0,
+            "max_cycles": 386.0,
+            "std_cycles": 18.506005031400544
+          }
+        },
+        "avg_profiled_cycles_per_core": 58222.145833333336,
+        "max_profiled_cycles_per_run": 58402.166666666664,
+        "avg_profiled_cycles_per_core_stage_sum": 58222.14583333334,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.2956281311914889,
+          "SDPA-K-ISSUE-SUM": 0.3987944163571779,
+          "SDPA-K-WAIT-SUM": 0.10389123840692059,
+          "SDPA-K-PUSH-SUM": 0.005601748761836399,
+          "SDPA-V-RESERVE-SUM": 0.005717684028449941,
+          "SDPA-V-ISSUE-SUM": 0.17982633326451164,
+          "SDPA-V-WAIT-SUM": 0.005928442892756658,
+          "SDPA-V-PUSH-SUM": 0.004612005096857831
+        }
+      },
+      "custom_writer_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_4k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 667.875,
+            "min_cycles": 20.0,
+            "max_cycles": 1410.0,
+            "std_cycles": 421.601886904775
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 73037.52083333333,
+            "min_cycles": 0.0,
+            "max_cycles": 142340.0,
+            "std_cycles": 68439.17522180722
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 744.7916666666666,
+            "min_cycles": 0.0,
+            "max_cycles": 1901.0,
+            "std_cycles": 519.9022728012342
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.791666666666664,
+            "min_cycles": 0.0,
+            "max_cycles": 74.0,
+            "std_cycles": 30.489723906406386
+          }
+        },
+        "avg_profiled_cycles_per_core": 74502.97916666667,
+        "max_profiled_cycles_per_run": 144361.66666666666,
+        "avg_profiled_cycles_per_core_stage_sum": 74502.97916666667,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9803302049163022,
+          "SDPA-WRITER-ISSUE-SUM": 0.009996803819086651,
+          "SDPA-WRITER-BARRIER-SUM": 0.008964406624679159,
+          "SDPA-WRITER-POP-SUM": 0.0007085846399319042
+        }
+      },
+      "custom_writer_source_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_4k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144,
+          7168,
+          8192
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-OUTPUT-GATHER-WAIT-SUM": {
+            "avg_cycles": 0.0,
+            "min_cycles": 0.0,
+            "max_cycles": 0.0,
+            "std_cycles": 0.0
+          },
+          "SDPA-WRITER-ROOT-CB-WAIT-SUM": {
+            "avg_cycles": 0.0,
+            "min_cycles": 0.0,
+            "max_cycles": 0.0,
+            "std_cycles": 0.0
+          },
+          "SDPA-WRITER-SENDER-CB-WAIT-SUM": {
+            "avg_cycles": 73037.52083333333,
+            "min_cycles": 0.0,
+            "max_cycles": 142340.0,
+            "std_cycles": 68439.17522180722
+          },
+          "SDPA-WRITER-TREE-CHILD-WAIT-SUM": {
+            "avg_cycles": 74388.5625,
+            "min_cycles": 0.0,
+            "max_cycles": 155999.0,
+            "std_cycles": 74495.18423386682
+          }
+        },
+        "avg_profiled_cycles_per_core": 147426.08333333334,
+        "max_profiled_cycles_per_run": 154947.5,
+        "avg_profiled_cycles_per_core_stage_sum": 147426.0833333333,
+        "stage_shares": {
+          "SDPA-WRITER-SENDER-CB-WAIT-SUM": 0.4954179015133573,
+          "SDPA-WRITER-ROOT-CB-WAIT-SUM": 0.0,
+          "SDPA-WRITER-TREE-CHILD-WAIT-SUM": 0.5045820984866428,
+          "SDPA-WRITER-OUTPUT-GATHER-WAIT-SUM": 0.0
+        }
+      }
+    },
+    {
+      "case": "decode_8k",
+      "mode": "decode",
+      "variant": "paged_decode",
+      "workload": {
+        "name": "decode_8k",
+        "mode": "decode",
+        "variant": "paged_decode",
+        "batch": 2,
+        "seq_len": 8192,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "kv_lora_rank": 512,
+        "qk_rope_head_dim": 64,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "rows_profiled": 4,
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "csv_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_8k/.logs/cpp_device_perf_report.csv",
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 304114.25,
+          "min_ns": 303756.0,
+          "max_ns": 304416.0,
+          "std_ns": 237.53776015614864
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 303168.5,
+          "min_ns": 302812.0,
+          "max_ns": 303476.0,
+          "std_ns": 237.05010018981218
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1065.0,
+          "min_ns": 1054.0,
+          "max_ns": 1074.0,
+          "std_ns": 9.1104335791443
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 291010.5,
+          "min_ns": 290679.0,
+          "max_ns": 291318.0,
+          "std_ns": 228.7187137074708
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 238594.0,
+          "min_ns": 238074.0,
+          "max_ns": 239105.0,
+          "std_ns": 495.4447496946557
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 302168.5,
+          "min_ns": 301806.0,
+          "max_ns": 302460.0,
+          "std_ns": 236.2821406708514
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 302909.5,
+          "min_ns": 302553.0,
+          "max_ns": 303213.0,
+          "std_ns": 236.14561185844636
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 302356.25,
+          "min_ns": 302005.0,
+          "max_ns": 302659.0,
+          "std_ns": 233.55660448807694
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 449882.5,
+          "min_ns": 184472.0,
+          "max_ns": 1194818.0,
+          "std_ns": 430410.2450136962
+        }
+      },
+      "analysis": {
+        "classification": "writer_close_to_critical_path",
+        "reasons": [
+          "brisc is close to the kernel window"
+        ],
+        "ratios": {
+          "ncrisc_share": 0.7870012880625791,
+          "brisc_share": 0.9598968890237607,
+          "compute_share": 0.9991456896082541,
+          "compute_wait_front_share": null,
+          "compute_reserve_back_share": null
+        },
+        "compute_stage": "trisc1",
+        "effective_single_pass_k_read_gbps": 39.55331651256947,
+        "effective_output_write_gbps": 0.2252014961659459,
+        "pm_dram_bw_util_pct": null,
+        "pm_noc_util_pct": null,
+        "pm_multicast_noc_util_pct": null
+      },
+      "custom_reader_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_8k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 432.21875,
+            "min_cycles": 335.0,
+            "max_cycles": 776.0,
+            "std_cycles": 86.0180701854994
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 62856.21875,
+            "min_cycles": 62465.0,
+            "max_cycles": 63259.0,
+            "std_cycles": 363.6509946341925
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 1177.25,
+            "min_cycles": 1160.0,
+            "max_cycles": 1193.0,
+            "std_cycles": 7.066647012551285
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 84892.71875,
+            "min_cycles": 83966.0,
+            "max_cycles": 85732.0,
+            "std_cycles": 539.0158412778213
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 14011.90625,
+            "min_cycles": 13431.0,
+            "max_cycles": 14583.0,
+            "std_cycles": 295.97332643489597
+          }
+        },
+        "avg_profiled_cycles_per_core": 163370.3125,
+        "max_profiled_cycles_per_run": 163870.75,
+        "avg_profiled_cycles_per_core_stage_sum": 163370.3125,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.00264563826429603,
+          "SDPA-PAGED-RESERVE-SUM": 0.5196336926269881,
+          "SDPA-PAGED-ISSUE-SUM": 0.3847468844744972,
+          "SDPA-PAGED-WAIT-SUM": 0.08576776303834273,
+          "SDPA-PAGED-PUSH-SUM": 0.007206021595875934
+        }
+      },
+      "custom_reader_source_breakdown": {},
+      "custom_writer_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_8k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 684.75,
+            "min_cycles": 20.0,
+            "max_cycles": 1402.0,
+            "std_cycles": 433.81037043851313
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 137924.40625,
+            "min_cycles": 0.0,
+            "max_cycles": 272513.0,
+            "std_cycles": 133276.8594366768
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 799.65625,
+            "min_cycles": 0.0,
+            "max_cycles": 2088.0,
+            "std_cycles": 588.0296341052358
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.0625,
+            "min_cycles": 0.0,
+            "max_cycles": 72.0,
+            "std_cycles": 30.06444900127059
+          }
+        },
+        "avg_profiled_cycles_per_core": 139460.875,
+        "max_profiled_cycles_per_run": 274006.5,
+        "avg_profiled_cycles_per_core_stage_sum": 139460.875,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9889827971465115,
+          "SDPA-WRITER-ISSUE-SUM": 0.005733911034187904,
+          "SDPA-WRITER-BARRIER-SUM": 0.0049099792325266855,
+          "SDPA-WRITER-POP-SUM": 0.0003733125867738891
+        }
+      },
+      "custom_writer_source_breakdown": {}
+    },
+    {
+      "case": "decode_16k",
+      "mode": "decode",
+      "variant": "paged_decode",
+      "workload": {
+        "name": "decode_16k",
+        "mode": "decode",
+        "variant": "paged_decode",
+        "batch": 1,
+        "seq_len": 16384,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "kv_lora_rank": 512,
+        "qk_rope_head_dim": 64,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "rows_profiled": 4,
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "csv_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_16k/.logs/cpp_device_perf_report.csv",
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 561821.75,
+          "min_ns": 561705.0,
+          "max_ns": 561927.0,
+          "std_ns": 88.9083095104164
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 560899.5,
+          "min_ns": 560791.0,
+          "max_ns": 561013.0,
+          "std_ns": 85.54969316134337
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1047.0,
+          "min_ns": 1020.0,
+          "max_ns": 1071.0,
+          "std_ns": 19.836834424877374
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 548789.5,
+          "min_ns": 548666.0,
+          "max_ns": 548928.0,
+          "std_ns": 107.70909896568628
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 497738.0,
+          "min_ns": 497491.0,
+          "max_ns": 498093.0,
+          "std_ns": 232.71656580484338
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 559891.0,
+          "min_ns": 559804.0,
+          "max_ns": 559987.0,
+          "std_ns": 75.80567261095966
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 560631.5,
+          "min_ns": 560523.0,
+          "max_ns": 560738.0,
+          "std_ns": 84.60053191322145
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 560095.75,
+          "min_ns": 559992.0,
+          "max_ns": 560197.0,
+          "std_ns": 79.74451391788654
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 529668.25,
+          "min_ns": 185974.0,
+          "max_ns": 1425590.0,
+          "std_ns": 518916.2133834204
+        }
+      },
+      "analysis": {
+        "classification": "reader_close_to_critical_path",
+        "reasons": [
+          "ncrisc is close to the kernel window"
+        ],
+        "ratios": {
+          "ncrisc_share": 0.8873924829670913,
+          "brisc_share": 0.9784096794523797,
+          "compute_share": 0.9995221960440328,
+          "compute_wait_front_share": null,
+          "compute_reserve_back_share": null
+        },
+        "compute_stage": "trisc1",
+        "effective_single_pass_k_read_gbps": 18.960143690053805,
+        "effective_output_write_gbps": 0.05970959721350354,
+        "pm_dram_bw_util_pct": null,
+        "pm_noc_util_pct": null,
+        "pm_multicast_noc_util_pct": null
+      },
+      "custom_reader_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_16k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 484.4375,
+            "min_cycles": 460.0,
+            "max_cycles": 615.0,
+            "std_cycles": 38.820047575318604
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 125625.8125,
+            "min_cycles": 124877.0,
+            "max_cycles": 126371.0,
+            "std_cycles": 713.2918598608496
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 2361.8125,
+            "min_cycles": 2339.0,
+            "max_cycles": 2378.0,
+            "std_cycles": 10.65492110482288
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 214920.5,
+            "min_cycles": 212928.0,
+            "max_cycles": 216788.0,
+            "std_cycles": 1318.082888137161
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 16528.375,
+            "min_cycles": 15782.0,
+            "max_cycles": 17931.0,
+            "std_cycles": 600.4085978523292
+          }
+        },
+        "avg_profiled_cycles_per_core": 359920.9375,
+        "max_profiled_cycles_per_run": 360922.75,
+        "avg_profiled_cycles_per_core_stage_sum": 359920.9375,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.0013459553183120946,
+          "SDPA-PAGED-RESERVE-SUM": 0.5971325299740308,
+          "SDPA-PAGED-ISSUE-SUM": 0.349037245158876,
+          "SDPA-PAGED-WAIT-SUM": 0.04592223813042274,
+          "SDPA-PAGED-PUSH-SUM": 0.0065620314183583725
+        }
+      },
+      "custom_reader_source_breakdown": {},
+      "custom_writer_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_16k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 548.0,
+            "min_cycles": 20.0,
+            "max_cycles": 730.0,
+            "std_cycles": 304.85570357137817
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 267460.8125,
+            "min_cycles": 0.0,
+            "max_cycles": 530641.0,
+            "std_cycles": 262817.84120974806
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 583.5,
+            "min_cycles": 0.0,
+            "max_cycles": 787.0,
+            "std_cycles": 336.8950133201737
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.1875,
+            "min_cycles": 0.0,
+            "max_cycles": 71.0,
+            "std_cycles": 30.13556609307348
+          }
+        },
+        "avg_profiled_cycles_per_core": 268644.5,
+        "max_profiled_cycles_per_run": 532093.5,
+        "avg_profiled_cycles_per_core_stage_sum": 268644.5,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9955938517259799,
+          "SDPA-WRITER-ISSUE-SUM": 0.0021720154330351076,
+          "SDPA-WRITER-BARRIER-SUM": 0.00203987053522406,
+          "SDPA-WRITER-POP-SUM": 0.00019426230576095917
+        }
+      },
+      "custom_writer_source_breakdown": {}
+    },
+    {
+      "case": "decode_32k",
+      "mode": "decode",
+      "variant": "paged_decode",
+      "workload": {
+        "name": "decode_32k",
+        "mode": "decode",
+        "variant": "paged_decode",
+        "batch": 1,
+        "seq_len": 32768,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "kv_lora_rank": 512,
+        "qk_rope_head_dim": 64,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "rows_profiled": 4,
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "csv_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_32k/.logs/cpp_device_perf_report.csv",
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 1085678.25,
+          "min_ns": 1085552.0,
+          "max_ns": 1085772.0,
+          "std_ns": 93.43012094608461
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 1084760.25,
+          "min_ns": 1084620.0,
+          "max_ns": 1084860.0,
+          "std_ns": 103.39819872705714
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1064.5,
+          "min_ns": 1060.0,
+          "max_ns": 1068.0,
+          "std_ns": 3.570714214271425
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 1072648.75,
+          "min_ns": 1072504.0,
+          "max_ns": 1072742.0,
+          "std_ns": 100.10837877021083
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 1023405.5,
+          "min_ns": 1023214.0,
+          "max_ns": 1023556.0,
+          "std_ns": 135.65673591827277
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 1083756.25,
+          "min_ns": 1083612.0,
+          "max_ns": 1083852.0,
+          "std_ns": 99.99593741747712
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 1084496.25,
+          "min_ns": 1084365.0,
+          "max_ns": 1084596.0,
+          "std_ns": 98.26590202099607
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 1083954.0,
+          "min_ns": 1083811.0,
+          "max_ns": 1084048.0,
+          "std_ns": 98.49619281982426
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 1429844.0,
+          "min_ns": 196797.0,
+          "max_ns": 4228201.0,
+          "std_ns": 1649135.9903037106
+        }
+      },
+      "analysis": {
+        "classification": "reader_writer_saturated",
+        "reasons": [
+          "reader and writer almost fully occupy the kernel window"
+        ],
+        "ratios": {
+          "ncrisc_share": 0.9434393452378071,
+          "brisc_share": 0.9888348600531777,
+          "compute_share": 0.9997566282503438,
+          "compute_wait_front_share": null,
+          "compute_reserve_back_share": null
+        },
+        "compute_stage": "trisc1",
+        "effective_single_pass_k_read_gbps": 18.44270721625006,
+        "effective_output_write_gbps": 0.030548676815220267,
+        "pm_dram_bw_util_pct": null,
+        "pm_noc_util_pct": null,
+        "pm_multicast_noc_util_pct": null
+      },
+      "custom_reader_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_32k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "NCRISC",
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 524.875,
+            "min_cycles": 502.0,
+            "max_cycles": 658.0,
+            "std_cycles": 42.24907543367073
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 251305.75,
+            "min_cycles": 249817.0,
+            "max_cycles": 252857.0,
+            "std_cycles": 1438.9028589519169
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 4727.0625,
+            "min_cycles": 4702.0,
+            "max_cycles": 4749.0,
+            "std_cycles": 15.155315692851799
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 463279.5625,
+            "min_cycles": 459726.0,
+            "max_cycles": 466887.0,
+            "std_cycles": 2919.5491297619483
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 32916.3125,
+            "min_cycles": 31902.0,
+            "max_cycles": 34603.0,
+            "std_cycles": 734.6869842618352
+          }
+        },
+        "avg_profiled_cycles_per_core": 752753.5625,
+        "max_profiled_cycles_per_run": 754885.5,
+        "avg_profiled_cycles_per_core_stage_sum": 752753.5625,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.0006972733523263798,
+          "SDPA-PAGED-RESERVE-SUM": 0.615446522712405,
+          "SDPA-PAGED-ISSUE-SUM": 0.33384863588739244,
+          "SDPA-PAGED-WAIT-SUM": 0.04372787342338217,
+          "SDPA-PAGED-PUSH-SUM": 0.006279694624494055
+        }
+      },
+      "custom_reader_source_breakdown": {},
+      "custom_writer_breakdown": {
+        "raw_log_path": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_wh_detailed/decode_32k/.logs/profile_log_device.csv",
+        "measured_run_ids": [
+          3072,
+          4096,
+          5120,
+          6144
+        ],
+        "processor_type": "BRISC",
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 557.5,
+            "min_cycles": 20.0,
+            "max_cycles": 778.0,
+            "std_cycles": 310.710073863079
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 529359.0,
+            "min_cycles": 0.0,
+            "max_cycles": 1054385.0,
+            "std_cycles": 524694.7251043934
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 600.125,
+            "min_cycles": 0.0,
+            "max_cycles": 865.0,
+            "std_cycles": 347.4355830582124
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.0,
+            "min_cycles": 0.0,
+            "max_cycles": 72.0,
+            "std_cycles": 30.033314835362415
+          }
+        },
+        "avg_profiled_cycles_per_core": 530568.625,
+        "max_profiled_cycles_per_run": 1055944.75,
+        "avg_profiled_cycles_per_core_stage_sum": 530568.625,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9977201346951113,
+          "SDPA-WRITER-ISSUE-SUM": 0.0011310977915439308,
+          "SDPA-WRITER-BARRIER-SUM": 0.0010507594564228143,
+          "SDPA-WRITER-POP-SUM": 9.80080569219486e-05
+        }
+      },
+      "custom_writer_source_breakdown": {}
+    }
+  ],
+  "bh_empirical_decode": {
+    "model": "current_a_bh_empirical_coupled",
+    "assumptions": {
+      "calibration_source": "wormhole detailed decode profile",
+      "wh_dram_bw_gbps": 258.0,
+      "bh_dram_bw_gbps": 512.0,
+      "wh_noc_bw_gbps": 32.0,
+      "bh_noc_bw_gbps": 86.4,
+      "wh_aiclk_mhz": 1000.0,
+      "bh_aiclk_mhz": 1350.0,
+      "active_core_sweep": [
+        16,
+        20,
+        24,
+        32,
+        48,
+        64
+      ],
+      "full_active_core_scan": [
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64
+      ],
+      "plateau_tolerance": 0.02,
+      "notes": [
+        "reader reserve is scaled as a downstream coupling term against max(compute, writer)",
+        "writer cb_wait is scaled as an upstream coupling term against max(compute, reader)",
+        "untracked thread time is scaled by the same factor as the tracked active sub-stages",
+        "coupling attribution is a heuristic proportional split used for interpretation, not a direct hardware counter"
+      ]
+    },
+    "cases": [
+      {
+        "case": "decode_1k",
+        "seq_len": 1024,
+        "batch": 2,
+        "active_cores": 16,
+        "ideal_first_order_ms": 0.007547407407407408,
+        "ideal_first_order_dominant_stage": "compute",
+        "compute_bh_ms": 0.006447407407407408,
+        "reader_active_bh_ms": 0.013511612891099686,
+        "reader_reserve_bh_ms": 1.0792638629467805e-05,
+        "reader_total_bh_ms": 0.013522405529729154,
+        "writer_active_bh_ms": 0.006853573331563274,
+        "writer_cb_wait_bh_ms": 0.004300084293173048,
+        "writer_total_bh_ms": 0.011153657624736323,
+        "predicted_kernel_ms": 0.013522405529729154,
+        "dominant_stage": "reader",
+        "uplift_vs_ideal": 1.7916623285046969,
+        "reader_reserve_coupling_coeff": 0.0009676322326457447,
+        "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+        "coupling_breakdown": {
+          "reader_reserve_from_compute_ms": 3.953427711222255e-06,
+          "reader_reserve_from_writer_ms": 6.8392109182455494e-06,
+          "writer_cb_wait_from_compute_ms": 0.001388315224161309,
+          "writer_cb_wait_from_reader_ms": 0.002911769069011739
+        },
+        "dominant_coupling_source": "writer_cb_wait_from_reader_ms",
+        "first_order_dram_crossover_active_cores": 23,
+        "second_order_noncompute_crossover_active_cores": 8,
+        "second_order_plateau_start_active_cores": 8,
+        "second_order_speedup_16c_to_64c": 1.0,
+        "second_order_floor_ms": 0.013522405529434416
+      },
+      {
+        "case": "decode_4k",
+        "seq_len": 4096,
+        "batch": 2,
+        "active_cores": 16,
+        "ideal_first_order_ms": 0.02688962962962963,
+        "ideal_first_order_dominant_stage": "compute",
+        "compute_bh_ms": 0.02578962962962963,
+        "reader_active_bh_ms": 0.046220998446113604,
+        "reader_reserve_bh_ms": 0.002811159693718153,
+        "reader_total_bh_ms": 0.04903215813983176,
+        "writer_active_bh_ms": 0.006973320841455039,
+        "writer_cb_wait_bh_ms": 0.020719846976462165,
+        "writer_total_bh_ms": 0.027693167817917204,
+        "predicted_kernel_ms": 0.04903215813983176,
+        "dominant_stage": "reader",
+        "uplift_vs_ideal": 1.8234597804130153,
+        "reader_reserve_coupling_coeff": 0.10151094808159063,
+        "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+        "coupling_breakdown": {
+          "reader_reserve_from_compute_ms": 0.0013555530150014552,
+          "reader_reserve_from_writer_ms": 0.001455606678716698,
+          "writer_cb_wait_from_compute_ms": 0.0071417323140153454,
+          "writer_cb_wait_from_reader_ms": 0.013578114662446818
+        },
+        "dominant_coupling_source": "writer_cb_wait_from_reader_ms",
+        "first_order_dram_crossover_active_cores": 23,
+        "second_order_noncompute_crossover_active_cores": 9,
+        "second_order_plateau_start_active_cores": 12,
+        "second_order_speedup_16c_to_64c": 0.9999999996948753,
+        "second_order_floor_ms": 0.04903215813983176
+      },
+      {
+        "case": "decode_8k",
+        "seq_len": 8192,
+        "batch": 2,
+        "active_cores": 16,
+        "ideal_first_order_ms": 0.05267925925925926,
+        "ideal_first_order_dominant_stage": "compute",
+        "compute_bh_ms": 0.05157925925925926,
+        "reader_active_bh_ms": 0.07774315113254623,
+        "reader_reserve_bh_ms": 0.014455484392630905,
+        "reader_total_bh_ms": 0.09219863552517714,
+        "writer_active_bh_ms": 0.007099519837294874,
+        "writer_cb_wait_bh_ms": 0.04198099452764015,
+        "writer_total_bh_ms": 0.04908051436493502,
+        "predicted_kernel_ms": 0.09219863552517714,
+        "dominant_stage": "reader",
+        "uplift_vs_ideal": 1.7501885338103287,
+        "reader_reserve_coupling_coeff": 0.2802576966057519,
+        "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+        "coupling_breakdown": {
+          "reader_reserve_from_compute_ms": 0.007407161275658525,
+          "reader_reserve_from_writer_ms": 0.0070483231169723775,
+          "writer_cb_wait_from_compute_ms": 0.015060372138214735,
+          "writer_cb_wait_from_reader_ms": 0.026920622389425417
+        },
+        "dominant_coupling_source": "writer_cb_wait_from_reader_ms",
+        "first_order_dram_crossover_active_cores": 23,
+        "second_order_noncompute_crossover_active_cores": 8,
+        "second_order_plateau_start_active_cores": 15,
+        "second_order_speedup_16c_to_64c": 1.0087829872011853,
+        "second_order_floor_ms": 0.09139590643462901
+      },
+      {
+        "case": "decode_16k",
+        "seq_len": 16384,
+        "batch": 1,
+        "active_cores": 16,
+        "ideal_first_order_ms": 0.10425851851851853,
+        "ideal_first_order_dominant_stage": "compute",
+        "compute_bh_ms": 0.10315851851851852,
+        "reader_active_bh_ms": 0.14309582814060137,
+        "reader_reserve_bh_ms": 0.03954626234747649,
+        "reader_total_bh_ms": 0.18264209048807786,
+        "writer_active_bh_ms": 0.006914067984836324,
+        "writer_cb_wait_bh_ms": 0.08713317378463363,
+        "writer_total_bh_ms": 0.09404724176946995,
+        "predicted_kernel_ms": 0.18264209048807786,
+        "dominant_stage": "reader",
+        "uplift_vs_ideal": 1.7518193533091182,
+        "reader_reserve_coupling_coeff": 0.3833543067059201,
+        "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+        "coupling_breakdown": {
+          "reader_reserve_from_compute_ms": 0.020686686995110174,
+          "reader_reserve_from_writer_ms": 0.018859575352366317,
+          "writer_cb_wait_from_compute_ms": 0.031450349782956424,
+          "writer_cb_wait_from_reader_ms": 0.05568282400167721
+        },
+        "dominant_coupling_source": "writer_cb_wait_from_reader_ms",
+        "first_order_dram_crossover_active_cores": 23,
+        "second_order_noncompute_crossover_active_cores": 8,
+        "second_order_plateau_start_active_cores": 17,
+        "second_order_speedup_16c_to_64c": 1.0239652448476193,
+        "second_order_floor_ms": 0.1783674703665225
+      },
+      {
+        "case": "decode_32k",
+        "seq_len": 32768,
+        "batch": 1,
+        "active_cores": 16,
+        "ideal_first_order_ms": 0.20741703703703704,
+        "ideal_first_order_dominant_stage": "compute",
+        "compute_bh_ms": 0.20631703703703705,
+        "reader_active_bh_ms": 0.28333468801721917,
+        "reader_reserve_bh_ms": 0.08813535930144051,
+        "reader_total_bh_ms": 0.3714700473186597,
+        "writer_active_bh_ms": 0.006919890887710007,
+        "writer_cb_wait_bh_ms": 0.1813201408290332,
+        "writer_total_bh_ms": 0.1882400317167432,
+        "predicted_kernel_ms": 0.3714700473186597,
+        "dominant_stage": "reader",
+        "uplift_vs_ideal": 1.7909331491044722,
+        "reader_reserve_coupling_coeff": 0.42718410736782175,
+        "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+        "coupling_breakdown": {
+          "reader_reserve_from_compute_ms": 0.0460866820779615,
+          "reader_reserve_from_writer_ms": 0.042048677223479,
+          "writer_cb_wait_from_compute_ms": 0.06474605477327433,
+          "writer_cb_wait_from_reader_ms": 0.11657408605575888
+        },
+        "dominant_coupling_source": "writer_cb_wait_from_reader_ms",
+        "first_order_dram_crossover_active_cores": 23,
+        "second_order_noncompute_crossover_active_cores": 7,
+        "second_order_plateau_start_active_cores": 17,
+        "second_order_speedup_16c_to_64c": 1.0269733105233148,
+        "second_order_floor_ms": 0.36171343824567104
+      }
+    ],
+    "active_core_sweep": [
+      {
+        "case": "decode_1k",
+        "seq_len": 1024,
+        "sweep": [
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 16,
+            "ideal_first_order_ms": 0.007547407407407408,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.006447407407407408,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 1.7916623285046969,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 3.953427711222255e-06,
+              "reader_reserve_from_writer_ms": 6.8392109182455494e-06,
+              "writer_cb_wait_from_compute_ms": 0.001388315224161309,
+              "writer_cb_wait_from_reader_ms": 0.002911769069011739
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 20,
+            "ideal_first_order_ms": 0.006257925925925926,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.005157925925925926,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.160844613661414,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 3.4127667876747342e-06,
+              "reader_reserve_from_writer_ms": 7.379871841793069e-06,
+              "writer_cb_wait_from_compute_ms": 0.0011873192031991349,
+              "writer_cb_wait_from_reader_ms": 0.0031127650899739133
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 24,
+            "ideal_first_order_ms": 0.005708,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.004298271604938271,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3690268972896202,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 3.002194190374136e-06,
+              "reader_reserve_from_writer_ms": 7.790444439093668e-06,
+              "writer_cb_wait_from_compute_ms": 0.001037162060482597,
+              "writer_cb_wait_from_reader_ms": 0.0032629222326904517
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 32,
+            "ideal_first_order_ms": 0.005708,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.003223703703703704,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3690268972896202,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 2.4199342513377634e-06,
+              "reader_reserve_from_writer_ms": 8.37270437813004e-06,
+              "writer_cb_wait_from_compute_ms": 0.0008277861722330595,
+              "writer_cb_wait_from_reader_ms": 0.003472298120939989
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 48,
+            "ideal_first_order_ms": 0.005708,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.0021491358024691353,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3690268972896202,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 1.7436071760886737e-06,
+              "reader_reserve_from_writer_ms": 9.04903145337913e-06,
+              "writer_cb_wait_from_compute_ms": 0.0005896972679455683,
+              "writer_cb_wait_from_reader_ms": 0.0037103870252274797
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_1k",
+            "seq_len": 1024,
+            "batch": 2,
+            "active_cores": 64,
+            "ideal_first_order_ms": 0.005708,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.001611851851851852,
+            "reader_active_bh_ms": 0.013511612891099686,
+            "reader_reserve_bh_ms": 1.0792638629467805e-05,
+            "reader_total_bh_ms": 0.013522405529729154,
+            "writer_active_bh_ms": 0.006853573331563274,
+            "writer_cb_wait_bh_ms": 0.004300084293173048,
+            "writer_total_bh_ms": 0.011153657624736323,
+            "predicted_kernel_ms": 0.013522405529729154,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3690268972896202,
+            "reader_reserve_coupling_coeff": 0.0009676322326457447,
+            "writer_cb_wait_coupling_coeff": 0.3179969927480187,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 1.3627450273864794e-06,
+              "reader_reserve_from_writer_ms": 9.429893602081326e-06,
+              "writer_cb_wait_from_compute_ms": 0.00045797416128956963,
+              "writer_cb_wait_from_reader_ms": 0.0038421101318834787
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          }
+        ],
+        "summary": {
+          "noncompute_crossover_active_cores": 8,
+          "plateau_floor_active_cores": 13,
+          "plateau_start_active_cores": 8,
+          "plateau_tolerance": 0.02,
+          "predicted_floor_ms": 0.013522405529434416,
+          "speedup_16c_to_64c": 1.0
+        },
+        "first_order_summary": {
+          "dram_crossover_active_cores": 23,
+          "scan": [
+            {
+              "active_cores": 4,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.02578962962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.02688962962962963,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 5,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.020631703703703704,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.021731703703703704,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 6,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.017193086419753083,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.018293086419753083,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 7,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.014736931216931214,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.015836931216931215,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 8,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.012894814814814816,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.013994814814814816,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 9,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.011462057613168725,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.012562057613168726,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 10,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.010315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.011415851851851852,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 11,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.009378047138047137,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.010478047138047137,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 12,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.008596543209876541,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.009696543209876542,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 13,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.007935270655270657,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.009035270655270657,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 14,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.007368465608465607,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.008468465608465607,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 15,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.006877234567901234,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.007977234567901234,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 16,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.006447407407407408,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.007547407407407408,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 17,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.006068148148148147,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0071681481481481474,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 18,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.005731028806584363,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.006831028806584363,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 19,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.005429395711500974,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.006529395711500974,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 20,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.005157925925925926,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.006257925925925926,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 21,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.004912310405643739,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.006012310405643739,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 22,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.004689023569023568,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005789023569023569,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 23,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.004485152979066023,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 24,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.004298271604938271,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 25,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.004126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 26,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.003967635327635328,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 27,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.003820685871056241,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 28,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0036842328042328036,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 29,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0035571902937420173,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 30,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.003438617283950617,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 31,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0033276941457586616,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 32,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.003223703703703704,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 33,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0031260157126823786,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 34,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0030340740740740736,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 35,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002947386243386243,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 36,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0028655144032921813,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 37,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0027880680680680684,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 38,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002714697855750487,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 39,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0026450902184235515,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 40,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002578962962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 41,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0025160614272809394,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 42,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0024561552028218693,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 43,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0023990353143841514,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 44,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002344511784511784,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 45,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0022924115226337443,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 46,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0022425764895330114,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 47,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002194862096138692,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 48,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0021491358024691353,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 49,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.002105275888133031,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 50,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0020631703703703707,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 51,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0020227160493827157,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 52,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.001983817663817664,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 53,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0019463871418588397,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 54,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0019103429355281205,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 55,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0018756094276094276,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 56,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0018421164021164018,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 57,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.001809798570500325,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 58,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0017785951468710086,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 59,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.001748449466415568,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 60,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0017193086419753085,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 61,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0016911232544019425,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 62,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.0016638470728793308,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 63,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.001637436801881246,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 64,
+              "t_dram_ms": 0.004608,
+              "t_compute_ms": 0.001611851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.005708,
+              "dominant_stage": "dram"
+            }
+          ]
+        }
+      },
+      {
+        "case": "decode_4k",
+        "seq_len": 4096,
+        "sweep": [
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 16,
+            "ideal_first_order_ms": 0.02688962962962963,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.02578962962962963,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.002811159693718153,
+            "reader_total_bh_ms": 0.04903215813983176,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.020719846976462165,
+            "writer_total_bh_ms": 0.027693167817917204,
+            "predicted_kernel_ms": 0.04903215813983176,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 1.8234597804130153,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0013555530150014552,
+              "reader_reserve_from_writer_ms": 0.001455606678716698,
+              "writer_cb_wait_from_compute_ms": 0.0071417323140153454,
+              "writer_cb_wait_from_reader_ms": 0.013578114662446818
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 20,
+            "ideal_first_order_ms": 0.021731703703703704,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.020631703703703704,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.0028111597173172617,
+            "reader_total_bh_ms": 0.049032158163430865,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.0207198469864346,
+            "writer_total_bh_ms": 0.02769316782788964,
+            "predicted_kernel_ms": 0.049032158163430865,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.2562500773961123,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0012001897265998772,
+              "reader_reserve_from_writer_ms": 0.0016109699907173845,
+              "writer_cb_wait_from_compute_ms": 0.0061364060554884685,
+              "writer_cb_wait_from_reader_ms": 0.014583440930946132
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 24,
+            "ideal_first_order_ms": 0.019532,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.017193086419753083,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.002811159715142522,
+            "reader_total_bh_ms": 0.049032158161256126,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.020719846985515603,
+            "writer_total_bh_ms": 0.027693167826970642,
+            "predicted_kernel_ms": 0.049032158161256126,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.5103501004124578,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0010767775732968778,
+              "reader_reserve_from_writer_ms": 0.0017343821418456444,
+              "writer_cb_wait_from_compute_ms": 0.005379189191068465,
+              "writer_cb_wait_from_reader_ms": 0.01534065779444714
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 32,
+            "ideal_first_order_ms": 0.019532,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.012894814814814816,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.0028111597124240995,
+            "reader_total_bh_ms": 0.0490321581585377,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.020719846984366862,
+            "writer_total_bh_ms": 0.0276931678258219,
+            "predicted_kernel_ms": 0.0490321581585377,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.5103501002732798,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0008931063223202408,
+              "reader_reserve_from_writer_ms": 0.0019180533901038584,
+              "writer_cb_wait_from_compute_ms": 0.004314413849513978,
+              "writer_cb_wait_from_reader_ms": 0.016405433134852883
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 48,
+            "ideal_first_order_ms": 0.019532,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.008596543209876541,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.00281115970970567,
+            "reader_total_bh_ms": 0.04903215815581927,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.020719846983218118,
+            "writer_total_bh_ms": 0.027693167824673157,
+            "predicted_kernel_ms": 0.04903215815581927,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.5103501001341018,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0006659258292616673,
+              "reader_reserve_from_writer_ms": 0.0021452338804440027,
+              "writer_cb_wait_from_compute_ms": 0.0030908046801709156,
+              "writer_cb_wait_from_reader_ms": 0.017629042303047206
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_4k",
+            "seq_len": 4096,
+            "batch": 2,
+            "active_cores": 64,
+            "ideal_first_order_ms": 0.019532,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.006447407407407408,
+            "reader_active_bh_ms": 0.046220998446113604,
+            "reader_reserve_bh_ms": 0.0028111597086790743,
+            "reader_total_bh_ms": 0.04903215815479268,
+            "writer_active_bh_ms": 0.006973320841455039,
+            "writer_cb_wait_bh_ms": 0.020719846982784302,
+            "writer_total_bh_ms": 0.02769316782423934,
+            "predicted_kernel_ms": 0.04903215815479268,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.510350100081542,
+            "reader_reserve_coupling_coeff": 0.10151094808159063,
+            "writer_cb_wait_coupling_coeff": 0.42257668767857465,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0005308841988210543,
+              "reader_reserve_from_writer_ms": 0.00228027550985802,
+              "writer_cb_wait_from_compute_ms": 0.002407900883206807,
+              "writer_cb_wait_from_reader_ms": 0.018311946099577495
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          }
+        ],
+        "summary": {
+          "noncompute_crossover_active_cores": 9,
+          "plateau_floor_active_cores": 16,
+          "plateau_start_active_cores": 12,
+          "plateau_tolerance": 0.02,
+          "predicted_floor_ms": 0.04903215813983176,
+          "speedup_16c_to_64c": 0.9999999996948753
+        },
+        "first_order_summary": {
+          "dram_crossover_active_cores": 23,
+          "scan": [
+            {
+              "active_cores": 4,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.10315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.10425851851851853,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 5,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.08252681481481482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.08362681481481482,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 6,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.06877234567901233,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.06987234567901233,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 7,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.05894772486772486,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.060047724867724854,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 8,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.05157925925925926,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.05267925925925926,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 9,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.0458482304526749,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0469482304526749,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 10,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.04126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.042363407407407405,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 11,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.03751218855218855,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.038612188552188544,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 12,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.034386172839506166,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.03548617283950616,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 13,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.03174108262108263,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.03284108262108262,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 14,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.02947386243386243,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.03057386243386243,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 15,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.027508938271604937,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.028608938271604937,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 16,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.02578962962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.02688962962962963,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 17,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.02427259259259259,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.02537259259259259,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 18,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.02292411522633745,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.02402411522633745,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 19,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.021717582846003895,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.022817582846003895,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 20,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.020631703703703704,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.021731703703703704,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 21,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.019649241622574955,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.020749241622574955,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 22,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.018756094276094273,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019856094276094274,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 23,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.01794061191626409,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 24,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.017193086419753083,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 25,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.016505362962962965,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 26,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.015870541310541313,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 27,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.015282743484224964,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 28,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.014736931216931214,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 29,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.014228761174968069,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 30,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.013754469135802468,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 31,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.013310776583034646,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 32,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.012894814814814816,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 33,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.012504062850729514,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 34,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.012136296296296294,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 35,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.011789544973544973,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 36,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.011462057613168725,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 37,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.011152272272272274,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 38,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.010858791423001947,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 39,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.010580360873694206,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 40,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.010315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 41,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.010064245709123757,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 42,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.009824620811287477,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 43,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.009596141257536606,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 44,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.009378047138047137,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 45,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.009169646090534977,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 46,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008970305958132046,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 47,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008779448384554769,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 48,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008596543209876541,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 49,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008421103552532123,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 50,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008252681481481483,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 51,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.008090864197530863,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 52,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.007935270655270657,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 53,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.007785548567435359,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 54,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.007641371742112482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 55,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.00750243771043771,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 56,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.007368465608465607,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 57,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.0072391942820013,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 58,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.0071143805874840345,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 59,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.006993797865662272,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 60,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.006877234567901234,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 61,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.00676449301760777,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 62,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.006655388291517323,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 63,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.006549747207524984,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 64,
+              "t_dram_ms": 0.018432,
+              "t_compute_ms": 0.006447407407407408,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.019532,
+              "dominant_stage": "dram"
+            }
+          ]
+        }
+      },
+      {
+        "case": "decode_8k",
+        "seq_len": 8192,
+        "sweep": [
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 16,
+            "ideal_first_order_ms": 0.05267925925925926,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.05157925925925926,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.014455484392630905,
+            "reader_total_bh_ms": 0.09219863552517714,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.04198099452764015,
+            "writer_total_bh_ms": 0.04908051436493502,
+            "predicted_kernel_ms": 0.09219863552517714,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 1.7501885338103287,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.007407161275658525,
+              "reader_reserve_from_writer_ms": 0.0070483231169723775,
+              "writer_cb_wait_from_compute_ms": 0.015060372138214735,
+              "writer_cb_wait_from_reader_ms": 0.026920622389425417
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 20,
+            "ideal_first_order_ms": 0.042363407407407405,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.04126340740740741,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.013652755387397755,
+            "reader_total_bh_ms": 0.09139590651994399,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.04161548627706882,
+            "writer_total_bh_ms": 0.04871500611436369,
+            "predicted_kernel_ms": 0.09139590651994399,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.1574257623092676,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.006261048464113673,
+              "reader_reserve_from_writer_ms": 0.007391706923284081,
+              "writer_cb_wait_from_compute_ms": 0.012944411620042423,
+              "writer_cb_wait_from_reader_ms": 0.0286710746570264
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 24,
+            "ideal_first_order_ms": 0.037964,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.034386172839506166,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.01365275537010184,
+            "reader_total_bh_ms": 0.09139590650264807,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.04161548626919344,
+            "writer_total_bh_ms": 0.04871500610648831,
+            "predicted_kernel_ms": 0.09139590650264807,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.4074361632770014,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.005649330272400984,
+              "reader_reserve_from_writer_ms": 0.008003425097700856,
+              "writer_cb_wait_from_compute_ms": 0.011376797959906208,
+              "writer_cb_wait_from_reader_ms": 0.03023868830928723
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 32,
+            "ideal_first_order_ms": 0.037964,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.02578962962962963,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.013652755348481954,
+            "reader_total_bh_ms": 0.09139590648102819,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.041615486259349216,
+            "writer_total_bh_ms": 0.04871500609664409,
+            "predicted_kernel_ms": 0.09139590648102819,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.4074361627075174,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0047258737718669005,
+              "reader_reserve_from_writer_ms": 0.008926881576615054,
+              "writer_cb_wait_from_compute_ms": 0.00915853622474444,
+              "writer_cb_wait_from_reader_ms": 0.032456950034604776
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 48,
+            "ideal_first_order_ms": 0.037964,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.017193086419753083,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.013652755326862068,
+            "reader_total_bh_ms": 0.0913959064594083,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.04161548624950498,
+            "writer_total_bh_ms": 0.04871500608679985,
+            "predicted_kernel_ms": 0.0913959064594083,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.407436162138034,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.003561520190849786,
+              "reader_reserve_from_writer_ms": 0.01009123513601228,
+              "writer_cb_wait_from_compute_ms": 0.006589053204351912,
+              "writer_cb_wait_from_reader_ms": 0.03502643304515307
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_8k",
+            "seq_len": 8192,
+            "batch": 2,
+            "active_cores": 64,
+            "ideal_first_order_ms": 0.037964,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.012894814814814816,
+            "reader_active_bh_ms": 0.07774315113254623,
+            "reader_reserve_bh_ms": 0.013652755316052131,
+            "reader_total_bh_ms": 0.09139590644859837,
+            "writer_active_bh_ms": 0.007099519837294874,
+            "writer_cb_wait_bh_ms": 0.041615486244582875,
+            "writer_total_bh_ms": 0.048715006081877746,
+            "predicted_kernel_ms": 0.09139590644859837,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.407436161853292,
+            "reader_reserve_coupling_coeff": 0.2802576966057519,
+            "writer_cb_wait_coupling_coeff": 0.45533205875022076,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.002857494940744451,
+              "reader_reserve_from_writer_ms": 0.01079526037530768,
+              "writer_cb_wait_from_compute_ms": 0.005145462434735558,
+              "writer_cb_wait_from_reader_ms": 0.03647002380984731
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          }
+        ],
+        "summary": {
+          "noncompute_crossover_active_cores": 8,
+          "plateau_floor_active_cores": 19,
+          "plateau_start_active_cores": 15,
+          "plateau_tolerance": 0.02,
+          "predicted_floor_ms": 0.09139590643462901,
+          "speedup_16c_to_64c": 1.0087829872011853
+        },
+        "first_order_summary": {
+          "dram_crossover_active_cores": 23,
+          "scan": [
+            {
+              "active_cores": 4,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.20631703703703705,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.20741703703703704,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 5,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.16505362962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.16615362962962962,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 6,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.13754469135802466,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.13864469135802465,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 7,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.11789544973544971,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.11899544973544972,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 8,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.10315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.10425851851851853,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 9,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.0916964609053498,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0927964609053498,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 10,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.08252681481481482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.08362681481481482,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 11,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.0750243771043771,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0761243771043771,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 12,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.06877234567901233,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.06987234567901233,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 13,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.06348216524216525,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.06458216524216526,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 14,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.05894772486772486,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.060047724867724854,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 15,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.05501787654320987,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.05611787654320987,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 16,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.05157925925925926,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.05267925925925926,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 17,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.04854518518518518,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.049645185185185174,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 18,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.0458482304526749,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0469482304526749,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 19,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.04343516569200779,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.044535165692007786,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 20,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.04126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.042363407407407405,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 21,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.03929848324514991,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.040398483245149906,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 22,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.03751218855218855,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.038612188552188544,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 23,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.03588122383252818,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 24,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.034386172839506166,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 25,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.03301072592592593,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 26,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.03174108262108263,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 27,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.030565486968449927,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 28,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.02947386243386243,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 29,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.028457522349936138,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 30,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.027508938271604937,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 31,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.026621553166069293,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 32,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.02578962962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 33,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.02500812570145903,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 34,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.02427259259259259,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 35,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.023579089947089946,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 36,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.02292411522633745,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 37,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.022304544544544547,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 38,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.021717582846003895,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 39,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.021160721747388412,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 40,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.020631703703703704,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 41,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.020128491418247515,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 42,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.019649241622574955,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 43,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.01919228251507321,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 44,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.018756094276094273,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 45,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.018339292181069954,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 46,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.01794061191626409,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 47,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.017558896769109537,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 48,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.017193086419753083,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 49,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.016842207105064247,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 50,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.016505362962962965,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 51,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.016181728395061726,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 52,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.015870541310541313,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 53,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.015571097134870718,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 54,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.015282743484224964,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 55,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.01500487542087542,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 56,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.014736931216931214,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 57,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.0144783885640026,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 58,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.014228761174968069,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 59,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.013987595731324545,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 60,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.013754469135802468,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 61,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.01352898603521554,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 62,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.013310776583034646,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 63,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.013099494415049968,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 64,
+              "t_dram_ms": 0.036864,
+              "t_compute_ms": 0.012894814814814816,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.037964,
+              "dominant_stage": "dram"
+            }
+          ]
+        }
+      },
+      {
+        "case": "decode_16k",
+        "seq_len": 16384,
+        "sweep": [
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 16,
+            "ideal_first_order_ms": 0.10425851851851853,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.10315851851851852,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.03954626234747649,
+            "reader_total_bh_ms": 0.18264209048807786,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.08713317378463363,
+            "writer_total_bh_ms": 0.09404724176946995,
+            "predicted_kernel_ms": 0.18264209048807786,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 1.7518193533091182,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.020686686995110174,
+              "reader_reserve_from_writer_ms": 0.018859575352366317,
+              "writer_cb_wait_from_compute_ms": 0.031450349782956424,
+              "writer_cb_wait_from_reader_ms": 0.05568282400167721
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 20,
+            "ideal_first_order_ms": 0.08362681481481482,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.08252681481481482,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.035271642288988714,
+            "reader_total_bh_ms": 0.17836747042959009,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.0850938781796383,
+            "writer_total_bh_ms": 0.09200794616447462,
+            "predicted_kernel_ms": 0.17836747042959009,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.1328980521926035,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0166778026054258,
+              "reader_reserve_from_writer_ms": 0.018593839683562915,
+              "writer_cb_wait_from_compute_ms": 0.026917135114043384,
+              "writer_cb_wait_from_reader_ms": 0.05817674306559492
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 24,
+            "ideal_first_order_ms": 0.074828,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.06877234567901233,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.035271642372947914,
+            "reader_total_bh_ms": 0.1783674705135493,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.08509387821969276,
+            "writer_total_bh_ms": 0.09200794620452908,
+            "predicted_kernel_ms": 0.1783674705135493,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.383699557833288,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.015087132592693007,
+              "reader_reserve_from_writer_ms": 0.020184509780254906,
+              "writer_cb_wait_from_compute_ms": 0.02367933139325781,
+              "writer_cb_wait_from_reader_ms": 0.061414546826434956
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 32,
+            "ideal_first_order_ms": 0.074828,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.05157925925925926,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.035271642322485586,
+            "reader_total_bh_ms": 0.17836747046308696,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.08509387819561867,
+            "writer_total_bh_ms": 0.09200794618045499,
+            "predicted_kernel_ms": 0.17836747046308696,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3836995571589106,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.012670245780465312,
+              "reader_reserve_from_writer_ms": 0.02260139654202027,
+              "writer_cb_wait_from_compute_ms": 0.019087373889280033,
+              "writer_cb_wait_from_reader_ms": 0.06600650430633864
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 48,
+            "ideal_first_order_ms": 0.074828,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.034386172839506166,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.03527164227202326,
+            "reader_total_bh_ms": 0.17836747041262463,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.08509387817154458,
+            "writer_total_bh_ms": 0.0920079461563809,
+            "predicted_kernel_ms": 0.17836747041262463,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.3836995564845327,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.009595832441685761,
+              "reader_reserve_from_writer_ms": 0.025675809830337494,
+              "writer_cb_wait_from_compute_ms": 0.013753244163828473,
+              "writer_cb_wait_from_reader_ms": 0.0713406340077161
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_16k",
+            "seq_len": 16384,
+            "batch": 1,
+            "active_cores": 64,
+            "ideal_first_order_ms": 0.074828,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.02578962962962963,
+            "reader_active_bh_ms": 0.14309582814060137,
+            "reader_reserve_bh_ms": 0.035271642246792106,
+            "reader_total_bh_ms": 0.17836747038739348,
+            "writer_active_bh_ms": 0.006914067984836324,
+            "writer_cb_wait_bh_ms": 0.08509387815950754,
+            "writer_total_bh_ms": 0.09200794614434386,
+            "predicted_kernel_ms": 0.17836747038739348,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.383699556147344,
+            "reader_reserve_coupling_coeff": 0.3833543067059201,
+            "writer_cb_wait_coupling_coeff": 0.4770706114444158,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.007722082428240809,
+              "reader_reserve_from_writer_ms": 0.027549559818551294,
+              "writer_cb_wait_from_compute_ms": 0.010749269074156832,
+              "writer_cb_wait_from_reader_ms": 0.0743446090853507
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          }
+        ],
+        "summary": {
+          "noncompute_crossover_active_cores": 8,
+          "plateau_floor_active_cores": 21,
+          "plateau_start_active_cores": 17,
+          "plateau_tolerance": 0.02,
+          "predicted_floor_ms": 0.1783674703665225,
+          "speedup_16c_to_64c": 1.0239652448476193
+        },
+        "first_order_summary": {
+          "dram_crossover_active_cores": 23,
+          "scan": [
+            {
+              "active_cores": 4,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.4126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.4137340740740741,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 5,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.33010725925925927,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.33120725925925926,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 6,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.2750893827160493,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.2761893827160493,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 7,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.23579089947089943,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.23689089947089942,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 8,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.20631703703703705,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.20741703703703704,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 9,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.1833929218106996,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.1844929218106996,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 10,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.16505362962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.16615362962962962,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 11,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.1500487542087542,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.15114875420875418,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 12,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.13754469135802466,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.13864469135802465,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 13,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.1269643304843305,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.1280643304843305,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 14,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.11789544973544971,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.11899544973544972,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 15,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.11003575308641975,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.11113575308641975,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 16,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.10315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.10425851851851853,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 17,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.09709037037037035,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.09819037037037036,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 18,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.0916964609053498,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0927964609053498,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 19,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.08687033138401558,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.08797033138401558,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 20,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.08252681481481482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.08362681481481482,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 21,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.07859696649029982,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.07969696649029982,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 22,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.0750243771043771,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.0761243771043771,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 23,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.07176244766505636,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 24,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.06877234567901233,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 25,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.06602145185185186,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 26,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.06348216524216525,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 27,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.061130973936899854,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 28,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.05894772486772486,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 29,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.056915044699872276,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 30,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.05501787654320987,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 31,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.053243106332138586,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 32,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.05157925925925926,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 33,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.05001625140291806,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 34,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.04854518518518518,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 35,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.04715817989417989,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 36,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.0458482304526749,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 37,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.044609089089089095,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 38,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.04343516569200779,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 39,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.042321443494776824,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 40,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.04126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 41,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.04025698283649503,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 42,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03929848324514991,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 43,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03838456503014642,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 44,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03751218855218855,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 45,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03667858436213991,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 46,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03588122383252818,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 47,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.035117793538219075,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 48,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.034386172839506166,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 49,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.033684414210128494,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 50,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03301072592592593,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 51,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03236345679012345,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 52,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03174108262108263,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 53,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.031142194269741436,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 54,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.030565486968449927,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 55,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.03000975084175084,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 56,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.02947386243386243,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 57,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.0289567771280052,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 58,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.028457522349936138,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 59,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.02797519146264909,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 60,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.027508938271604937,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 61,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.02705797207043108,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 62,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.026621553166069293,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 63,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.026198988830099936,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 64,
+              "t_dram_ms": 0.073728,
+              "t_compute_ms": 0.02578962962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.074828,
+              "dominant_stage": "dram"
+            }
+          ]
+        }
+      },
+      {
+        "case": "decode_32k",
+        "seq_len": 32768,
+        "sweep": [
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 16,
+            "ideal_first_order_ms": 0.20741703703703704,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.20631703703703705,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.08813535930144051,
+            "reader_total_bh_ms": 0.3714700473186597,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.1813201408290332,
+            "writer_total_bh_ms": 0.1882400317167432,
+            "predicted_kernel_ms": 0.3714700473186597,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 1.7909331491044722,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.0460866820779615,
+              "reader_reserve_from_writer_ms": 0.042048677223479,
+              "writer_cb_wait_from_compute_ms": 0.06474605477327433,
+              "writer_cb_wait_from_reader_ms": 0.11657408605575888
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 20,
+            "ideal_first_order_ms": 0.16615362962962962,
+            "ideal_first_order_dominant_stage": "compute",
+            "compute_bh_ms": 0.16505362962962963,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.0783787502307689,
+            "reader_total_bh_ms": 0.3617134382479881,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.17655779257652274,
+            "writer_total_bh_ms": 0.18347768346423274,
+            "predicted_kernel_ms": 0.3617134382479881,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.176981863437336,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.03711774731683468,
+              "reader_reserve_from_writer_ms": 0.04126100291393422,
+              "writer_cb_wait_from_compute_ms": 0.055321424366112266,
+              "writer_cb_wait_from_reader_ms": 0.12123636821041045
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 24,
+            "ideal_first_order_ms": 0.148556,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.13754469135802466,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.0783787503531993,
+            "reader_total_bh_ms": 0.36171343837041847,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.17655779263628285,
+            "writer_total_bh_ms": 0.18347768352399285,
+            "predicted_kernel_ms": 0.36171343837041847,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.434862532448494,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.03358202377737862,
+              "reader_reserve_from_writer_ms": 0.044796726575820685,
+              "writer_cb_wait_from_compute_ms": 0.0486413453261553,
+              "writer_cb_wait_from_reader_ms": 0.12791644731012755
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 32,
+            "ideal_first_order_ms": 0.148556,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.10315851851851852,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.0783787502539684,
+            "reader_total_bh_ms": 0.36171343827118757,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.17655779258784676,
+            "writer_total_bh_ms": 0.18347768347555676,
+            "predicted_kernel_ms": 0.36171343827118757,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.4348625317805244,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.028208006187925495,
+              "reader_reserve_from_writer_ms": 0.050170744066042904,
+              "writer_cb_wait_from_compute_ms": 0.03917947738134126,
+              "writer_cb_wait_from_reader_ms": 0.1373783152065055
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 48,
+            "ideal_first_order_ms": 0.148556,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.06877234567901233,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.07837875041673031,
+            "reader_total_bh_ms": 0.3617134384339495,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.1765577926672933,
+            "writer_total_bh_ms": 0.1834776835550033,
+            "predicted_kernel_ms": 0.3617134384339495,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.434862532876151,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.021368840011303892,
+              "reader_reserve_from_writer_ms": 0.057009910405426426,
+              "writer_cb_wait_from_compute_ms": 0.028206026767314294,
+              "writer_cb_wait_from_reader_ms": 0.148351765899979
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          },
+          {
+            "case": "decode_32k",
+            "seq_len": 32768,
+            "batch": 1,
+            "active_cores": 64,
+            "ideal_first_order_ms": 0.148556,
+            "ideal_first_order_dominant_stage": "dram",
+            "compute_bh_ms": 0.05157925925925926,
+            "reader_active_bh_ms": 0.28333468801721917,
+            "reader_reserve_bh_ms": 0.07837875040638476,
+            "reader_total_bh_ms": 0.36171343842360393,
+            "writer_active_bh_ms": 0.006919890887710007,
+            "writer_cb_wait_bh_ms": 0.17655779266224347,
+            "writer_total_bh_ms": 0.18347768354995347,
+            "predicted_kernel_ms": 0.36171343842360393,
+            "dominant_stage": "reader",
+            "uplift_vs_ideal": 2.4348625328065103,
+            "reader_reserve_coupling_coeff": 0.42718410736782175,
+            "writer_cb_wait_coupling_coeff": 0.48811510413244863,
+            "coupling_breakdown": {
+              "reader_reserve_from_compute_ms": 0.017198887381552563,
+              "reader_reserve_from_writer_ms": 0.06117986302483219,
+              "writer_cb_wait_from_compute_ms": 0.022034553750950536,
+              "writer_cb_wait_from_reader_ms": 0.15452323891129294
+            },
+            "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+          }
+        ],
+        "summary": {
+          "noncompute_crossover_active_cores": 7,
+          "plateau_floor_active_cores": 35,
+          "plateau_start_active_cores": 17,
+          "plateau_tolerance": 0.02,
+          "predicted_floor_ms": 0.36171343824567104,
+          "speedup_16c_to_64c": 1.0269733105233148
+        },
+        "first_order_summary": {
+          "dram_crossover_active_cores": 23,
+          "scan": [
+            {
+              "active_cores": 4,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.8252681481481482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.8263681481481482,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 5,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.6602145185185185,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.6613145185185185,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 6,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.5501787654320986,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.5512787654320986,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 7,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.47158179894179886,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.47268179894179885,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 8,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.4126340740740741,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.4137340740740741,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 9,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.3667858436213992,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.3678858436213992,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 10,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.33010725925925927,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.33120725925925926,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 11,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.3000975084175084,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.30119750841750836,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 12,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.2750893827160493,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.2761893827160493,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 13,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.253928660968661,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.255028660968661,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 14,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.23579089947089943,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.23689089947089942,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 15,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.2200715061728395,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.22117150617283948,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 16,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.20631703703703705,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.20741703703703704,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 17,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.1941807407407407,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.1952807407407407,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 18,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.1833929218106996,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.1844929218106996,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 19,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.17374066276803116,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.17484066276803115,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 20,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.16505362962962963,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.16615362962962962,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 21,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.15719393298059964,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.15829393298059963,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 22,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.1500487542087542,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.15114875420875418,
+              "dominant_stage": "compute"
+            },
+            {
+              "active_cores": 23,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.14352489533011273,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 24,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.13754469135802466,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 25,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.13204290370370372,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 26,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.1269643304843305,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 27,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.12226194787379971,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 28,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.11789544973544971,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 29,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.11383008939974455,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 30,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.11003575308641975,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 31,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.10648621266427717,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 32,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.10315851851851852,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 33,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.10003250280583612,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 34,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.09709037037037035,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 35,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.09431635978835978,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 36,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.0916964609053498,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 37,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.08921817817817819,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 38,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.08687033138401558,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 39,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.08464288698955365,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 40,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.08252681481481482,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 41,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.08051396567299006,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 42,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.07859696649029982,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 43,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.07676913006029285,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 44,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.0750243771043771,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 45,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.07335716872427982,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 46,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.07176244766505636,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 47,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.07023558707643815,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 48,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06877234567901233,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 49,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06736882842025699,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 50,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06602145185185186,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 51,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.0647269135802469,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 52,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06348216524216525,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 53,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06228438853948287,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 54,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.061130973936899854,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 55,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.06001950168350168,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 56,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05894772486772486,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 57,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.0579135542560104,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 58,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.056915044699872276,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 59,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05595038292529818,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 60,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05501787654320987,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 61,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05411594414086216,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 62,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.053243106332138586,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 63,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05239797766019987,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            },
+            {
+              "active_cores": 64,
+              "t_dram_ms": 0.147456,
+              "t_compute_ms": 0.05157925925925926,
+              "t_reduce_ms": 0.0011,
+              "predicted_core_ms": 0.148556,
+              "dominant_stage": "dram"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

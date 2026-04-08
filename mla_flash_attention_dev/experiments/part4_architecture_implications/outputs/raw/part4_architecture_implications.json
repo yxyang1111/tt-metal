@@ -1,0 +1,336 @@
+{
+  "metadata": {
+    "title": "Part IV Architectural Implications",
+    "description": "Consolidated WH->BH empirical/analytical projection report for the SF-MLA paper Part IV.",
+    "notes": [
+      "Part I uses DeepSeek FlashMLA as the decode primary method; Part IV remains TT-mainline architecture proxy",
+      "A-BH empirical rows come from bh_empirical_decode in the frozen part1 detailed JSON",
+      "B-BH rows are parsed from flash_mla_wh_profile_and_bh_simulation.md",
+      "This directory focuses on the five long-seq representative points that remain aligned with the current paper narrative"
+    ]
+  },
+  "proxy_context": {
+    "decode_1k_ratio": 0.8635836098908477,
+    "decode_4k_ratio": 1.0250789841894108,
+    "decode_16k_ratio": 0.9755948688893568,
+    "decode_32k_ratio": 0.9974147450680516,
+    "long_seq_max_gap_pct": 2.507898418941079
+  },
+  "empirical_rows": [
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "ideal_first_order_ms": 0.0075474074,
+      "empirical_ms": 0.0135224055,
+      "uplift_vs_ideal": 1.7916623285,
+      "first_order_dram_crossover_active_cores": 23,
+      "second_order_noncompute_crossover_active_cores": 8,
+      "second_order_plateau_start_active_cores": 8,
+      "second_order_floor_ms": 0.0135224055,
+      "second_order_speedup_16c_to_64c": 1.0,
+      "compute_bh_ms": 0.0064474074,
+      "reader_total_bh_ms": 0.0135224055,
+      "writer_total_bh_ms": 0.0111536576,
+      "reader_active_bh_ms": 0.0135116129,
+      "reader_reserve_bh_ms": 1.07926e-05,
+      "writer_active_bh_ms": 0.0068535733,
+      "writer_cb_wait_bh_ms": 0.0043000843,
+      "dominant_stage": "reader",
+      "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "ideal_first_order_ms": 0.0268896296,
+      "empirical_ms": 0.0490321581,
+      "uplift_vs_ideal": 1.8234597804,
+      "first_order_dram_crossover_active_cores": 23,
+      "second_order_noncompute_crossover_active_cores": 9,
+      "second_order_plateau_start_active_cores": 12,
+      "second_order_floor_ms": 0.0490321581,
+      "second_order_speedup_16c_to_64c": 0.9999999997,
+      "compute_bh_ms": 0.0257896296,
+      "reader_total_bh_ms": 0.0490321581,
+      "writer_total_bh_ms": 0.0276931678,
+      "reader_active_bh_ms": 0.0462209984,
+      "reader_reserve_bh_ms": 0.0028111597,
+      "writer_active_bh_ms": 0.0069733208,
+      "writer_cb_wait_bh_ms": 0.020719847,
+      "dominant_stage": "reader",
+      "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+    },
+    {
+      "case": "decode_8k",
+      "seq_len": 8192,
+      "ideal_first_order_ms": 0.0526792593,
+      "empirical_ms": 0.0921986355,
+      "uplift_vs_ideal": 1.7501885338,
+      "first_order_dram_crossover_active_cores": 23,
+      "second_order_noncompute_crossover_active_cores": 8,
+      "second_order_plateau_start_active_cores": 15,
+      "second_order_floor_ms": 0.0913959064,
+      "second_order_speedup_16c_to_64c": 1.0087829872,
+      "compute_bh_ms": 0.0515792593,
+      "reader_total_bh_ms": 0.0921986355,
+      "writer_total_bh_ms": 0.0490805144,
+      "reader_active_bh_ms": 0.0777431511,
+      "reader_reserve_bh_ms": 0.0144554844,
+      "writer_active_bh_ms": 0.0070995198,
+      "writer_cb_wait_bh_ms": 0.0419809945,
+      "dominant_stage": "reader",
+      "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+    },
+    {
+      "case": "decode_16k",
+      "seq_len": 16384,
+      "ideal_first_order_ms": 0.1042585185,
+      "empirical_ms": 0.1826420905,
+      "uplift_vs_ideal": 1.7518193533,
+      "first_order_dram_crossover_active_cores": 23,
+      "second_order_noncompute_crossover_active_cores": 8,
+      "second_order_plateau_start_active_cores": 17,
+      "second_order_floor_ms": 0.1783674704,
+      "second_order_speedup_16c_to_64c": 1.0239652448,
+      "compute_bh_ms": 0.1031585185,
+      "reader_total_bh_ms": 0.1826420905,
+      "writer_total_bh_ms": 0.0940472418,
+      "reader_active_bh_ms": 0.1430958281,
+      "reader_reserve_bh_ms": 0.0395462623,
+      "writer_active_bh_ms": 0.006914068,
+      "writer_cb_wait_bh_ms": 0.0871331738,
+      "dominant_stage": "reader",
+      "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "ideal_first_order_ms": 0.207417037,
+      "empirical_ms": 0.3714700473,
+      "uplift_vs_ideal": 1.7909331491,
+      "first_order_dram_crossover_active_cores": 23,
+      "second_order_noncompute_crossover_active_cores": 7,
+      "second_order_plateau_start_active_cores": 17,
+      "second_order_floor_ms": 0.3617134382,
+      "second_order_speedup_16c_to_64c": 1.0269733105,
+      "compute_bh_ms": 0.206317037,
+      "reader_total_bh_ms": 0.3714700473,
+      "writer_total_bh_ms": 0.1882400317,
+      "reader_active_bh_ms": 0.283334688,
+      "reader_reserve_bh_ms": 0.0881353593,
+      "writer_active_bh_ms": 0.0069198909,
+      "writer_cb_wait_bh_ms": 0.1813201408,
+      "dominant_stage": "reader",
+      "dominant_coupling_source": "writer_cb_wait_from_reader_ms"
+    }
+  ],
+  "native_b_rows": [
+    {
+      "case": "decode_256",
+      "seq_len": 256,
+      "a_bh_ideal_ms": 0.0027,
+      "a_bh_empirical_ms": 0.0069,
+      "b_bh_ms": 0.0054,
+      "b_vs_a_ideal_speedup": 0.51,
+      "b_vs_a_empirical_speedup": 1.28,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_512",
+      "seq_len": 512,
+      "a_bh_ideal_ms": 0.0043,
+      "a_bh_empirical_ms": 0.0095,
+      "b_bh_ms": 0.0058,
+      "b_vs_a_ideal_speedup": 0.74,
+      "b_vs_a_empirical_speedup": 1.63,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "a_bh_ideal_ms": 0.0075,
+      "a_bh_empirical_ms": 0.0135,
+      "b_bh_ms": 0.0068,
+      "b_vs_a_ideal_speedup": 1.11,
+      "b_vs_a_empirical_speedup": 1.99,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_2k",
+      "seq_len": 2048,
+      "a_bh_ideal_ms": 0.014,
+      "a_bh_empirical_ms": 0.0227,
+      "b_bh_ms": 0.0087,
+      "b_vs_a_ideal_speedup": 1.61,
+      "b_vs_a_empirical_speedup": 2.6,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "a_bh_ideal_ms": 0.0269,
+      "a_bh_empirical_ms": 0.045,
+      "b_bh_ms": 0.0126,
+      "b_vs_a_ideal_speedup": 2.14,
+      "b_vs_a_empirical_speedup": 3.59,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_8k",
+      "seq_len": 8192,
+      "a_bh_ideal_ms": 0.0527,
+      "a_bh_empirical_ms": 0.0922,
+      "b_bh_ms": 0.0202,
+      "b_vs_a_ideal_speedup": 2.6,
+      "b_vs_a_empirical_speedup": 4.56,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_16k",
+      "seq_len": 16384,
+      "a_bh_ideal_ms": 0.1043,
+      "a_bh_empirical_ms": 0.1826,
+      "b_bh_ms": 0.0356,
+      "b_vs_a_ideal_speedup": 2.93,
+      "b_vs_a_empirical_speedup": 5.13,
+      "b_dominant_stage": "k_mcast"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "a_bh_ideal_ms": 0.2074,
+      "a_bh_empirical_ms": 0.3715,
+      "b_bh_ms": 0.0663,
+      "b_vs_a_ideal_speedup": 3.13,
+      "b_vs_a_empirical_speedup": 5.6,
+      "b_dominant_stage": "k_mcast"
+    }
+  ],
+  "active_core_rows": [
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 16,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 20,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 24,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 32,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 48,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "active_cores": 64,
+      "predicted_kernel_ms": 0.0135224055,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 16,
+      "predicted_kernel_ms": 0.0490321581,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 20,
+      "predicted_kernel_ms": 0.0490321582,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 24,
+      "predicted_kernel_ms": 0.0490321582,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 32,
+      "predicted_kernel_ms": 0.0490321582,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 48,
+      "predicted_kernel_ms": 0.0490321582,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "active_cores": 64,
+      "predicted_kernel_ms": 0.0490321582,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 16,
+      "predicted_kernel_ms": 0.3714700473,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 20,
+      "predicted_kernel_ms": 0.3617134382,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 24,
+      "predicted_kernel_ms": 0.3617134384,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 32,
+      "predicted_kernel_ms": 0.3617134383,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 48,
+      "predicted_kernel_ms": 0.3617134384,
+      "dominant_stage": "reader"
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "active_cores": 64,
+      "predicted_kernel_ms": 0.3617134384,
+      "dominant_stage": "reader"
+    }
+  ]
+}

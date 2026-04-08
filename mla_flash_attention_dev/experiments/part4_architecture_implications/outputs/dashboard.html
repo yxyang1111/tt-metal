@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part IV Architectural Implications</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a1018;
+      --panel: #121925;
+      --panel-2: #0f141d;
+      --text: #f5f7fb;
+      --muted: #9fb0c3;
+      --border: #223046;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1a2435 0%, var(--bg) 48%);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+    }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 1080px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    figure {
+      margin: 0;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+    }
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Part IV Architectural Implications</h1>
+    <p class="lead">这页把 current `TT 主线 FlashMLA` 的 WH→BH 二阶经验模型、native B-BH analytical 对照，以及 active-core 平台区结论统一整理出来。由于 Part I 主方法已经切到 `DeepSeek FlashMLA`，这里仍应读作 `generic MLA backend architecture proxy`。</p>
+    <section class="cards">
+      <div class="card">
+        <div class="label">32k A-BH uplift</div>
+        <div class="value">1.79x</div>
+        <div class="hint">即使到了 BH，A-path 的 empirical floor 仍明显高于 ideal first-order。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k B / A empirical</div>
+        <div class="value">5.60x</div>
+        <div class="hint">native B-BH 的结构优势会在 long-seq 区间迅速放大。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k Noncompute Crossover</div>
+        <div class="value">7c</div>
+        <div class="hint">compute 很早就退出 critical path，之后主要受 reader/writer floor 限制。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k Plateau Start</div>
+        <div class="value">17c</div>
+        <div class="hint">平台区形成后，继续堆 active cores 的收益已经非常有限。</div>
+      </div>
+    </section>
+    <section class="grid">
+      <figure><img src="visuals/bh_latency_comparison.svg" alt="bh_latency_comparison"></figure>
+      <figure><img src="visuals/bh_crossover_thresholds.svg" alt="bh_crossover_thresholds"></figure>
+      <figure><img src="visuals/bh_active_core_plateau.svg" alt="bh_active_core_plateau"></figure>
+      <figure><img src="visuals/bh_coupling_components.svg" alt="bh_coupling_components"></figure>
+    </section>
+    <p class="footnote">说明：Part IV 的 architecture projection 主要回答 generic MLA backend 在 future hardware 上最先撞到哪类资源平衡问题，不应直接等同为 `DeepSeek FlashMLA` 的 direct BH benchmark。</p>
+  </div>
+</body>
+</html>

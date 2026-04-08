@@ -257,7 +257,7 @@ class FlashMLAOptimalGridNOC0_WH:
     NUM_BLOCKS = len(BLOCKS)
     CORES_PER_BLOCK = len(BLOCKS[0][0])
 
-    OPTIMAL_DRAM_BANK_ORDER = tuple(block[1] for block in BLOCKS)  # (0, 1, 2, 3, 4, 5)
+    OPTIMAL_DRAM_BANK_ORDER = tuple(block[1] for block in BLOCKS)  # (1, 2, 0, 4, 9, 8)
 
     # 3-step tree reduction (6 → 3 → 2 → 1)
     TREE_REDUCTION_ORDER = (
@@ -346,6 +346,28 @@ class FlashMLAOptimalGridNOC0_WH:
         num_mcast_dests = len(cores) - 1
         return (first_physical.x, first_physical.y, last_physical.x, last_physical.y, num_mcast_dests)
 
+    @classmethod
+    def validate_dram_banks(cls, device) -> None:
+        """Validate that all DRAM bank IDs in the grid are valid on the device."""
+        optimal_workers = device.get_optimal_dram_bank_to_logical_worker_assignment(ttnn.NOC.NOC_0)
+        num_banks = len(optimal_workers)
+        for bank_id in cls.OPTIMAL_DRAM_BANK_ORDER:
+            assert bank_id < num_banks, (
+                f"DRAM bank {bank_id} not available (device has {num_banks} banks). "
+                f"OPTIMAL_DRAM_BANK_ORDER={cls.OPTIMAL_DRAM_BANK_ORDER}"
+            )
+
+    @classmethod
+    def validate_grid(cls, device) -> None:
+        """Validate grid layout against device capabilities."""
+        grid_size = device.compute_with_storage_grid_size()
+        for s_idx, (cores, bank_id) in enumerate(cls.BLOCKS):
+            for x, y in cores:
+                assert x < grid_size.x and y < grid_size.y, (
+                    f"S block {s_idx} core ({x},{y}) exceeds device grid {grid_size.x}x{grid_size.y}"
+                )
+        cls.validate_dram_banks(device)
+
 
 def get_interleaved_tensor_accessor_args(tensor):
     """
@@ -386,6 +408,7 @@ class FlashMLAProgramConfig:
     device_chunk_size: int = None
     exp_approx_mode: bool = True
     grid: type = FlashMLAOptimalGridNOC0
+    allow_wh_fallback: bool = True
 
     def __post_init__(self):
         expected = self.grid.CORES_PER_BLOCK * self.k_chunk_size
@@ -414,8 +437,97 @@ class FlashMLADecode:
 
     # Program config class for this op
     ProgramConfig = FlashMLAProgramConfig
-    _wh_fallback_cache_key = None
-    _wh_fallback_cache_result = None
+
+    @staticmethod
+    def _extract_position_ids(cur_pos_tensor: ttnn.Tensor, batch_size: int) -> list[int]:
+        position_ids = ttnn.to_torch(cur_pos_tensor).reshape(-1)[:batch_size].to(torch.int32)
+        return [int(x) for x in position_ids.tolist()]
+
+    @staticmethod
+    def _materialize_output_like(output_torch: torch.Tensor, output_tensor: ttnn.Tensor) -> ttnn.Tensor:
+        return ttnn.from_torch(
+            output_torch,
+            dtype=output_tensor.dtype,
+            layout=output_tensor.layout,
+            device=output_tensor.device(),
+            memory_config=output_tensor.memory_config(),
+            tile=output_tensor.get_tile(),
+        )
+
+    @staticmethod
+    def _to_wh_backend_tensor(tensor: ttnn.Tensor, *, dtype) -> ttnn.Tensor:
+        # The built-in WH MLA decode path expects standard-tile DRAM tensors, while the
+        # experimental DeepSeek path uses 8x32 tiny-tile Q and ND-sharded KV cache.
+        return ttnn.from_torch(
+            ttnn.to_torch(tensor).to(torch.bfloat16),
+            dtype=dtype,
+            layout=ttnn.TILE_LAYOUT,
+            device=tensor.device(),
+            memory_config=ttnn.DRAM_MEMORY_CONFIG,
+        )
+
+    @staticmethod
+    def _build_wh_sdpa_program_config(
+        q_tensor: ttnn.Tensor, program_config: "FlashMLAProgramConfig"
+    ) -> "ttnn.SDPAProgramConfig":
+        max_cores_per_head_batch = 4
+        q_mem_config = q_tensor.memory_config()
+        if q_mem_config.is_sharded() and q_mem_config.shard_spec is not None:
+            max_cores_per_head_batch = q_mem_config.shard_spec.grid.num_cores()
+
+        return ttnn.SDPAProgramConfig(
+            compute_with_storage_grid_size=q_tensor.device().compute_with_storage_grid_size(),
+            q_chunk_size=0,
+            k_chunk_size=program_config.k_chunk_size,
+            exp_approx_mode=program_config.exp_approx_mode,
+            max_cores_per_head_batch=max_cores_per_head_batch,
+        )
+
+    @classmethod
+    def _wh_builtin_backend(
+        cls,
+        q_tensor: ttnn.Tensor,
+        kv_cache_tensor: ttnn.Tensor,
+        head_dim_v: int,
+        cur_pos_tensor: ttnn.Tensor,
+        output_tensor: ttnn.Tensor,
+        scale: float,
+        program_config: "FlashMLAProgramConfig",
+        compute_kernel_config: "ttnn.DeviceComputeKernelConfig",
+    ) -> ttnn.Tensor:
+        batch_size = q_tensor.padded_shape[1]
+        cur_pos = cls._extract_position_ids(cur_pos_tensor, batch_size)
+        sdpa_program_config = cls._build_wh_sdpa_program_config(q_tensor, program_config)
+
+        backend_q = None
+        backend_k = None
+        backend_out = None
+        output_torch = None
+
+        try:
+            backend_q = cls._to_wh_backend_tensor(q_tensor, dtype=ttnn.bfloat16)
+            backend_k = cls._to_wh_backend_tensor(kv_cache_tensor, dtype=kv_cache_tensor.dtype)
+            backend_out = ttnn.transformer.flash_multi_latent_attention_decode(
+                backend_q,
+                backend_k,
+                None,
+                head_dim_v=head_dim_v,
+                cur_pos=cur_pos,
+                scale=scale,
+                program_config=sdpa_program_config,
+                compute_kernel_config=compute_kernel_config,
+                memory_config=ttnn.DRAM_MEMORY_CONFIG,
+            )
+            output_torch = ttnn.to_torch(backend_out).to(torch.bfloat16)
+        finally:
+            if backend_out is not None:
+                ttnn.deallocate(backend_out)
+            if backend_q is not None:
+                ttnn.deallocate(backend_q)
+            if backend_k is not None:
+                ttnn.deallocate(backend_k)
+
+        return cls._materialize_output_like(output_torch, output_tensor)
 
     @classmethod
     def _wh_reference_fallback(
@@ -429,14 +541,10 @@ class FlashMLADecode:
     ) -> ttnn.Tensor:
         # WH kernel bring-up is still unstable. Use the device-resident KV contents
         # so the fallback preserves the real quantized cache values.
-        cache_key = (id(q_tensor), id(kv_cache_tensor), id(cur_pos_tensor), id(output_tensor), head_dim_v, float(scale))
-        if cls._wh_fallback_cache_key == cache_key and cls._wh_fallback_cache_result is not None:
-            return cls._wh_fallback_cache_result
-
         q_torch = ttnn.to_torch(q_tensor).to(torch.bfloat16)
         kv_cache_torch = ttnn.to_torch(kv_cache_tensor).to(torch.bfloat16)
         batch_size = q_torch.shape[1]
-        position_ids = ttnn.to_torch(cur_pos_tensor).reshape(-1)[:batch_size].to(torch.int32)
+        position_ids = torch.tensor(cls._extract_position_ids(cur_pos_tensor, batch_size), dtype=torch.int32)
 
         output_torch = cls.golden(
             q=q_torch,
@@ -445,17 +553,7 @@ class FlashMLADecode:
             head_dim_v=head_dim_v,
             scale=scale,
         )
-        fallback_output = ttnn.from_torch(
-            output_torch,
-            dtype=output_tensor.dtype,
-            layout=output_tensor.layout,
-            device=output_tensor.device(),
-            memory_config=output_tensor.memory_config(),
-            tile=output_tensor.get_tile(),
-        )
-        cls._wh_fallback_cache_key = cache_key
-        cls._wh_fallback_cache_result = fallback_output
-        return fallback_output
+        return cls._materialize_output_like(output_torch, output_tensor)
 
     @staticmethod
     def golden(
@@ -568,18 +666,34 @@ class FlashMLADecode:
         arch_name = _get_arch_name()
         is_wh = "wormhole" in arch_name
         if is_wh:
-            return FlashMLADecode._wh_reference_fallback(
-                q_tensor=q_tensor,
-                kv_cache_tensor=kv_cache_tensor,
-                head_dim_v=head_dim_v,
-                cur_pos_tensor=cur_pos_tensor,
-                output_tensor=output_tensor,
-                scale=scale,
-            )
+            try:
+                return FlashMLADecode._wh_builtin_backend(
+                    q_tensor=q_tensor,
+                    kv_cache_tensor=kv_cache_tensor,
+                    head_dim_v=head_dim_v,
+                    cur_pos_tensor=cur_pos_tensor,
+                    output_tensor=output_tensor,
+                    scale=scale,
+                    program_config=program_config,
+                    compute_kernel_config=compute_kernel_config,
+                )
+            except Exception:
+                if program_config.allow_wh_fallback:
+                    return FlashMLADecode._wh_reference_fallback(
+                        q_tensor=q_tensor,
+                        kv_cache_tensor=kv_cache_tensor,
+                        head_dim_v=head_dim_v,
+                        cur_pos_tensor=cur_pos_tensor,
+                        output_tensor=output_tensor,
+                        scale=scale,
+                    )
+                raise
 
         if is_wh:
             assert device_grid.x >= 8, f"WH device must have at least 8 columns, got {device_grid.x}"
             assert device_grid.y >= 7, f"WH device must have at least 7 rows, got {device_grid.y}"
+            if hasattr(grid, "validate_grid"):
+                grid.validate_grid(device)
         else:
             assert device_grid.x >= 11, f"BH device must have at least 11 columns, got {device_grid.x}"
             assert device_grid.y == 10, f"BH device must have exactly 10 rows, got {device_grid.y}"
@@ -595,6 +709,16 @@ class FlashMLADecode:
         math_approx_mode = compute_kernel_config.math_approx_mode
         fp32_dest_acc_en = compute_kernel_config.fp32_dest_acc_en
         dst_full_sync_en = compute_kernel_config.dst_full_sync_en
+
+        if is_wh:
+            assert not fp32_dest_acc_en, (
+                "WH FlashMLA requires fp32_dest_acc_en=False. "
+                "With fp32=True, DEST register only has 256 rows but SDPA layout needs 352."
+            )
+            assert dst_full_sync_en, (
+                "WH FlashMLA requires dst_full_sync_en=True. "
+                "Without full sync, DEST register is too small for the SDPA layout."
+            )
 
         # =========================================================================
         # Shape extraction (matching C++ lines 70-114)
@@ -701,12 +825,28 @@ class FlashMLADecode:
         # =========================================================================
         # CB tile counts (matching C++ lines 285-299)
         # =========================================================================
+        # dest register capacity in standard tiles (full vs half sync)
         if dst_full_sync_en:
             dst_size = 8 if fp32_dest_acc_en else 16
         else:
             dst_size = 4 if fp32_dest_acc_en else 8
 
-        assert dst_size >= 8, f"dst_size must be >= 8, got {dst_size}"
+        # SDPA kernel dest register layout (tiny tile rows, packed_tile_size=Q_TILE_HEIGHT*2):
+        #   mm2(V output): vDHt tiles, max: 1 tile, corr_exp: 1 tile, mm1(QKt): Sk_chunk_t tiles
+        #   Total rows needed = (vDHt + 1 + 1 + Sk_chunk_t) * packed_tile_size
+        # WH has smaller dest than BH; half-sync mode may not fit the SDPA layout.
+        packed_tile_size = Q_TILE_HEIGHT * 2
+        sdpa_tiles_needed = vDHt + 2 + Sk_chunk_t
+        sdpa_rows_needed = sdpa_tiles_needed * packed_tile_size
+        # Each dst slot holds one standard tile = K_TILE_HEIGHT DEST rows.
+        # Tiny tiles pack contiguously at packed_tile_size rows each.
+        dest_rows_available = dst_size * K_TILE_HEIGHT
+        assert dest_rows_available >= sdpa_rows_needed, (
+            f"Dest register too small for SDPA: need {sdpa_rows_needed} rows ({sdpa_tiles_needed} tiny tiles), "
+            f"but only {dest_rows_available} rows available (dst_size={dst_size}, "
+            f"fp32_dest_acc_en={fp32_dest_acc_en}, dst_full_sync_en={dst_full_sync_en}). "
+            f"On WH use fp32_dest_acc_en=False and dst_full_sync_en=True."
+        )
 
         q_tiles = PNHt * DHt
         # Double buffer K for overlap between DRAM reads and compute.
@@ -1100,6 +1240,7 @@ class FlashMLADecode:
                 math_fidelity=math_fidelity,
                 fp32_dest_acc_en=fp32_dest_acc_en,
                 math_approx_mode=math_approx_mode,
+                dst_full_sync_en=dst_full_sync_en,
             ),
             per_core_runtime_args_descriptor=PerCoreRuntimeArgsDescriptor(
                 ncrisc_args=ncrisc_per_core_args,

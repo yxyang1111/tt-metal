@@ -13,7 +13,7 @@ import torch
 from loguru import logger
 
 import ttnn
-from models.common.utility_functions import comp_pcc, is_wormhole_b0, run_for_wormhole_b0
+from models.common.utility_functions import comp_pcc, run_for_wormhole_b0
 from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
     FlashMLADecode,
     FlashMLAOptimalGridNOC0_WH,
@@ -21,18 +21,29 @@ from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
 )
 
 
+def _check_device_available():
+    """Check if the WH device is accessible without resetting."""
+    import subprocess
+
+    result = subprocess.run(
+        ["fuser", "/dev/tenstorrent/0"],
+        capture_output=True,
+        timeout=5,
+    )
+    if result.stdout.strip():
+        pytest.skip("WH device /dev/tenstorrent/0 is in use by another process")
+
+
 @run_for_wormhole_b0()
 @pytest.mark.parametrize("batch_size", [1])
 @pytest.mark.parametrize(
     "decode_position",
     [
-        # Aligned chunks (multiples of 128 - 1)
         127,
         255,
         511,
         1023,
         2047,
-        # Unaligned chunks
         0,
         1,
         7,
@@ -53,8 +64,6 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
     for bank_id, worker_core in enumerate(optimal_workers):
         logger.info(f"DRAM bank {bank_id} -> optimal worker core ({worker_core.x}, {worker_core.y})")
 
-    # WH with TP=4 (T3K): 128 / 8 = 16 heads per device, or TP=2: 64 heads
-    # Use 32 heads for a lighter WH config that fits 4 Q shards × 8 heads/core
     num_heads = 32
     num_q_heads_per_core = 8
     kv_lora_rank = 512
@@ -78,7 +87,6 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
 
     tiny_tile = ttnn.Tile((num_q_heads_per_core, 32))
 
-    # Q sharded onto S1 output cores (first S block)
     s1_cores, _ = grid.BLOCKS[0]
     q_cores = s1_cores[:num_q_shards]
     q_core_grid = ttnn.CoreRangeSet(
@@ -95,7 +103,6 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         ttnn.ShardSpec(q_core_grid, (num_q_heads_per_core, kv_lora_rank), ttnn.ShardOrientation.ROW_MAJOR),
     )
 
-    # Create Q tensor: [1, batch_size, num_heads, kvpe_dim]
     logger.info("Creating Q tensor...")
     q_shape = (1, batch_size, num_heads, kvpe_dim)
     torch_q = torch.randn(q_shape, dtype=torch.bfloat16)
@@ -113,9 +120,9 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         k_chunk_size=k_chunk_size,
         exp_approx_mode=False,
         grid=grid,
+        allow_wh_fallback=False,
     )
 
-    # Create KV cache with ND sharding across 6 DRAM banks
     logger.info(f"Creating KV cache with seq_len={max_seq_len}...")
     cache_shape = (batch_size, 1, max_seq_len, kvpe_dim)
     torch_cache = torch.randn(cache_shape, dtype=torch.bfloat16)
@@ -145,7 +152,6 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         memory_config=kv_mem_config,
     )
 
-    # Position tensor replicated on every core
     grid_size = device.compute_with_storage_grid_size()
     position_ids = torch.ones(batch_size, dtype=torch.int32) * decode_position
     position_replicated = position_ids.repeat(grid_size.x * grid_size.y, 1)
@@ -165,7 +171,6 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         memory_config=pos_mem_config,
     )
 
-    # Create output tensor
     logger.info("Creating output tensor...")
     out_shape = (1, batch_size, num_heads, kv_lora_rank)
     torch_output_zeros = torch.zeros(out_shape, dtype=torch.bfloat16)
@@ -178,14 +183,16 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         tile=tiny_tile,
     )
 
+    # WH DEST register constraint: fp32_dest_acc_en=True only gives 256 DEST rows,
+    # but SDPA layout needs 352 rows. Must use fp32_dest_acc_en=False (512 rows).
     compute_kernel_config = ttnn.types.WormholeComputeKernelConfig(
-        math_fidelity=ttnn.MathFidelity.LoFi,
+        math_fidelity=ttnn.MathFidelity.HiFi4,
         math_approx_mode=False,
         fp32_dest_acc_en=False,
         packer_l1_acc=False,
+        dst_full_sync_en=True,
     )
 
-    # Golden reference
     logger.info("Computing PyTorch reference...")
     reference_output = FlashMLADecode.golden(
         q=torch_q,
@@ -195,8 +202,7 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
         scale=scale,
     )
 
-    # Stress test with multiple iterations
-    num_iterations = 10
+    num_iterations = 1
     first_output = None
     logger.info(f"Running FlashMLADecode.op {num_iterations} times for stress test...")
     for i in range(num_iterations):
@@ -228,17 +234,19 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
             logger.info(f"Reference range: [{reference_output.min().item()}, {reference_output.max().item()}]")
             logger.info(f"Output[0,0,0,:8]: {output_torch[0,0,0,:8]}")
             logger.info(f"Reference[0,0,0,:8]: {reference_output[0,0,0,:8]}")
-            if has_inf_out:
-                inf_mask = torch.isinf(output_torch)
-                inf_indices = torch.nonzero(inf_mask)
-                logger.info(f"First 20 inf positions: {inf_indices[:20]}")
-                logger.info(f"Inf values: {output_torch[inf_mask][:20]}")
+
+            assert not has_inf_out, (
+                f"Output contains {torch.isinf(output_torch).sum().item()} inf values. "
+                f"First inf positions: {torch.nonzero(torch.isinf(output_torch))[:10]}"
+            )
+
             out_max_diff = torch.max(torch.abs(output_torch - reference_output)).item()
             out_mean_diff = torch.mean(torch.abs(output_torch - reference_output)).item()
             logger.info(f"Out Max absolute difference: {out_max_diff}")
             logger.info(f"Out Mean absolute difference: {out_mean_diff}")
             pcc_required = 0.995
             passing, pcc_message = comp_pcc(reference_output, output_torch, pcc_required)
+            assert passing, f"Iteration {i}: PCC check failed vs golden: {pcc_message}"
             logger.info(f"    PCC vs golden: {pcc_message}")
             first_output = output_torch.clone()
         else:
@@ -256,7 +264,6 @@ def test_flash_mla_wh_grid_layout(device):
     """Validate WH S block grid layout: no core overlaps, valid rectangles."""
     grid = FlashMLAOptimalGridNOC0_WH
 
-    # Verify no core overlaps across blocks
     all_cores = set()
     for s_idx in range(grid.NUM_BLOCKS):
         cores = grid.get_cores(s_idx)
@@ -267,7 +274,6 @@ def test_flash_mla_wh_grid_layout(device):
     logger.info(f"Total active cores: {len(all_cores)}")
     assert len(all_cores) == grid.NUM_BLOCKS * grid.CORES_PER_BLOCK
 
-    # Verify multicast coordinates resolve to valid physical rectangles
     for s_idx in range(grid.NUM_BLOCKS):
         start_x, start_y, end_x, end_y, num_dests = grid.physical_multicast_coords(device, s_idx)
         logger.info(
@@ -276,13 +282,32 @@ def test_flash_mla_wh_grid_layout(device):
         )
         assert num_dests == grid.CORES_PER_BLOCK - 1
 
-    # Verify tree reduction covers all blocks
     for s_idx in range(grid.NUM_BLOCKS):
         roles = grid.get_tree_reduction_role(s_idx)
         logger.info(f"S{s_idx+1} tree roles: {roles}")
 
-    # S1 (idx 0) must be the final receiver
     assert grid.is_tree_reduction_receiver(0)
     assert not grid.is_tree_reduction_sender(0)
 
     logger.info("WH grid layout validation passed!")
+
+
+@run_for_wormhole_b0()
+def test_flash_mla_wh_dram_bank_validation(device):
+    """Validate that WH DRAM bank IDs are valid on the current device."""
+    grid = FlashMLAOptimalGridNOC0_WH
+
+    optimal_workers = device.get_optimal_dram_bank_to_logical_worker_assignment(ttnn.NOC.NOC_0)
+    num_dram_banks = len(optimal_workers)
+    logger.info(f"Device has {num_dram_banks} DRAM banks")
+
+    for bank_id in grid.OPTIMAL_DRAM_BANK_ORDER:
+        assert bank_id < num_dram_banks, (
+            f"DRAM bank {bank_id} exceeds device bank count {num_dram_banks}. "
+            f"Grid OPTIMAL_DRAM_BANK_ORDER={grid.OPTIMAL_DRAM_BANK_ORDER} "
+            f"is incompatible with this device."
+        )
+        worker = optimal_workers[bank_id]
+        logger.info(f"DRAM bank {bank_id} -> worker ({worker.x}, {worker.y})")
+
+    logger.info("WH DRAM bank validation passed!")

@@ -48,6 +48,33 @@ static constexpr uint32_t HOST_MEM_CHANNELS_MASK = HOST_MEM_CHANNELS - 1;
 
 namespace {
 
+inline uint32_t get_host_mem_channels_override(uint32_t default_value) {
+    const char* env_value = std::getenv("TT_METAL_NUM_HOST_MEM_CHANNELS");
+    if (env_value == nullptr || *env_value == '\0') {
+        return default_value;
+    }
+
+    char* parse_end = nullptr;
+    unsigned long parsed = std::strtoul(env_value, &parse_end, 10);
+    TT_FATAL(
+        parse_end != env_value && *parse_end == '\0',
+        "Invalid TT_METAL_NUM_HOST_MEM_CHANNELS value '{}'. Expected an integer in [0, {}].",
+        env_value,
+        HOST_MEM_CHANNELS);
+    TT_FATAL(
+        parsed <= HOST_MEM_CHANNELS,
+        "TT_METAL_NUM_HOST_MEM_CHANNELS={} exceeds supported maximum {}.",
+        parsed,
+        HOST_MEM_CHANNELS);
+
+    log_warning(
+        tt::LogMetal,
+        "Overriding host memory channels per MMIO device from {} to {} via TT_METAL_NUM_HOST_MEM_CHANNELS.",
+        default_value,
+        parsed);
+    return static_cast<uint32_t>(parsed);
+}
+
 inline std::string get_soc_description_file(
     const tt::ARCH& arch, tt::TargetDevice target_device, const tt::llrt::RunTimeOptions& rtoptions) {
     if (target_device == tt::TargetDevice::Simulator) {
@@ -384,8 +411,10 @@ void Cluster::open_driver(const bool& /*skip_driver_allocs*/) {
         for (const auto& [mmio_device_id, chips] : grouped_chips) {
             max_chips_per_mmio = std::max(max_chips_per_mmio, static_cast<uint32_t>(chips.size()));
         }
+        const uint32_t host_mem_channels =
+            get_host_mem_channels_override(std::min(HOST_MEM_CHANNELS, max_chips_per_mmio));
         device_driver = std::make_unique<tt::umd::Cluster>(tt::umd::ClusterOptions{
-            .num_host_mem_ch_per_mmio_device = std::min(HOST_MEM_CHANNELS, max_chips_per_mmio),
+            .num_host_mem_ch_per_mmio_device = host_mem_channels,
             .sdesc_path = sdesc_path,
         });
     } else if (this->target_type_ == TargetDevice::Simulator) {

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Part II Utilization and Bottleneck Analysis</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0f14;
+      --panel: #121925;
+      --panel-2: #0f141d;
+      --text: #f5f7fb;
+      --muted: #9fb0c3;
+      --border: #223046;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #162033 0%, var(--bg) 45%);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 40px;
+    }
+    .lead {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 1040px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 18px 16px;
+    }
+    .card .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .card .value {
+      font-size: 28px;
+      font-weight: 700;
+    }
+    .card .hint {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    figure {
+      margin: 0;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 18px;
+    }
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <h1>Part II Utilization and Bottleneck Analysis</h1>
+    <p class="lead">这页把 Part II 需要的 stage-level、source-level、compute bubble 与 prefill PM 对照统一收拢到一个目录下，同时显式对齐新的 Part I 叙事：`DeepSeek FlashMLA` 是主方法，`TT 主线 FlashMLA` 的 dense characterization 只作为 long-seq mechanism proxy。</p>
+    <section class="cards">
+      <div class="card">
+        <div class="label">Part I 主方法</div>
+        <div class="value">DeepSeek FlashMLA</div>
+        <div class="hint">Part II 的 dense decode profile 仍主要来自 `TT 主线 FlashMLA`，所以这里强调 proxy 边界。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k DeepSeek / TT</div>
+        <div class="value">0.997x</div>
+        <div class="hint">long-seq 代表点已经足够贴近，可用 `TT 主线` 承接机理解释，但仍不能替代 direct profile。</div>
+      </div>
+      <div class="card">
+        <div class="label">32k Writer cb_wait</div>
+        <div class="value">99.8%</div>
+        <div class="hint">writer 主等待不在带宽本身，而在 output readiness / reduction 链路。</div>
+      </div>
+      <div class="card">
+        <div class="label">Prefill 4k PM FPU</div>
+        <div class="value">19.43%</div>
+        <div class="hint">direct PM 可读，但仍明显低于 stage-level wait shares。</div>
+      </div>
+    </section>
+    <section class="grid">
+      <figure><img src="visuals/decode_deepseek_proxy_alignment.svg" alt="decode_deepseek_proxy_alignment"></figure>
+      <figure><img src="visuals/decode_phase_transition.svg" alt="decode_phase_transition"></figure>
+      <figure><img src="visuals/decode_backpressure_signals.svg" alt="decode_backpressure_signals"></figure>
+      <figure><img src="visuals/decode_bubble_density.svg" alt="decode_bubble_density"></figure>
+      <figure><img src="visuals/decode_bubble_composition.svg" alt="decode_bubble_composition"></figure>
+      <figure><img src="visuals/decode_reader_source_breakdown.svg" alt="decode_reader_source_breakdown"></figure>
+      <figure><img src="visuals/decode_writer_source_breakdown.svg" alt="decode_writer_source_breakdown"></figure>
+      <figure><img src="visuals/prefill_control.svg" alt="prefill_control"></figure>
+    </section>
+    <p class="footnote">说明：decode 图中的 `wait-front / reserve-back` 统一按 accumulated stall density 解读。Part II 的 decode 仍使用 mixed-batch characterization：`256~8k=batch=2`，`16k/32k=batch=1`。`DeepSeek FlashMLA` 的 direct representative-point profiler 仍是后续可补资产。</p>
+  </div>
+</body>
+</html>

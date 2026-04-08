@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "arch": "Arch.WORMHOLE_B0",
+    "selected_cases": [
+      "standalone_decode_wh"
+    ]
+  },
+  "results": [
+    {
+      "case": "standalone_decode_wh",
+      "status": "failed",
+      "error": "Traceback (most recent call last):\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 390, in main\n    result = case_runners[case_name](device)\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 366, in <lambda>\n    \"standalone_decode_wh\": lambda device: run_standalone_decode_wh(\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 228, in run_standalone_decode_wh\n    raise AssertionError(f\"standalone WH decode PCC check failed: {pcc_message}\")\nAssertionError: standalone WH decode PCC check failed: 0.0\n"
+    }
+  ]
+}
