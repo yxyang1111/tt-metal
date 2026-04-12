@@ -1,0 +1,354 @@
+{
+  "meta": {
+    "warmup": 2,
+    "iters": 5
+  },
+  "path_decomposition": [
+    {
+      "seq_len": 8192,
+      "variant": "tt_mainline_paged",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "mean_ms": 0.43929200037382543,
+      "min_ms": 0.4239690024405718,
+      "max_ms": 0.4765699995914474,
+      "samples": [
+        0.4765699995914474,
+        0.43777200335171074,
+        0.4306780028855428,
+        0.4239690024405718,
+        0.4274709935998544
+      ]
+    },
+    {
+      "seq_len": 8192,
+      "variant": "nonpaged_builtin_sharded_q",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "mean_ms": 0.42792239983100444,
+      "min_ms": 0.422081007855013,
+      "max_ms": 0.44053999590687454,
+      "samples": [
+        0.44053999590687454,
+        0.42391200258862227,
+        0.422081007855013,
+        0.42999599827453494,
+        0.42308299452997744
+      ]
+    },
+    {
+      "seq_len": 8192,
+      "variant": "deepseek_adapted_backend",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "measurement_note": "timed only the backend device op after one-time DeepSeek->builtin tensor adaptation; excludes current Python wrapper to_torch/from_torch materialization overhead",
+      "mean_ms": 0.42510539933573455,
+      "min_ms": 0.4100460064364597,
+      "max_ms": 0.43990000267513096,
+      "samples": [
+        0.43990000267513096,
+        0.432278000516817,
+        0.4100460064364597,
+        0.4310919903218746,
+        0.41221099672839046
+      ]
+    },
+    {
+      "seq_len": 32768,
+      "variant": "tt_mainline_paged",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "mean_ms": 1.22675119782798,
+      "min_ms": 1.219575002323836,
+      "max_ms": 1.2362229899736121,
+      "samples": [
+        1.2356950028333813,
+        1.2362229899736121,
+        1.2221689976286143,
+        1.219575002323836,
+        1.2200939963804558
+      ]
+    },
+    {
+      "seq_len": 32768,
+      "variant": "nonpaged_builtin_sharded_q",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "mean_ms": 1.2205609993543476,
+      "min_ms": 1.2116600119043142,
+      "max_ms": 1.2302209943300113,
+      "samples": [
+        1.2302209943300113,
+        1.2198030017316341,
+        1.2261289957677945,
+        1.2149919930379838,
+        1.2116600119043142
+      ]
+    },
+    {
+      "seq_len": 32768,
+      "variant": "deepseek_adapted_backend",
+      "config": {
+        "batch": 1,
+        "num_heads": 32,
+        "num_kv_heads": 1,
+        "std_head_dim": 512,
+        "mla_head_dim_v": 512,
+        "mla_d_rope": 64,
+        "deepseek_qk_nope_head_dim": 512,
+        "deepseek_qk_rope_head_dim": 64,
+        "deepseek_kv_lora_rank": 512,
+        "block_size": 64,
+        "k_chunk_size": 128,
+        "max_cores_per_head_batch": 4,
+        "deepseek_num_q_heads_per_core": 8,
+        "torch_input_dtype": "torch.bfloat16",
+        "common_value_dim": 512,
+        "mla_head_dim_qk": 576,
+        "deepseek_qk_head_dim": 576,
+        "deepseek_kvpe_dim": 576,
+        "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128",
+        "config_label": "B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128",
+        "deepseek_num_q_shards": 4
+      },
+      "measurement_note": "timed only the backend device op after one-time DeepSeek->builtin tensor adaptation; excludes current Python wrapper to_torch/from_torch materialization overhead",
+      "mean_ms": 1.2351470038993284,
+      "min_ms": 1.2243319943081588,
+      "max_ms": 1.2543259945232421,
+      "samples": [
+        1.2543259945232421,
+        1.2310230085859075,
+        1.2344450078671798,
+        1.2243319943081588,
+        1.2316090142121539
+      ]
+    }
+  ],
+  "head_sweep": [
+    {
+      "num_heads": 8,
+      "deepseek_num_q_shards": 1,
+      "variant": "tt_mainline_paged",
+      "mean_ms": 1.0122295992914587,
+      "min_ms": 0.9901809971779585,
+      "max_ms": 1.0526650003157556,
+      "samples": [
+        1.017464994220063,
+        1.006349004455842,
+        0.9901809971779585,
+        1.0526650003157556,
+        0.9944880002876744
+      ]
+    },
+    {
+      "num_heads": 8,
+      "deepseek_num_q_shards": 1,
+      "variant": "deepseek_adapted_backend",
+      "mean_ms": 12.992832998861559,
+      "min_ms": 5.497639998793602,
+      "max_ms": 17.336153003270738,
+      "samples": [
+        17.070188987418078,
+        17.336153003270738,
+        16.799621997051872,
+        5.497639998793602,
+        8.260561007773504
+      ]
+    },
+    {
+      "num_heads": 16,
+      "deepseek_num_q_shards": 2,
+      "variant": "tt_mainline_paged",
+      "mean_ms": 1.020180998602882,
+      "min_ms": 0.9914099937304854,
+      "max_ms": 1.0959380015265197,
+      "samples": [
+        1.0959380015265197,
+        1.0002100025303662,
+        0.9914099937304854,
+        0.9960320021491498,
+        1.017314993077889
+      ]
+    },
+    {
+      "num_heads": 16,
+      "deepseek_num_q_shards": 2,
+      "variant": "deepseek_adapted_backend",
+      "mean_ms": 2.4500770086888224,
+      "min_ms": 1.828946013120003,
+      "max_ms": 3.7444040062837303,
+      "samples": [
+        1.8551350076450035,
+        3.7444040062837303,
+        1.828946013120003,
+        1.8326000135857612,
+        2.989300002809614
+      ]
+    },
+    {
+      "num_heads": 24,
+      "deepseek_num_q_shards": 3,
+      "variant": "tt_mainline_paged",
+      "mean_ms": 1.2404449982568622,
+      "min_ms": 1.2255740002728999,
+      "max_ms": 1.2656820035772398,
+      "samples": [
+        1.2656820035772398,
+        1.248241009307094,
+        1.232222988619469,
+        1.2305049895076081,
+        1.2255740002728999
+      ]
+    },
+    {
+      "num_heads": 24,
+      "deepseek_num_q_shards": 3,
+      "variant": "deepseek_adapted_backend",
+      "mean_ms": 7.090407999930903,
+      "min_ms": 1.6118339990498498,
+      "max_ms": 12.70377000037115,
+      "samples": [
+        1.6126920090755448,
+        1.6118339990498498,
+        8.426170999882743,
+        12.70377000037115,
+        11.097572991275229
+      ]
+    },
+    {
+      "num_heads": 32,
+      "deepseek_num_q_shards": 4,
+      "variant": "tt_mainline_paged",
+      "mean_ms": 13.765071402303874,
+      "min_ms": 1.2008220073767006,
+      "max_ms": 20.32128200517036,
+      "samples": [
+        1.2008220073767006,
+        20.32128200517036,
+        17.462969000916928,
+        13.656014009029604,
+        16.18426998902578
+      ]
+    },
+    {
+      "num_heads": 32,
+      "deepseek_num_q_shards": 4,
+      "variant": "deepseek_adapted_backend",
+      "mean_ms": 16.342418402200565,
+      "min_ms": 1.1953530047321692,
+      "max_ms": 31.314325009589083,
+      "samples": [
+        1.1953530047321692,
+        13.005386994336732,
+        20.603978002327494,
+        31.314325009589083,
+        15.593049000017345
+      ]
+    }
+  ]
+}

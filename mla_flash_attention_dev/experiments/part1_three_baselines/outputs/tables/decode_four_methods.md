@@ -2,34 +2,35 @@
 
 说明：每个 workload 下各方法都重复运行，并在剔除慢尾异常点后重新计算 `avg / best / worst`。
 说明：`best=最小延迟`，`worst=最大延迟`，括号里的 `8/10 kept` 表示过滤后保留样本数。
+说明：这张默认主表固定在 `config=b1_h32_hkv1_dv512_ro64_blk64_kc128_dqhpc8`，即 `B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128, deepseek_q_heads_per_core=8`；更多 B/H/dims 对比见 `multidim/` 目录。
 说明：`DeepSeek FlashMLA` 采用“预先完成一次张量适配后，只计时 backend device op”的口径，因此可与其它 TT device baseline 更公平比较。
 
 ## 延迟统计
 
 | case | Reference Attention | Flash Attention | FlashMLA (TT Mainline) | DeepSeek FlashMLA |
 |---|---|---|---|---|
-| decode_256 | avg 1.257 / best 1.091 / worst 1.455 ms (8/10 kept) | avg 0.169 / best 0.162 / worst 0.185 ms (9/10 kept) | avg 0.196 / best 0.172 / worst 0.265 ms (9/10 kept) | avg 0.177 / best 0.160 / worst 0.206 ms (9/10 kept) |
-| decode_512 | avg 16.585 / best 15.973 / worst 17.141 ms (10/10 kept) | avg 0.177 / best 0.166 / worst 0.197 ms (10/10 kept) | avg 0.108 / best 0.103 / worst 0.115 ms (9/10 kept) | avg 0.210 / best 0.189 / worst 0.244 ms (10/10 kept) |
-| decode_1k | avg 30.467 / best 30.095 / worst 31.577 ms (10/10 kept) | avg 0.204 / best 0.196 / worst 0.213 ms (9/10 kept) | avg 0.209 / best 0.197 / worst 0.226 ms (10/10 kept) | avg 0.180 / best 0.173 / worst 0.192 ms (9/10 kept) |
-| decode_2k | avg 58.991 / best 57.609 / worst 60.943 ms (10/10 kept) | avg 0.229 / best 0.216 / worst 0.262 ms (10/10 kept) | avg 0.217 / best 0.206 / worst 0.233 ms (9/10 kept) | avg 0.208 / best 0.199 / worst 0.223 ms (10/10 kept) |
-| decode_4k | avg 123.463 / best 120.992 / worst 128.236 ms (10/10 kept) | avg 0.277 / best 0.267 / worst 0.290 ms (9/10 kept) | avg 0.291 / best 0.279 / worst 0.317 ms (9/10 kept) | avg 0.298 / best 0.284 / worst 0.333 ms (9/10 kept) |
-| decode_8k | avg 245.915 / best 222.086 / worst 288.117 ms (10/10 kept) | avg 0.416 / best 0.400 / worst 0.442 ms (10/10 kept) | avg 0.426 / best 0.418 / worst 0.440 ms (9/10 kept) | avg 0.432 / best 0.413 / worst 0.462 ms (10/10 kept) |
-| decode_16k | avg 502.884 / best 493.871 / worst 535.022 ms (10/10 kept) | avg 0.686 / best 0.677 / worst 0.708 ms (9/10 kept) | avg 0.708 / best 0.699 / worst 0.724 ms (10/10 kept) | avg 0.690 / best 0.676 / worst 0.730 ms (10/10 kept) |
-| decode_32k | avg 980.514 / best 952.253 / worst 1039.562 ms (10/10 kept) | avg 1.198 / best 1.178 / worst 1.249 ms (10/10 kept) | avg 1.240 / best 1.223 / worst 1.267 ms (10/10 kept) | avg 1.237 / best 1.228 / worst 1.254 ms (10/10 kept) |
-| decode_64k | avg 1941.513 / best 1905.613 / worst 2004.374 ms (10/10 kept) | avg 2.232 / best 2.213 / worst 2.258 ms (10/10 kept) | avg 2.320 / best 2.301 / worst 2.386 ms (9/10 kept) | avg 2.331 / best 2.292 / worst 2.501 ms (10/10 kept) |
-| decode_128k | avg 3820.783 / best 3649.933 / worst 3945.519 ms (10/10 kept) | avg 4.302 / best 4.287 / worst 4.326 ms (10/10 kept) | avg 4.430 / best 4.420 / worst 4.454 ms (10/10 kept) | avg 4.435 / best 4.418 / worst 4.459 ms (7/10 kept) |
+| decode_256 | avg 1.410 / best 1.255 / worst 1.776 ms (10/10 kept) | avg 0.172 / best 0.162 / worst 0.186 ms (10/10 kept) | avg 0.165 / best 0.156 / worst 0.182 ms (9/10 kept) | avg 0.185 / best 0.169 / worst 0.198 ms (9/10 kept) |
+| decode_512 | avg 20.648 / best 20.197 / worst 20.949 ms (10/10 kept) | avg 0.179 / best 0.170 / worst 0.198 ms (8/10 kept) | avg 0.178 / best 0.168 / worst 0.188 ms (10/10 kept) | avg 0.171 / best 0.157 / worst 0.198 ms (10/10 kept) |
+| decode_1k | avg 39.754 / best 39.288 / worst 40.445 ms (10/10 kept) | avg 0.196 / best 0.181 / worst 0.210 ms (10/10 kept) | avg 0.203 / best 0.181 / worst 0.212 ms (9/10 kept) | avg 0.181 / best 0.171 / worst 0.190 ms (9/10 kept) |
+| decode_2k | avg 74.994 / best 72.296 / worst 81.065 ms (10/10 kept) | avg 0.229 / best 0.218 / worst 0.240 ms (10/10 kept) | avg 0.234 / best 0.224 / worst 0.244 ms (9/10 kept) | avg 0.215 / best 0.206 / worst 0.224 ms (9/10 kept) |
+| decode_4k | avg 146.124 / best 143.216 / worst 148.202 ms (10/10 kept) | avg 0.285 / best 0.276 / worst 0.297 ms (10/10 kept) | avg 0.312 / best 0.290 / worst 0.352 ms (9/10 kept) | avg 0.298 / best 0.283 / worst 0.312 ms (9/10 kept) |
+| decode_8k | avg 264.559 / best 262.147 / worst 268.467 ms (10/10 kept) | avg 0.382 / best 0.378 / worst 0.395 ms (9/10 kept) | avg 0.473 / best 0.463 / worst 0.484 ms (10/10 kept) | avg 0.462 / best 0.449 / worst 0.469 ms (10/10 kept) |
+| decode_16k | avg 507.768 / best 495.588 / worst 522.738 ms (10/10 kept) | avg 0.672 / best 0.663 / worst 0.692 ms (10/10 kept) | avg 0.699 / best 0.687 / worst 0.713 ms (9/10 kept) | avg 0.681 / best 0.673 / worst 0.699 ms (9/10 kept) |
+| decode_32k | avg 916.238 / best 900.841 / worst 952.396 ms (10/10 kept) | avg 1.196 / best 1.178 / worst 1.259 ms (10/10 kept) | avg 1.224 / best 1.214 / worst 1.236 ms (10/10 kept) | avg 1.216 / best 1.211 / worst 1.230 ms (9/10 kept) |
+| decode_64k | avg 1671.564 / best 1618.243 / worst 1725.478 ms (10/10 kept) | avg 2.224 / best 2.192 / worst 2.275 ms (9/10 kept) | avg 2.303 / best 2.272 / worst 2.351 ms (9/10 kept) | avg 2.279 / best 2.253 / worst 2.314 ms (10/10 kept) |
+| decode_128k | avg 3425.909 / best 3383.744 / worst 3507.020 ms (10/10 kept) | avg 29.940 / best 4.300 / worst 92.673 ms (10/10 kept) | avg 35.604 / best 4.428 / worst 74.150 ms (10/10 kept) | avg 4.406 / best 4.381 / worst 4.433 ms (6/10 kept) |
 
 ## 平均吞吐量
 
 | case | Reference Attention | Flash Attention | FlashMLA (TT Mainline) | DeepSeek FlashMLA |
 |---|---:|---:|---:|---:|
-| decode_256 | 795.7 tok/s | 5908.6 tok/s | 5103.7 tok/s | 5645.2 tok/s |
-| decode_512 | 60.3 tok/s | 5640.4 tok/s | 9256.1 tok/s | 4764.3 tok/s |
-| decode_1k | 32.8 tok/s | 4897.8 tok/s | 4795.8 tok/s | 5553.4 tok/s |
-| decode_2k | 17.0 tok/s | 4370.3 tok/s | 4615.6 tok/s | 4797.2 tok/s |
-| decode_4k | 8.1 tok/s | 3607.8 tok/s | 3437.8 tok/s | 3353.7 tok/s |
-| decode_8k | 4.1 tok/s | 2404.1 tok/s | 2348.4 tok/s | 2313.0 tok/s |
-| decode_16k | 2.0 tok/s | 1457.9 tok/s | 1412.9 tok/s | 1448.3 tok/s |
-| decode_32k | 1.0 tok/s | 835.1 tok/s | 806.6 tok/s | 808.7 tok/s |
-| decode_64k | 0.5 tok/s | 448.0 tok/s | 431.1 tok/s | 429.0 tok/s |
-| decode_128k | 0.3 tok/s | 232.4 tok/s | 225.8 tok/s | 225.5 tok/s |
+| decode_256 | 709.4 tok/s | 5829.4 tok/s | 6079.0 tok/s | 5409.8 tok/s |
+| decode_512 | 48.4 tok/s | 5581.9 tok/s | 5623.3 tok/s | 5847.9 tok/s |
+| decode_1k | 25.2 tok/s | 5089.9 tok/s | 4936.7 tok/s | 5522.6 tok/s |
+| decode_2k | 13.3 tok/s | 4361.7 tok/s | 4276.2 tok/s | 4660.3 tok/s |
+| decode_4k | 6.8 tok/s | 3502.7 tok/s | 3204.5 tok/s | 3351.4 tok/s |
+| decode_8k | 3.8 tok/s | 2615.7 tok/s | 2112.0 tok/s | 2163.7 tok/s |
+| decode_16k | 2.0 tok/s | 1487.7 tok/s | 1429.8 tok/s | 1469.1 tok/s |
+| decode_32k | 1.1 tok/s | 835.9 tok/s | 817.2 tok/s | 822.1 tok/s |
+| decode_64k | 0.6 tok/s | 449.6 tok/s | 434.2 tok/s | 438.8 tok/s |
+| decode_128k | 0.3 tok/s | 33.4 tok/s | 28.1 tok/s | 227.0 tok/s |

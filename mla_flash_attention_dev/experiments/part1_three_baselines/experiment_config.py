@@ -19,6 +19,7 @@ DEFAULT_BLOCK_SIZE = 64
 DEFAULT_K_CHUNK_SIZE = 128
 DEFAULT_MAX_CORES_PER_HEAD_BATCH = 4
 DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE = 8
+DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES = (DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE,)
 
 DEFAULT_PROBE_BATCHES = (1, 2, 4)
 DEFAULT_PROBE_NUM_HEADS = (8, 16, 24, 32)
@@ -39,6 +40,7 @@ class SweepPreset:
     num_kv_heads: tuple[int, ...]
     value_dims: tuple[int, ...]
     rope_dims: tuple[int, ...]
+    deepseek_num_q_heads_per_core_values: tuple[int, ...]
     decode_seq_lens: tuple[int, ...]
     prefill_seq_lens: tuple[int, ...] = ()
 
@@ -55,6 +57,7 @@ SWEEP_PRESETS: dict[str, SweepPreset] = {
         num_kv_heads=DEFAULT_PROBE_NUM_KV_HEADS,
         value_dims=DEFAULT_PROBE_VALUE_DIMS,
         rope_dims=DEFAULT_PROBE_ROPE_DIMS,
+        deepseek_num_q_heads_per_core_values=DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES,
         decode_seq_lens=DEFAULT_PROBE_DECODE_SEQ_LENS,
         prefill_seq_lens=(),
     ),
@@ -69,6 +72,7 @@ SWEEP_PRESETS: dict[str, SweepPreset] = {
         num_kv_heads=(1,),
         value_dims=(256, 512),
         rope_dims=(64,),
+        deepseek_num_q_heads_per_core_values=DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES,
         decode_seq_lens=(1024, 8192, 32768),
         prefill_seq_lens=(),
     ),
@@ -83,6 +87,7 @@ SWEEP_PRESETS: dict[str, SweepPreset] = {
         num_kv_heads=(1,),
         value_dims=DEFAULT_EXPANDED_VALUE_DIMS,
         rope_dims=(64,),
+        deepseek_num_q_heads_per_core_values=DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES,
         decode_seq_lens=DEFAULT_DECODE_SEQ_LENS,
         prefill_seq_lens=(),
     ),
@@ -142,6 +147,7 @@ class ExperimentConfig:
             f"b{self.batch}_h{self.num_heads}_hkv{self.num_kv_heads}"
             f"_dv{self.common_value_dim}_ro{self.mla_d_rope}"
             f"_blk{self.block_size}_kc{self.k_chunk_size}"
+            f"_dqhpc{self.deepseek_num_q_heads_per_core}"
         )
 
     @property
@@ -149,7 +155,8 @@ class ExperimentConfig:
         return (
             f"B={self.batch}, H={self.num_heads}, H_kv={self.num_kv_heads}, "
             f"value_dim={self.common_value_dim}, rope_dim={self.mla_d_rope}, "
-            f"block={self.block_size}, k_chunk={self.k_chunk_size}"
+            f"block={self.block_size}, k_chunk={self.k_chunk_size}, "
+            f"deepseek_q_heads_per_core={self.deepseek_num_q_heads_per_core}"
         )
 
     @property

@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import os
 import statistics
 import shutil
 import time
@@ -40,6 +41,7 @@ from mla_flash_attention_dev.experiments.part1_three_baselines.experiment_config
     DEFAULT_BLOCK_SIZE,
     DEFAULT_DECODE_SEQ_LENS,
     DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE,
+    DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES,
     DEFAULT_DEVICE_ID,
     DEFAULT_K_CHUNK_SIZE,
     DEFAULT_MAX_CORES_PER_HEAD_BATCH,
@@ -64,7 +66,7 @@ from mla_flash_attention_dev.experiments.part1_three_baselines.experiment_config
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = SCRIPT_DIR / "outputs"
+OUTPUT_DIR = Path(os.environ.get("PART1_OUTPUT_DIR", str(SCRIPT_DIR / "outputs"))).expanduser()
 RAW_DIR = OUTPUT_DIR / "raw"
 FLASHMLA_DETAIL_DIR = OUTPUT_DIR / "flashmla_detailed"
 JSON_PATH = RAW_DIR / "part1_four_method_results.json"
@@ -132,6 +134,36 @@ def parse_int_list(values: list[int]) -> list[int]:
     return sorted(dict.fromkeys(values))
 
 
+def valid_deepseek_num_q_heads_per_core_values(num_heads: int) -> list[int]:
+    return [
+        value
+        for value in (1, 2, 4, 8, 16)
+        if value <= num_heads and num_heads % value == 0
+    ]
+
+
+def aligned_deepseek_num_q_heads_per_core(num_heads: int, max_cores_per_head_batch: int) -> int:
+    target_q_shards = max(1, min(num_heads, max_cores_per_head_batch))
+    candidates = valid_deepseek_num_q_heads_per_core_values(num_heads)
+    if not candidates:
+        raise ValueError(f"No hardware-valid deepseek_num_q_heads_per_core values for num_heads={num_heads}")
+    candidate_q_shards = [(value, num_heads // value) for value in candidates]
+    not_exceeding_target = [(value, q_shards) for value, q_shards in candidate_q_shards if q_shards <= target_q_shards]
+    if not_exceeding_target:
+        return min(not_exceeding_target, key=lambda item: (target_q_shards - item[1], item[0]))[0]
+    return min(candidate_q_shards, key=lambda item: (item[1] - target_q_shards, item[0]))[0]
+
+
+def resolved_deepseek_num_q_heads_per_core_values(
+    args: argparse.Namespace, *, num_heads: int, probe: bool
+) -> list[int]:
+    if probe:
+        return [args.deepseek_num_q_heads_per_core]
+    if args.deepseek_parallelism_policy == "align_with_tt_mainline":
+        return [aligned_deepseek_num_q_heads_per_core(num_heads, args.max_cores_per_head_batch)]
+    return args.deepseek_num_q_heads_per_core_list
+
+
 def apply_sweep_preset_to_args(args: argparse.Namespace, preset_name: str, *, probe: bool) -> None:
     if preset_name == "manual":
         return
@@ -150,6 +182,7 @@ def apply_sweep_preset_to_args(args: argparse.Namespace, preset_name: str, *, pr
     args.num_kv_heads_list = list(preset.num_kv_heads)
     args.value_dims = list(preset.value_dims)
     args.rope_dims = list(preset.rope_dims)
+    args.deepseek_num_q_heads_per_core_list = list(preset.deepseek_num_q_heads_per_core_values)
     args.decode_seq_lens = list(preset.decode_seq_lens)
     args.prefill_seq_lens = list(preset.prefill_seq_lens)
 
@@ -236,6 +269,26 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE,
         help="DeepSeek FlashMLA Q heads per core.",
+    )
+    parser.add_argument(
+        "--deepseek-num-q-heads-per-core-list",
+        nargs="+",
+        type=int,
+        default=None,
+        help=(
+            "Main sweep values for DeepSeek FlashMLA q_heads_per_core. "
+            "If omitted, falls back to --deepseek-num-q-heads-per-core."
+        ),
+    )
+    parser.add_argument(
+        "--deepseek-parallelism-policy",
+        default="fixed",
+        choices=("fixed", "align_with_tt_mainline"),
+        help=(
+            "How to assign DeepSeek q_heads_per_core. "
+            "'fixed' uses the explicit list; 'align_with_tt_mainline' derives per-config values "
+            "so DeepSeek num_q_shards tracks TT mainline max_cores_per_head_batch."
+        ),
     )
     parser.add_argument(
         "--run-capability-probe",
@@ -338,12 +391,23 @@ def parse_args() -> argparse.Namespace:
         parser.error("--probe-checkpoint-every-workloads must be > 0")
     apply_sweep_preset_to_args(args, args.sweep_preset, probe=False)
     apply_sweep_preset_to_args(args, args.probe_preset, probe=True)
+    explicit_dqhpc_list = args.deepseek_num_q_heads_per_core_list is not None
+    if args.deepseek_parallelism_policy != "fixed" and explicit_dqhpc_list:
+        parser.error(
+            "--deepseek-num-q-heads-per-core-list cannot be combined with "
+            "--deepseek-parallelism-policy=align_with_tt_mainline"
+        )
+    if args.deepseek_num_q_heads_per_core_list is None:
+        args.deepseek_num_q_heads_per_core_list = list(DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE_VALUES)
+    if args.deepseek_parallelism_policy == "fixed" and not explicit_dqhpc_list:
+        args.deepseek_num_q_heads_per_core_list = [args.deepseek_num_q_heads_per_core]
     args.probe_workload_batch_size = args.probe_workload_batch_size or None
     args.batches = parse_int_list(args.batches)
     args.num_heads_list = parse_int_list(args.num_heads_list)
     args.num_kv_heads_list = parse_int_list(args.num_kv_heads_list)
     args.value_dims = parse_int_list(args.value_dims)
     args.rope_dims = parse_int_list(args.rope_dims)
+    args.deepseek_num_q_heads_per_core_list = parse_int_list(args.deepseek_num_q_heads_per_core_list)
     args.decode_seq_lens = parse_int_list(args.decode_seq_lens)
     args.prefill_seq_lens = parse_int_list(args.prefill_seq_lens)
     args.probe_batches = parse_int_list(args.probe_batches)
@@ -362,40 +426,57 @@ def build_experiment_configs(args: argparse.Namespace, *, probe: bool = False) -
     value_dims = args.probe_value_dims if probe else args.value_dims
     rope_dims = args.probe_rope_dims if probe else args.rope_dims
 
-    configs = [
-        make_strict_four_way_config(
-            batch=batch,
-            num_heads=num_heads,
-            num_kv_heads=num_kv_heads,
-            value_dim=value_dim,
-            rope_dim=rope_dim,
-            block_size=args.block_size,
-            k_chunk_size=args.k_chunk_size,
-            max_cores_per_head_batch=args.max_cores_per_head_batch,
-            deepseek_num_q_heads_per_core=args.deepseek_num_q_heads_per_core,
-            torch_input_dtype=DEFAULT_TORCH_INPUT_DTYPE_STR,
+    configs = []
+    for batch, num_heads, num_kv_heads, value_dim, rope_dim in product(
+        batches, num_heads_values, num_kv_heads_values, value_dims, rope_dims
+    ):
+        for deepseek_num_q_heads_per_core in resolved_deepseek_num_q_heads_per_core_values(
+            args, num_heads=num_heads, probe=probe
+        ):
+            configs.append(
+                make_strict_four_way_config(
+                    batch=batch,
+                    num_heads=num_heads,
+                    num_kv_heads=num_kv_heads,
+                    value_dim=value_dim,
+                    rope_dim=rope_dim,
+                    block_size=args.block_size,
+                    k_chunk_size=args.k_chunk_size,
+                    max_cores_per_head_batch=args.max_cores_per_head_batch,
+                    deepseek_num_q_heads_per_core=deepseek_num_q_heads_per_core,
+                    torch_input_dtype=DEFAULT_TORCH_INPUT_DTYPE_STR,
+                )
+            )
+    configs.sort(
+        key=lambda config: (
+            config.batch,
+            config.num_heads,
+            config.num_kv_heads,
+            config.common_value_dim,
+            config.mla_d_rope,
+            config.deepseek_num_q_heads_per_core,
         )
-        for batch, num_heads, num_kv_heads, value_dim, rope_dim in product(
-            batches, num_heads_values, num_kv_heads_values, value_dims, rope_dims
-        )
-    ]
-    configs.sort(key=lambda config: (config.batch, config.num_heads, config.num_kv_heads, config.common_value_dim, config.mla_d_rope))
+    )
     return configs
 
 
 def default_config_from_list(configs: list[ExperimentConfig]) -> ExperimentConfig:
-    for config in configs:
-        if (
-            config.batch == 1
-            and config.num_heads == 32
-            and config.num_kv_heads == 1
-            and config.common_value_dim == 512
-            and config.mla_d_rope == 64
-            and config.block_size == DEFAULT_BLOCK_SIZE
-            and config.k_chunk_size == DEFAULT_K_CHUNK_SIZE
-        ):
-            return config
-    return configs[0]
+    return min(
+        configs,
+        key=lambda config: (
+            config.batch != 1,
+            config.num_kv_heads != 1,
+            config.common_value_dim != 512,
+            config.mla_d_rope != 64,
+            config.block_size != DEFAULT_BLOCK_SIZE,
+            config.k_chunk_size != DEFAULT_K_CHUNK_SIZE,
+            config.deepseek_num_q_heads_per_core != DEFAULT_DEEPSEEK_NUM_Q_HEADS_PER_CORE,
+            abs(config.num_heads - 32),
+            config.batch,
+            config.num_heads,
+            config.deepseek_num_q_heads_per_core,
+        ),
+    )
 
 
 def build_workload_catalog(
@@ -1048,6 +1129,11 @@ def validate_workload_baseline_support(
             reasons.append("DeepSeek FlashMLA currently requires num_kv_heads=1")
         if config.deepseek_num_q_heads_per_core <= 0 or config.deepseek_num_q_heads_per_core >= 32:
             reasons.append("deepseek_num_q_heads_per_core must be in range (0, 32)")
+        if config.deepseek_num_q_heads_per_core not in valid_deepseek_num_q_heads_per_core_values(config.num_heads):
+            reasons.append(
+                "deepseek_num_q_heads_per_core must be a hardware-valid tile height divisor of num_heads "
+                "(currently one of 1/2/4/8/16)"
+            )
         if config.deepseek_num_q_shards is None:
             reasons.append("num_heads must be divisible by deepseek_num_q_heads_per_core")
         else:
@@ -1287,6 +1373,9 @@ def run_all_benchmarks(args: argparse.Namespace) -> dict[str, Any]:
                 "num_kv_heads": args.num_kv_heads_list,
                 "value_dims": args.value_dims,
                 "rope_dims": args.rope_dims,
+                "deepseek_num_q_heads_per_core": sorted(
+                    {config.deepseek_num_q_heads_per_core for config in configs}
+                ),
                 "decode_seq_lens": args.decode_seq_lens,
                 "prefill_seq_lens": args.prefill_seq_lens,
             },
@@ -1301,7 +1390,17 @@ def run_all_benchmarks(args: argparse.Namespace) -> dict[str, Any]:
             "block_size": args.block_size,
             "k_chunk_size": args.k_chunk_size,
             "max_cores_per_head_batch": args.max_cores_per_head_batch,
-            "deepseek_num_q_heads_per_core": args.deepseek_num_q_heads_per_core,
+            "deepseek_num_q_heads_per_core": default_config.deepseek_num_q_heads_per_core,
+            "deepseek_num_q_heads_per_core_list": sorted({config.deepseek_num_q_heads_per_core for config in configs}),
+            "deepseek_parallelism_policy": args.deepseek_parallelism_policy,
+            "deepseek_parallelism_note": (
+                "DeepSeek q_heads_per_core is derived per config so num_q_shards is the largest divisor of num_heads "
+                "that does not exceed max_cores_per_head_batch."
+                if args.deepseek_parallelism_policy == "align_with_tt_mainline"
+                else "DeepSeek q_heads_per_core is treated as an explicit main-sweep axis."
+            ),
+            "run_flashmla_detailed": args.run_flashmla_detailed,
+            "reuse_existing_flashmla_detailed": args.reuse_existing_flashmla_detailed,
             "run_capability_probe": args.run_capability_probe,
             "capability_probe_json": str(CAPABILITY_PROBE_JSON_PATH) if args.run_capability_probe else None,
             "reference_backend_note": "reference attention uses torch reference SDPA on host as the non-TT control baseline",

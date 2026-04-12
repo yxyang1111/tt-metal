@@ -10,16 +10,17 @@
 | comparison mode | `strict_four_way` | 当前实现的比较模式 |
 | sweep preset | `manual` | 主跑使用的 preset；`manual` 表示直接读取 CLI 轴参数 |
 | probe preset | `manual` | capability probe 使用的 preset；`manual` 表示直接读取 CLI 轴参数 |
+| DeepSeek parallelism policy | `align_with_tt_mainline` | `fixed`=固定 q_heads_per_core；`align_with_tt_mainline`=按 TT 主线并行度派生 |
 | device_id | `0` | TT 设备编号 |
 | arch | `wormhole_b0` | 当前结果中的设备架构 |
 | compute grid | `8 x 7` | 当前结果中的 `compute_with_storage_grid_size` |
-| total configs | `1` | 当前主跑实际生成的 config 数量 |
-| default config | `b1_h32_hkv1_dv512_ro64_blk64_kc128` | 默认主表固定使用的 config |
-| default config label | `B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128` | 默认主表的人类可读说明 |
+| total configs | `4` | 当前主跑实际生成的 config 数量 |
+| default config | `b1_h32_hkv1_dv512_ro64_blk64_kc128_dqhpc8` | 默认主表固定使用的 config |
+| default config label | `B=1, H=32, H_kv=1, value_dim=512, rope_dim=64, block=64, k_chunk=128, deepseek_q_heads_per_core=8` | 默认主表的人类可读说明 |
 | decode seq_len sweep | `256, 512, 1k, 2k, 4k, 8k, 16k, 32k, 64k, 128k` | decode 主 sweep |
 | prefill seq_len sweep | `1k, 4k` | prefill 控制组 |
 | torch input dtype | `torch.bfloat16` | host 随机输入生成 dtype |
-| warmup_device / iters_device | `2 / 10` | TT baseline 预热 / 正式测量次数 |
+| warmup_device / iters_device | `5 / 10` | TT baseline 预热 / 正式测量次数 |
 | warmup_reference / iters_reference | `1 / 10` | torch reference 预热 / 正式测量次数 |
 | outlier filter | `modified z-score > 5.0 and latency > median x 1.1` | 当前主表使用的慢尾异常点过滤规则 |
 | filtered minimum kept samples | `5` | 若过滤后样本过少则回退到原始样本 |
@@ -29,11 +30,12 @@
 | 轴 | 当前值 | 说明 |
 |---|---|---|
 | `B` | `1` | 主跑 batch sweep |
-| `H` | `32` | 主跑 num_heads sweep |
+| `H` | `8, 16, 24, 32` | 主跑 num_heads sweep |
 | `H_kv` | `1` | 主跑 num_kv_heads sweep |
 | `value_dim` | `512` | 严格四方法公共 value dim sweep |
 | `rope_dim` | `64` | rope dim sweep |
-| capability probe | `false` | probe 轴与结果详见 `raw/capability_probe_results.json` |
+| `deepseek_num_q_heads_per_core` | `2, 4, 8` | DeepSeek Q shard 粒度 sweep / 派生结果 |
+| capability probe | `false` | status=`-`；汇总见 `tables/capability_probe_summary.md`，原始结果见 `raw/capability_probe_results.json` |
 
 ## 3. 默认 config 显式字段
 
@@ -46,9 +48,9 @@
 | `mla_head_dim_v` | `512` | TT 主线 MLA 的 `d_v` |
 | `mla_d_rope` | `64` | TT 主线 MLA rope 维度 |
 | `mla_head_dim_qk` | `576` | `mla_head_dim_v + mla_d_rope` |
-| `deepseek_qk_nope_head_dim` | `128` | DeepSeek 逻辑 QK 的 non-rope 部分 |
+| `deepseek_qk_nope_head_dim` | `512` | DeepSeek 逻辑 QK 的 non-rope 部分 |
 | `deepseek_qk_rope_head_dim` | `64` | DeepSeek 逻辑 QK 的 rope 部分 |
-| `deepseek_qk_head_dim` | `192` | DeepSeek 缩放维度 |
+| `deepseek_qk_head_dim` | `576` | DeepSeek 缩放维度 |
 | `deepseek_kv_lora_rank` | `512` | DeepSeek 输出 / value 维度 |
 | `deepseek_kvpe_dim` | `576` | DeepSeek Q/KV 存储宽度 |
 | `block_size` | `64` | paged attention block size |
@@ -77,7 +79,7 @@
 | `reference_attention` | decode + prefill | `q_std` | `k_std` | `v_std` | `512^-0.5` | torch reference SDPA |
 | `flash_attention` | decode + prefill | `q_std` | `k_std` | `v_std` | `512^-0.5` | `scaled_dot_product_attention` / `paged_scaled_dot_product_attention_decode` |
 | `flash_mla` | decode + prefill | `q_mla` | `k_mla` | `None`，`V` 取前 `512` 维 | `576^-0.5` | `flash_mla_prefill` / `paged_flash_multi_latent_attention_decode` |
-| `deepseek_flash_mla` | decode only | `q_deepseek` | `k_deepseek` | `None`，输出宽度 `512` | `192^-0.5` | `flash_multi_latent_attention_decode` |
+| `deepseek_flash_mla` | decode only | `q_deepseek` | `k_deepseek` | `None`，输出宽度 `512` | `576^-0.5` | `flash_multi_latent_attention_decode` |
 
 ## 6. Program / Kernel / Guardrails
 
@@ -95,9 +97,9 @@
 
 | 参数 | 当前值 | 说明 |
 |---|---|---|
-| `--cases` | `decode_256, decode_512, decode_1k, decode_2k, decode_4k, decode_8k, decode_16k, decode_32k, decode_64k, decode_128k, prefill_1k, prefill_4k` | 本次实际运行的 benchmark cases |
+| `--cases` | `decode_256_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_512_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_1k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_2k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_4k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_8k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_16k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_32k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_64k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_128k_b1_h8_hkv1_dv512_ro64_blk64_kc128_dqhpc2, decode_256_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_512_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_1k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_2k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_4k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_8k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_16k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_32k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_64k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_128k_b1_h16_hkv1_dv512_ro64_blk64_kc128_dqhpc4, decode_256_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_512_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_1k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_2k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_4k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_8k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_16k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_32k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_64k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_128k_b1_h24_hkv1_dv512_ro64_blk64_kc128_dqhpc8, decode_256, decode_512, decode_1k, decode_2k, decode_4k, decode_8k, decode_16k, decode_32k, decode_64k, decode_128k` | 本次实际运行的 benchmark cases |
 | `--detail-cases` | `decode_1k, decode_4k, decode_8k, decode_16k, decode_32k` | detailed FlashMLA profiling 选择的 case |
-| `--run-capability-probe` | `false` | 是否先跑公共参数空间 probe |
+| `--run-capability-probe` | `false` | 当前工作区是否存在 capability probe 结果 |
 | `--run-flashmla-detailed` | `false` | 是否现场重跑 detailed tracy profile |
 | `--reuse-existing-flashmla-detailed` | `true` | 当前是否复用现有稳定 detailed 结果 |
 | `--skip-render` | `false` | 当前结果已完成 render |
@@ -108,6 +110,7 @@
 - 参数总表：`tables/experiment_parameters.md`
 - Decode 默认主表：`tables/decode_four_methods.md`
 - Prefill 默认主表：`tables/prefill_control.md`
+- Capability probe 汇总：`tables/capability_probe_summary.md`
 - Capability probe：`tables/capability_probe.md`
 - 多维结果目录：`multidim`
 - 过滤后 JSON：`raw/part1_four_method_results_filtered.json`

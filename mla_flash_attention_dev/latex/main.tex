@@ -175,128 +175,116 @@ auto-tuning, Tenstorrent, pipeline coupling}
 %% ============================================================
 \section{Introduction}\label{sec:intro}
 
-%% P1: Attention is the bottleneck — set up the problem
-%% (Like FLAT §1 P1: "Attention mechanisms... backbone of ML")
-Attention mechanisms are the computational backbone of transformer-based
-models.  During Large Language Model (LLM) inference, the
-\emph{decode} phase---where each new token attends over the entire
-key-value (KV) cache---exhibits $\mathcal{O}(1)$ arithmetic intensity,
-making it severely memory-bandwidth bound and the dominant latency
-contributor~\cite{pope2023efficiently}.  As sequence lengths grow from
-thousands to tens of thousands of tokens, the pressure on both memory
-capacity and bandwidth intensifies, posing a critical challenge for
-efficient deployment.
+%% P1: Attention is important and bottlenecked in decode
+Attention mechanisms, the key computational primitive of
+transformer-based models, increasingly dominate autoregressive large
+language model (LLM) inference during the decode phase.  For each
+generated token, attention requires the query to access the entire
+key-value (KV) cache, giving decode an arithmetic intensity of
+$\mathcal{O}(1)$ and making it strongly memory-bandwidth
+bound~\cite{pope2023efficiently}.  As context lengths grow from
+thousands to tens of thousands of tokens, attention over the expanding
+KV cache drives both capacity and bandwidth pressure, and decode
+latency often determines end-to-end serving
+performance~\cite{kwon2023pagedattention, zhong2024distserve}.
 
-%% P2: MLA changes the game — new attention variant with new characteristics
-%% (Like FLAT introducing L/A as distinct from CONV/FC)
-The attention mechanism itself has undergone rapid evolution.
-Multi-head attention (MHA)~\cite{vaswani2017attention} maintains
-independent KV heads, resulting in large cache footprints.
-Grouped-query attention (GQA)~\cite{ainslie2023gqa} and multi-query
-attention (MQA)~\cite{shazeer2019mqa} reduce KV head count.
-Most recently, \emph{Multi-Latent Attention} (MLA), introduced in
-DeepSeek-V2~\cite{deepseekai2024deepseekv2} and
-DeepSeek-V3~\cite{deepseekai2024deepseekv3}, takes a fundamentally
-different approach: it compresses KV representations into a low-rank
-latent space, reducing per-token cache size from $2Hd$ to $d_c$
-elements.  However, during decode MLA must \emph{online-restore} the
-full K and V via learned per-head projections, introducing a
-computation--data-movement interplay absent in MHA/GQA.
-This creates an attention variant whose dataflow characteristics
-differ qualitatively from both conventional activation-weight operators
-(CONV, FC) and previous activation-activation attention
-operators~\cite{kao2023flat}.  The key question is therefore not only
-how much MLA reduces KV storage, but also how its restore-and-attend
-computation should be organized on the target hardware.
+%% P2: MLA reduces KV storage but changes the operator
+However, the structure of the attention operator itself is also
+changing.  Multi-head attention (MHA)~\cite{vaswani2017attention}
+stores independent KV heads and therefore incurs large cache
+footprints, while grouped-query attention (GQA)~\cite{ainslie2023gqa}
+and multi-query attention (MQA)~\cite{shazeer2019mqa} reduce KV head
+count to lower memory cost.  Multi-Latent Attention (MLA), introduced
+in DeepSeek-V2~\cite{deepseekai2024deepseekv2} and
+DeepSeek-V3~\cite{deepseekai2024deepseekv3}, goes further by
+compressing per-token KV state into a low-rank latent space, reducing
+the cache footprint from $2Hd$ to $d_c$ elements.  Yet MLA does not
+simply make decode smaller: it must \emph{online-restore} per-head K
+and V through learned projections, creating a restore-and-attend
+workflow whose compute and data-movement behavior differs qualitatively
+from MHA/GQA.  The central question is therefore not only how much KV
+storage MLA saves, but how this new computation should be organized
+efficiently on real hardware.
 
-%% P3: Spatial accelerators — opportunity and complexity
-%% (Like FLAT introducing the accelerator substrate)
-This mapping problem is especially consequential on spatial
+%% P3: Spatial accelerators make dataflow the main problem
+That question is especially consequential on spatial
 accelerators---many-core architectures with per-core scratchpad SRAM,
-decoupled data-mover engines, and hardware-supported on-chip
-multicast---which offer a promising substrate for attention
-acceleration~\cite{tenstorrent2024wormhole, flatattention2024}.
-Unlike GPUs where optimization focuses on warp-level tiling, spatial
-accelerators demand explicit orchestration of \emph{where} data
-resides (spatial reuse via multicast), \emph{when} data moves
-(temporal reuse via pipeline buffering), and \emph{how} cores
-cooperate (topological choices among multicast, tree-reduction, and
-independent modes).  On these substrates, dataflow design becomes the
-\emph{decisive} performance factor.
+decoupled data-mover engines, and hardware-supported multicast over the
+on-chip network---which offer a promising substrate for attention
+acceleration~\cite{tenstorrent2024wormhole, tandem2023,
+dynamic-alloc2024}.  Unlike GPU-centric optimizations that focus
+primarily on warp-level tiling, spatial accelerators require explicit
+choices about \emph{where} data is placed, \emph{when} it is moved, and
+\emph{how} cores cooperate.  For MLA, these choices determine whether
+latent sharing, projection work, and attention computation remain
+balanced or become bottlenecked by communication and buffering.  As a
+result, prior mappings developed for simpler decode kernels are not
+directly suited to MLA, and mapping MLA onto a spatial accelerator is
+fundamentally a \emph{dataflow design} problem.
 
-%% P4: Challenges — the crux of our motivation
-%% (Like FLAT §1 identifying 3 challenges before presenting solution)
-We identify three fundamental challenges in mapping MLA onto spatial
-accelerators:
+%% P4: Three coupled challenges motivate our work
+We identify three coupled challenges in this mapping problem:
 \begin{enumerate}
-  \item \textbf{Complex data reuse.}  Spatial accelerators expose rich
-    reuse opportunities through distributed scratchpad SRAM and NoC
-    multicast, while MLA's shared-latent representation adds reuse
-    across heads and tiles that does not exist in conventional MHA.
-    Exploiting this reuse is non-trivial because online per-head
-    restoration couples placement, buffering, and communication choices
-    across spatial, temporal, and topological dimensions.  Unlike the
-    purely memory-bound L/A operators studied in
-    FLAT~\cite{kao2023flat}, MLA decode lies in a mixed
-    compute--memory regime whose balance shifts with sequence length.
+  \item \textbf{Complex data reuse.}  MLA exposes reuse patterns that do
+    not exist in conventional MHA: the latent cache is shared across
+    heads, but the subsequent per-head restoration couples placement,
+    buffering, and communication decisions across spatial, temporal,
+    and topological dimensions.  As a result, MLA decode lies in a
+    mixed compute--memory regime whose balance shifts with sequence
+    length.
   \item \textbf{Pipeline coupling in decoupled execution.}
-    Compared with MHA/GQA decode, MLA introduces an additional
-    online-restoration stage and therefore a more intricate
-    reader--compute--writer dataflow.  Spatial accelerators employ
-    decoupled pipelines to hide latency, but these asynchronous stages
-    remain coupled through shared buffers, back-pressure, and NoC
-    contention.  As we show through hardware profiling, the coupling
-    intensifies with sequence length and is not captured by first-order
-    analytical models.
-  \item \textbf{Large, non-obvious design space.}
-    The dataflow design space---spanning head grouping, tile grouping,
-    block sizes, pipeline depth, and reduction topology---contains
-    hundreds of feasible configurations whose relative performance
-    shifts across sequence-length regimes, making manual tuning
-    infeasible.
+    Compared with MHA/GQA decode, MLA inserts an additional
+    online-restoration stage into the reader--compute--writer pipeline.
+    Although spatial accelerators rely on decoupled execution to hide
+    latency, the stages remain coupled in practice through shared
+    buffers, back-pressure, and NoC contention, effects not captured by
+    first-order analytical models~\cite{parashar2019timeloop,
+    kwon2019maestro}.
+  \item \textbf{Large, non-obvious design space.}  The resulting
+    dataflow space---spanning head grouping, tile grouping, block size,
+    pipeline depth, and reduction topology---contains hundreds of
+    feasible configurations whose relative performance shifts across
+    sequence-length regimes, making manual tuning infeasible.
 \end{enumerate}
 
-%% P5: Our approach — overview
-%% (Like FLAT §1 "This paper fundamentally tackles...")
-This paper presents \sysname (\brandexpansion), a framework for
-analyzing and exploring MLA dataflows on
-spatial accelerators.  Guided by the three challenges above, we first
-quantify MLA's reuse and pipeline-coupling behavior through
-quantitative analysis and hardware measurements
-(Section~\ref{sec:challenges}).  We then present a dataflow concept and
-implementation that expose the key spatial, temporal, and topological
-design decisions (Sections~\ref{sec:concept}--\ref{sec:design}).
-Finally, we build a cost-model-guided DSE workflow with empirical
-calibration, automated search, and architecture-level exploration
+%% P5: Our response
+This paper fundamentally tackles these challenges with \sysname
+(\brandexpansion), a framework for analyzing and exploring MLA
+dataflows on spatial accelerators.  We first characterize MLA's reuse
+structure and pipeline-coupling behavior through quantitative analysis
+and hardware measurements (Section~\ref{sec:challenges}).  We then
+derive a parameterized dataflow concept and implementation that expose
+the key spatial, temporal, and topological design trade-offs
+(Sections~\ref{sec:concept}--\ref{sec:design}).  Finally, we introduce
+a cost-model-guided DSE workflow with empirical calibration, automated
+search, and architecture-level exploration
 (Sections~\ref{sec:costmodel}--\ref{sec:arch-explore}).
 
 %% P6: Contributions
-%% (Like FLAT listing specific contributions)
 We make the following contributions:
 \begin{itemize}
-  \item \textbf{Systematic characterization of MLA's core mapping
-    challenges} on spatial accelerators, showing how complex data reuse,
-    compute--memory balance, and pipeline coupling evolve with
-    sequence length and differ from MHA
+  \item \textbf{A systematic characterization of MLA's core mapping
+    challenges on spatial accelerators,} showing how shared-latent
+    reuse, compute--memory balance, and pipeline coupling evolve with
+    sequence length and differ from conventional MHA decode
     (Section~\ref{sec:challenges}).
 
   \item \textbf{A parameterized MLA dataflow concept and design} that
-    leverages collective primitives (multicast, reduction) to exploit
-    MLA's shared-latent structure, while making the key spatial,
-    temporal, and topological trade-offs explicit
+    leverages multicast and reduction primitives to exploit MLA's
+    shared-latent structure while making the key spatial, temporal, and
+    topological trade-offs explicit
     (Sections~\ref{sec:concept}--\ref{sec:design}).
 
-  \item \textbf{A dataflow DSE framework with second-order cost
-    modeling} that captures non-ideal effects such as reader
-    back-pressure, writer stalls, and multicast injection hotspots, and
-    pairs the model with an \autoTuner{} to efficiently search the large
-    design space (Section~\ref{sec:costmodel}).
+  \item \textbf{A DSE framework with a second-order cost model and an
+    \autoTuner{},} capturing non-ideal effects such as reader
+    back-pressure, writer stalls, and multicast injection hotspots
+    while efficiently navigating the large design space
+    (Section~\ref{sec:costmodel}).
 
-  \item \textbf{Hardware-validated decode characterization} revealing
-    a bottleneck \emph{\phaseTransition} from compute-critical to
-    reader--writer saturated coupling, decomposed at sub-component
-    granularity; and \textbf{architecture exploration} identifying
-    divergent optimal configurations for MLA versus MHA
+  \item \textbf{Hardware validation and architecture exploration} that
+    reveal a bottleneck \emph{\phaseTransition} in decode, from
+    compute-critical to reader--writer-saturated execution, and
+    identify divergent optimal configurations for MLA versus MHA
     (Sections~\ref{sec:eval}--\ref{sec:arch-explore}).
 \end{itemize}
 
@@ -331,7 +319,8 @@ Autoregressive LLM inference has two distinct
 phases~\cite{pope2023efficiently}.
 The \emph{prefill} phase processes the entire prompt in one forward
 pass, computing $\mathcal{O}(L^2 d H)$ FLOPs over $\mathcal{O}(LdH)$
-data---typically \emph{compute-bound}.
+data---typically \emph{compute-bound} in modern serving
+stacks~\cite{aminabadi2022deepspeed, zhong2024distserve}.
 The \emph{decode} phase generates one token per step: the new query
 $q_h \in \mathbb{R}^{1 \times d}$ attends over the full KV cache of
 length $L$:
@@ -347,7 +336,11 @@ firmly \emph{memory-bound}.
 \paragraph{From GQA/MQA to MLA.}
 Grouped-query attention (GQA)~\cite{ainslie2023gqa} and multi-query
 attention (MQA)~\cite{shazeer2019mqa} reduce the number of KV heads,
-proportionally shrinking cache size and DRAM traffic.
+proportionally shrinking cache size and DRAM traffic, complementing
+system-level KV-cache optimizations such as
+PagedAttention~\cite{kwon2023pagedattention},
+StreamingLLM~\cite{xiao2024streamingllm}, and
+H\textsubscript{2}O~\cite{zhang2024h2o}.
 Multi-Latent Attention (MLA)~\cite{deepseekai2024deepseekv2} goes
 further by compressing the KV representation itself into a low-rank
 latent space.
@@ -357,7 +350,8 @@ latent space.
 
 \subsection{Multi-Latent Attention}\label{sec:bg-mla}
 
-In MLA, the KV cache for each token position $t$ is compressed into a
+In MLA~\cite{deepseekai2024deepseekv2, deepseekai2024deepseekv3}, the KV
+cache for each token position $t$ is compressed into a
 single latent vector $c_t \in \mathbb{R}^{d_c}$ via a learned
 down-projection:
 \begin{equation}\label{eq:mla-compress}
@@ -389,7 +383,7 @@ handling in the dataflow.
 
 Tenstorrent's Wormhole~\cite{tenstorrent2024wormhole} and
 Blackhole chips are many-core spatial accelerators designed for
-neural-network workloads.  We describe the features most relevant
+neural-network workloads~\cite{tt-fft2025}.  We describe the features most relevant
 to MLA dataflow design.
 
 \paragraph{Tensix core microarchitecture.}
@@ -465,7 +459,7 @@ of both fabrics.
 %% (Mirrors FLAT §2.1: operational intensity, roofline, dataflow)
 
 Following the methodology of prior dataflow
-analysis~\cite{kao2023flat, parashar2019timeloop}, we review two key
+analysis~\cite{parashar2019timeloop}, we review two key
 concepts that underpin our challenge analysis in
 Section~\ref{sec:challenges}.
 
@@ -477,7 +471,8 @@ fraction of peak compute on a given accelerator~\cite{williams2009roofline}:
   I = \frac{\text{\# of operations}}{\text{\# of memory accesses}}.
 \end{equation}
 An operator with low $I$ is memory-bandwidth bound and cannot
-achieve high compute utilization regardless of available FLOPs.
+achieve high compute utilization regardless of available
+FLOPs~\cite{williams2009roofline}.
 
 \paragraph{Dataflow on spatial accelerators.}
 Following~\cite{kao2023flat, chen2019eyerissv2}, dataflow on a spatial
@@ -490,7 +485,8 @@ On tile-based many-PE architectures, a fourth dimension
 emerges~\cite{flatattention2024}: \emph{collective communication}---how
 data is shared across PEs via multicast, reduction, and broadcast
 primitives on the on-chip network fabric.  The dataflow along with
-specific tile sizes is called a \emph{mapping}~\cite{parashar2019timeloop}.
+specific tile sizes is called a \emph{mapping}~\cite{parashar2019timeloop,
+kwon2019maestro}.
 
 
 %% ============================================================
@@ -599,7 +595,7 @@ increasing \emph{mutual coupling} as sequence length grows:
 
 \paragraph{Why first-order models fail.}
 Existing dataflow mapping frameworks~\cite{parashar2019timeloop,
-kwon2019maestro, kao2023flat} assume independent pipeline stages
+kwon2019maestro} assume independent pipeline stages
 and do not model these coupling effects.  The resulting predictions
 are optimistic: as we show in Section~\ref{sec:eval-accuracy},
 first-order models underestimate latency by up to $1.8\times$ at
@@ -746,9 +742,9 @@ We employ a host-precomputed \emph{tree topology} on NoC\,1, where
 BRISC drives semaphore-based send/receive protocols and TRISC
 performs the numerical $\texttt{sdpa\_tail}$ merge at each tree level.
 The tree topology balances reduction latency ($\mathcal{O}(\log N_s)$)
-against NoC traffic, following the insight from
-FlatAttention~\cite{flatattention2024} that NoC collective primitives
-are highly beneficial when properly co-designed with the dataflow.
+against NoC traffic, reflecting the broader insight that NoC
+collective primitives are highly beneficial when properly co-designed
+with the dataflow.
 
 
 %%% ----- 4.4 Summary of Concept -----
@@ -1787,12 +1783,17 @@ pipelines, circular buffers).
 \subsection{KV Cache Management and MLA Implementations}\label{sec:rw-kv}
 
 PagedAttention~\cite{kwon2023pagedattention} in vLLM addresses cache
-fragmentation via virtual-memory paging.
+fragmentation via virtual-memory paging.  FlexGen~\cite{sheng2023flexgen},
+Orca~\cite{yu2022orca}, DeepSpeed-Inference~\cite{aminabadi2022deepspeed},
+Splitwise~\cite{patel2024splitwise}, and
+DistServe~\cite{zhong2024distserve} target system-level memory
+placement, batching, or prefill/decode scheduling.
 GQA~\cite{ainslie2023gqa}, MQA~\cite{shazeer2019mqa},
 StreamingLLM~\cite{xiao2024streamingllm}, and
 H\textsubscript{2}O~\cite{zhang2024h2o} reduce or compress KV data.
 These are orthogonal to dataflow design.
-FlashMLA~\cite{flashmla2024gpu} implements a GPU-optimized kernel
+MLA itself originates in DeepSeek-V2/V3~\cite{deepseekai2024deepseekv2,
+deepseekai2024deepseekv3}.  FlashMLA~\cite{flashmla2024gpu} implements a GPU-optimized kernel
 for MLA decode but does not address spatial-accelerator dataflow or DSE.
 
 \paragraph{Positioning.}
@@ -1800,9 +1801,8 @@ To our knowledge, no prior work jointly addresses (i)~MLA-specific
 dataflow with latent-restoration awareness, (ii)~second-order pipeline
 coupling modeling on spatial accelerators, and (iii)~automated DSE
 with hardware-calibrated cost models.
-\sysname fills this gap, building on the dataflow analysis methodology
-of FLAT~\cite{kao2023flat} and the collective-primitives insight of
-FlatAttention~\cite{flatattention2024}, while targeting the unique
+\sysname fills this gap, building on prior attention-dataflow and
+collective-aware accelerator analyses while targeting the unique
 characteristics of MLA on decoupled spatial architectures.
 
 
