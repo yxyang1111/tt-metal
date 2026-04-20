@@ -1,0 +1,77 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_prefill4k_tracy_sum_sync_canary",
+  "preflight": {
+    "case": "prefill_4k",
+    "status": "passed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+      "--child-run",
+      "--case",
+      "prefill_4k"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  "cases": [
+    {
+      "case": "prefill_4k",
+      "status": "completed",
+      "output_dir": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_prefill4k_tracy_sum_sync_canary/prefill_4k",
+      "report_dir": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_prefill4k_tracy_sum_sync_canary/prefill_4k/reports/2026_04_17_09_35_45",
+      "ops_csv": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_prefill4k_tracy_sum_sync_canary/prefill_4k/reports/2026_04_17_09_35_45/ops_perf_results_2026_04_17_09_35_45.csv",
+      "available_required_columns": [
+        "PM IDEAL [ns]",
+        "PM COMPUTE [ns]",
+        "PM BANDWIDTH [ns]",
+        "PM FPU UTIL (%)",
+        "DEVICE COMPUTE CB WAIT FRONT [ns]",
+        "DEVICE COMPUTE CB RESERVE BACK [ns]"
+      ],
+      "missing_required_columns": [],
+      "available_optional_noc_columns": [
+        "NOC UTIL (%)",
+        "MULTICAST NOC UTIL (%)",
+        "DRAM BW UTIL (%)"
+      ],
+      "command": [
+        "python3",
+        "-m",
+        "tracy",
+        "-v",
+        "-r",
+        "-p",
+        "-o",
+        "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/flash_mla_pm_bubble_probe_prefill4k_tracy_sum_sync_canary/prefill_4k",
+        "--check-exit-code",
+        "--op-support-count",
+        "4000",
+        "--sync-host-device",
+        "--enable-sum-profiling",
+        "-a",
+        "device_kernel_duration",
+        "-a",
+        "device_kernel_first_to_last_start",
+        "-a",
+        "device_brisc_kernel_duration",
+        "-a",
+        "device_ncrisc_kernel_duration",
+        "-a",
+        "device_trisc0_kernel_duration",
+        "-a",
+        "device_trisc1_kernel_duration",
+        "-a",
+        "device_trisc2_kernel_duration",
+        "-a",
+        "device_compute_cb_wait_front",
+        "-a",
+        "device_compute_cb_reserve_back",
+        "mla_flash_attention_dev/experiments/profile_flash_mla_wh_detailed.py",
+        "--child-run",
+        "--case",
+        "prefill_4k"
+      ],
+      "error": null
+    }
+  ]
+}

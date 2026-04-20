@@ -3,13 +3,36 @@
     "arch": "Arch.WORMHOLE_B0",
     "selected_cases": [
       "standalone_decode_wh"
-    ]
+    ],
+    "wh_cores_per_block": 8
   },
   "results": [
     {
       "case": "standalone_decode_wh",
-      "status": "failed",
-      "error": "Traceback (most recent call last):\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 390, in main\n    result = case_runners[case_name](device)\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 366, in <lambda>\n    \"standalone_decode_wh\": lambda device: run_standalone_decode_wh(\n  File \"/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/run_flash_mla_wh_smoke.py\", line 228, in run_standalone_decode_wh\n    raise AssertionError(f\"standalone WH decode PCC check failed: {pcc_message}\")\nAssertionError: standalone WH decode PCC check failed: 0.0\n"
+      "status": "passed",
+      "batch_size": 8,
+      "grid": "FlashMLAOptimalGridNOC0_WH_8C",
+      "decode_position": 511,
+      "max_seq_len": 1024,
+      "output_shape": [
+        1,
+        8,
+        32,
+        512
+      ],
+      "reference_shape": [
+        1,
+        8,
+        32,
+        512
+      ],
+      "pcc": 0.9986749746991035,
+      "max_abs_diff": 0.2109375,
+      "mean_abs_diff": 0.01129150390625,
+      "iteration_latencies_ms": [
+        6141.329450998455,
+        124.47912700008601
+      ]
     }
   ]
 }

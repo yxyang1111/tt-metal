@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Wormhole SF-MLA Runtime Architecture (4c)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0a0e17;
+    color: #c8d6e5;
+    font-family: 'Noto Sans SC', 'JetBrains Mono', monospace;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  h1 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    color: #00d2ff;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: #576574;
+    margin-bottom: 20px;
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding: 12px 16px;
+    background: #111827;
+    border-radius: 8px;
+    border: 1px solid #1e293b;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .legend-swatch {
+    width: 28px;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(90deg, var(--c) 0 6px, transparent 6px 10px);
+  }
+  .legend-block {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    border: 2px solid;
+  }
+  svg {
+    display: block;
+    margin: 0 auto;
+  }
+  .note {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #576574;
+    line-height: 1.7;
+    max-width: 1100px;
+  }
+  .note b { color: #8395a7; }
+</style>
+</head>
+<body>
+
+<h1>Wormhole B0 — SF-MLA 数据流架构图（4-core S block）</h1>
+<p class="subtitle">逻辑坐标系 8×7 · 6 S blocks × 4 cores = 24 active · 6 DRAM banks · NOC0 torus</p>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:#ff6b6b"></div>① K DRAM → sender（NCRISC）</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#feca57"></div>② K multicast sender → block（BRISC）</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#48dbfb"></div>③ Q broadcast output → all workers（BRISC）</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#1dd1a1"></div>④ TRISC compute（QK^T → softmax → P·V）</div>
+  <div class="legend-item"><div class="legend-swatch dashed" style="--c:#c56cf0"></div>⑤ tree reduction → S1 output（BRISC）</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#ff9ff3"></div>⑥ final output → DRAM（writer）</div>
+</div>
+
+<svg id="diagram" viewBox="0 0 1100 780" width="1100" height="780" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="arr-red" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><path d="#ff6b6b" fill="#ff6b6b" d="M0 0L10 3.5L0 7z"/></marker>
+  <marker id="arr-yellow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><path fill="#feca57" d="M0 0L10 3.5L0 7z"/></marker>
+  <marker id="arr-cyan" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><path fill="#48dbfb" d="M0 0L10 3.5L0 7z"/></marker>
+  <marker id="arr-purple" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><path fill="#c56cf0" d="M0 0L10 3.5L0 7z"/></marker>
+  <marker id="arr-pink" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto"><path fill="#ff9ff3" d="M0 0L10 3.5L0 7z"/></marker>
+  <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+
+<style>
+  .core { stroke-width:1.5; rx:5; ry:5; }
+  .core-inactive { fill:#151d2b; stroke:#2d3748; }
+  .core-s1 { fill:#1a1a2e; stroke:#e74c3c; }
+  .core-s2 { fill:#1a1a2e; stroke:#e67e22; }
+  .core-s3 { fill:#1a1a2e; stroke:#f39c12; }
+  .core-s4 { fill:#1a1a2e; stroke:#2ecc71; }
+  .core-s5 { fill:#1a1a2e; stroke:#3498db; }
+  .core-s6 { fill:#1a1a2e; stroke:#9b59b6; }
+  .dram-bank { fill:#0d1117; stroke:#576574; stroke-width:1.5; rx:6; ry:6; }
+  .dram-label { fill:#8395a7; font-size:11px; font-family:'JetBrains Mono'; text-anchor:middle; }
+  .core-label { fill:#8395a7; font-size:9px; font-family:'JetBrains Mono'; text-anchor:middle; dominant-baseline:central; }
+  .sender-badge { fill:#ff6b6b; font-size:7px; font-family:'JetBrains Mono'; font-weight:700; text-anchor:middle; }
+  .output-badge { fill:#48dbfb; font-size:7px; font-family:'JetBrains Mono'; font-weight:700; text-anchor:middle; }
+  .sblock-label { font-size:13px; font-family:'JetBrains Mono'; font-weight:700; text-anchor:middle; }
+  .sblock-region { fill:none; stroke-width:2; stroke-dasharray:6 3; rx:8; ry:8; }
+  .flow-line { fill:none; stroke-width:2; }
+  .flow-line-dash { fill:none; stroke-width:2; stroke-dasharray:8 4; }
+  .grid-header { fill:#576574; font-size:10px; font-family:'JetBrains Mono'; text-anchor:middle; }
+</style>
+
+<script type="text/javascript"><![CDATA[
+document.addEventListener('DOMContentLoaded', () => {
+  const svg = document.getElementById('diagram');
+
+  const CW = 68, CH = 68, GAP = 8;
+  const OX = 120, OY = 100;
+  const COLS = 8, ROWS = 7;
+
+  function cx(col) { return OX + col * (CW + GAP) + CW/2; }
+  function cy(row) { return OY + row * (CH + GAP) + CH/2; }
+  function cLeft(col) { return OX + col * (CW + GAP); }
+  function cTop(row) { return OY + row * (CH + GAP); }
+
+  const sblocks = [
+    { name:'S1', color:'#e74c3c', cls:'core-s1', bank:1, cores:[[0,0],[1,0],[0,1],[1,1]], pos:'左上' },
+    { name:'S2', color:'#e67e22', cls:'core-s2', bank:2, cores:[[0,3],[1,3],[0,4],[1,4]], pos:'左中' },
+    { name:'S3', color:'#f39c12', cls:'core-s3', bank:0, cores:[[2,5],[3,5],[2,6],[3,6]], pos:'左下' },
+    { name:'S4', color:'#2ecc71', cls:'core-s4', bank:4, cores:[[4,0],[5,0],[4,1],[5,1]], pos:'右上' },
+    { name:'S5', color:'#3498db', cls:'core-s5', bank:9, cores:[[4,2],[5,2],[4,3],[5,3]], pos:'右中' },
+    { name:'S6', color:'#9b59b6', cls:'core-s6', bank:8, cores:[[4,5],[5,5],[4,6],[5,6]], pos:'右下' },
+  ];
+
+  const activeSet = new Set();
+  sblocks.forEach(sb => sb.cores.forEach(([x,y]) => activeSet.add(`${x},${y}`)));
+
+  // col/row headers
+  for (let c = 0; c < COLS; c++) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('class','grid-header');
+    t.setAttribute('x', cx(c));
+    t.setAttribute('y', OY - 16);
+    t.textContent = `x=${c}`;
+    svg.appendChild(t);
+  }
+  for (let r = 0; r < ROWS; r++) {
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('class','grid-header');
+    t.setAttribute('x', OX - 24);
+    t.setAttribute('y', cy(r) + 4);
+    t.textContent = `y${r}`;
+    svg.appendChild(t);
+  }
+
+  // draw inactive cores
+  for (let c = 0; c < COLS; c++) {
+    for (let r = 0; r < ROWS; r++) {
+      if (activeSet.has(`${c},${r}`)) continue;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('class','core core-inactive');
+      rect.setAttribute('x', cLeft(c));
+      rect.setAttribute('y', cTop(r));
+      rect.setAttribute('width', CW);
+      rect.setAttribute('height', CH);
+      svg.appendChild(rect);
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lbl.setAttribute('class','core-label');
+      lbl.setAttribute('x', cx(c));
+      lbl.setAttribute('y', cy(r));
+      lbl.textContent = `(${c},${r})`;
+      svg.appendChild(lbl);
+    }
+  }
+
+  // draw S block regions + cores
+  sblocks.forEach((sb, si) => {
+    const xs = sb.cores.map(c=>c[0]), ys = sb.cores.map(c=>c[1]);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const pad = 6;
+    const region = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    region.setAttribute('class','sblock-region');
+    region.setAttribute('stroke', sb.color);
+    region.setAttribute('x', cLeft(minX) - pad);
+    region.setAttribute('y', cTop(minY) - pad);
+    region.setAttribute('width', (maxX - minX + 1) * (CW + GAP) - GAP + pad*2);
+    region.setAttribute('height', (maxY - minY + 1) * (CH + GAP) - GAP + pad*2);
+    svg.appendChild(region);
+
+    const lbl = document.createElementNS('http://www.w3.org/2000/svg','text');
+    lbl.setAttribute('class','sblock-label');
+    lbl.setAttribute('fill', sb.color);
+    lbl.setAttribute('x', (cLeft(minX) + cLeft(maxX) + CW) / 2);
+    lbl.setAttribute('y', cTop(minY) - 14);
+    lbl.textContent = `${sb.name} → Bank ${sb.bank}`;
+    svg.appendChild(lbl);
+
+    sb.cores.forEach(([x,y], ci) => {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('class', `core ${sb.cls}`);
+      rect.setAttribute('x', cLeft(x));
+      rect.setAttribute('y', cTop(y));
+      rect.setAttribute('width', CW);
+      rect.setAttribute('height', CH);
+      svg.appendChild(rect);
+
+      const lbl2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+      lbl2.setAttribute('class','core-label');
+      lbl2.setAttribute('x', cx(x));
+      lbl2.setAttribute('y', cy(y) - 8);
+      lbl2.textContent = `(${x},${y})`;
+      svg.appendChild(lbl2);
+
+      // sender badge (first core in block)
+      if (ci === 0) {
+        const badge = document.createElementNS('http://www.w3.org/2000/svg','text');
+        badge.setAttribute('class','sender-badge');
+        badge.setAttribute('x', cx(x));
+        badge.setAttribute('y', cy(y) + 6);
+        badge.textContent = 'SENDER';
+        svg.appendChild(badge);
+      }
+      // output badge for S1 cores
+      if (si === 0) {
+        const badge = document.createElementNS('http://www.w3.org/2000/svg','text');
+        badge.setAttribute('class','output-badge');
+        badge.setAttribute('x', cx(x));
+        badge.setAttribute('y', cy(y) + 18);
+        badge.textContent = `OUT[b${ci}]`;
+        svg.appendChild(badge);
+      }
+    });
+  });
+
+  // DRAM banks at bottom
+  const dramY = OY + ROWS * (CH + GAP) + 30;
+  const dramBanks = [
+    { id:0, label:'Bank 0', x: cx(2.5), sblock:'S3' },
+    { id:1, label:'Bank 1', x: cx(0.5), sblock:'S1' },
+    { id:2, label:'Bank 2', x: cx(0.5), sblock:'S2' },
+    { id:4, label:'Bank 4', x: cx(4.5), sblock:'S4' },
+    { id:8, label:'Bank 8', x: cx(4.5), sblock:'S6' },
+    { id:9, label:'Bank 9', x: cx(4.5), sblock:'S5' },
+  ];
+  const dramW = 90, dramH = 36;
+  const dramPositions = [
+    { label:'Bank 1\n(S1)', x: cx(0) - 10, y: dramY },
+    { label:'Bank 2\n(S2)', x: cx(1) + 20, y: dramY },
+    { label:'Bank 0\n(S3)', x: cx(2) + 50, y: dramY },
+    { label:'Bank 4\n(S4)', x: cx(4) + 10, y: dramY },
+    { label:'Bank 9\n(S5)', x: cx(5) + 40, y: dramY },
+    { label:'Bank 8\n(S6)', x: cx(6) + 70, y: dramY },
+  ];
+
+  // simpler DRAM row
+  const dramStartX = OX;
+  const dramTotalW = COLS * (CW + GAP) - GAP;
+  const dramRegion = document.createElementNS('http://www.w3.org/2000/svg','rect');
+  dramRegion.setAttribute('x', dramStartX - 10);
+  dramRegion.setAttribute('y', dramY - 8);
+  dramRegion.setAttribute('width', dramTotalW + 20);
+  dramRegion.setAttribute('height', 50);
+  dramRegion.setAttribute('rx', 8);
+  dramRegion.setAttribute('fill', '#0d1117');
+  dramRegion.setAttribute('stroke', '#576574');
+  dramRegion.setAttribute('stroke-width', '1.5');
+  svg.appendChild(dramRegion);
+
+  const dramTitle = document.createElementNS('http://www.w3.org/2000/svg','text');
+  dramTitle.setAttribute('class','dram-label');
+  dramTitle.setAttribute('x', dramStartX + dramTotalW/2);
+  dramTitle.setAttribute('y', dramY + 8);
+  dramTitle.setAttribute('font-size', '13');
+  dramTitle.textContent = 'DRAM Banks';
+  svg.appendChild(dramTitle);
+
+  const bankOrder = [1,2,0,4,9,8];
+  const bankColors = { 1:'#e74c3c', 2:'#e67e22', 0:'#f39c12', 4:'#2ecc71', 9:'#3498db', 8:'#9b59b6' };
+  const bankW = 80;
+  const bankGap = (dramTotalW - bankOrder.length * bankW) / (bankOrder.length + 1);
+  bankOrder.forEach((bid, i) => {
+    const bx = dramStartX + bankGap * (i+1) + bankW * i;
+    const by = dramY + 18;
+    const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+    r.setAttribute('x', bx);
+    r.setAttribute('y', by);
+    r.setAttribute('width', bankW);
+    r.setAttribute('height', 18);
+    r.setAttribute('rx', 4);
+    r.setAttribute('fill', bankColors[bid] + '33');
+    r.setAttribute('stroke', bankColors[bid]);
+    r.setAttribute('stroke-width', '1');
+    svg.appendChild(r);
+    const t = document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('class','dram-label');
+    t.setAttribute('x', bx + bankW/2);
+    t.setAttribute('y', by + 13);
+    t.setAttribute('font-size','10');
+    t.setAttribute('fill', bankColors[bid]);
+    t.textContent = `Bank ${bid} → S${i+1}`;
+    svg.appendChild(t);
+  });
+
+  // helper: create arrow line
+  function arrow(x1,y1,x2,y2,color,marker,dash) {
+    const l = document.createElementNS('http://www.w3.org/2000/svg','line');
+    l.setAttribute('x1',x1); l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2); l.setAttribute('y2',y2);
+    l.setAttribute('stroke',color);
+    l.setAttribute('class', dash ? 'flow-line-dash' : 'flow-line');
+    l.setAttribute('marker-end',`url(#${marker})`);
+    l.setAttribute('filter','url(#glow)');
+    svg.appendChild(l);
+  }
+  function arrowPath(d,color,marker,dash) {
+    const p = document.createElementNS('http://www.w3.org/2000/svg','path');
+    p.setAttribute('d',d);
+    p.setAttribute('stroke',color);
+    p.setAttribute('class', dash ? 'flow-line-dash' : 'flow-line');
+    p.setAttribute('marker-end',`url(#${marker})`);
+    p.setAttribute('filter','url(#glow)');
+    svg.appendChild(p);
+  }
+
+  // ① K DRAM read: from DRAM area up to sender core of each S block
+  sblocks.forEach((sb, si) => {
+    const sender = sb.cores[0];
+    const sx = cx(sender[0]), sy = cTop(sender[1]) + CH;
+    const dy = dramY + 18;
+    const bankIdx = si;
+    const bx = dramStartX + bankGap * (bankIdx+1) + bankW * bankIdx + bankW/2;
+    arrow(bx, dy, sx, sy + 4, '#ff6b6b', 'arr-red', false);
+  });
+
+  // ② K multicast: sender -> other cores in same block (short yellow arrows)
+  sblocks.forEach(sb => {
+    const sender = sb.cores[0];
+    const sx = cx(sender[0]), sy = cy(sender[1]);
+    for (let i = 1; i < sb.cores.length; i++) {
+      const [rx,ry] = sb.cores[i];
+      const tx = cx(rx), ty = cy(ry);
+      arrow(sx, sy, tx, ty, '#feca57', 'arr-yellow', false);
+    }
+  });
+
+  // ③ Q broadcast: S1 output cores -> all other S blocks' same-index core
+  // show S1[0] -> S2[0], S3[0], S4[0], S5[0], S6[0] as representative
+  const s1c0 = sblocks[0].cores[0];
+  const qSrc = { x: cx(s1c0[0]), y: cy(s1c0[1]) };
+  for (let si = 1; si < sblocks.length; si++) {
+    const [dx,dy] = sblocks[si].cores[0];
+    const destX = cx(dx), destY = cy(dy);
+    arrowPath(
+      `M${qSrc.x},${qSrc.y} Q${(qSrc.x+destX)/2},${Math.min(qSrc.y,destY)-30} ${destX},${destY}`,
+      '#48dbfb', 'arr-cyan', false
+    );
+  }
+
+  // ⑤ tree reduction arrows (dashed purple)
+  // Step 1: S2→S1, S4→S3, S6→S5
+  const reductionPairs = [[1,0],[3,2],[5,4], [2,0], [4,0]];
+  reductionPairs.forEach(([src,dst]) => {
+    const sc = sblocks[src].cores[0];
+    const dc = sblocks[dst].cores[0];
+    const sx2 = cx(sc[0]) + 5, sy2 = cy(sc[1]) + 5;
+    const dx2 = cx(dc[0]) + 5, dy2 = cy(dc[1]) + 5;
+    arrowPath(
+      `M${sx2},${sy2} Q${(sx2+dx2)/2+20},${(sy2+dy2)/2-20} ${dx2},${dy2}`,
+      '#c56cf0', 'arr-purple', true
+    );
+  });
+
+  // ⑥ final output: S1[0] -> DRAM (pink)
+  const outCore = sblocks[0].cores[0];
+  const outX = cx(outCore[0]) - 5, outY = cTop(outCore[1]) + CH;
+  arrow(outX, outY, outX - 20, dramY + 10, '#ff9ff3', 'arr-pink', false);
+
+});
+]]></script>
+</svg>
+
+<div class="note">
+  <b>图例说明：</b><br>
+  · 每个<b>彩色虚线框</b>是一个 S block（2×2 = 4 core），框色与绑定的 DRAM bank 颜色对应。<br>
+  · <b>灰色方块</b>是 8×7 逻辑网格中未被 S block 使用的 inactive core。<br>
+  · 每个 S block 的第一个 core 标有 <b style="color:#ff6b6b">SENDER</b>，负责从绑定 DRAM bank 读 K 并 multicast。<br>
+  · S1 的 4 个 core 同时是 <b style="color:#48dbfb">output core</b>，持有 Q 并写最终输出。<br>
+  · <b style="color:#ff6b6b">红线 ①</b>：K 从 DRAM bank 读到 sender（NCRISC）。<br>
+  · <b style="color:#feca57">黄线 ②</b>：sender 把 K multicast 到同 block 内其它核（BRISC，NOC0）。<br>
+  · <b style="color:#48dbfb">青线 ③</b>：Q 从 S1 output core 广播到所有 worker core（BRISC，各 core 从 S1 L1 pull）。<br>
+  · <b style="color:#1dd1a1">绿色</b>：每个 core 上的 TRISC 并行执行 flash attention chunk compute。<br>
+  · <b style="color:#c56cf0">紫色虚线 ⑤</b>：tree reduction（S2→S1, S4→S3, S6→S5, 然后 S3→S1, S5→S1）。<br>
+  · <b style="color:#ff9ff3">粉线 ⑥</b>：最终结果从 S1 output core 写回 DRAM。<br>
+  <br>
+  <b>数据流顺序：</b> ①DRAM→sender → ②sender multicast→block → ③Q broadcast → ④chunk compute → ⑤tree reduction → ⑥output write
+</div>
+
+</body>
+</html>

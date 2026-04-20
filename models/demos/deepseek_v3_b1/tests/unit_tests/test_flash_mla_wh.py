@@ -5,7 +5,7 @@
 """
 Test for flash_multi_latent_attention_decode op on Wormhole B0.
 
-Validates the WH-specific S block layout (6 blocks × 4 cores) with 6 DRAM banks.
+Validates the WH-specific S block layouts (6x4 and experimental 6x8) with 6 DRAM banks.
 """
 
 import pytest
@@ -17,6 +17,7 @@ from models.common.utility_functions import comp_pcc, run_for_wormhole_b0
 from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
     FlashMLADecode,
     FlashMLAOptimalGridNOC0_WH,
+    FlashMLAOptimalGridNOC0_WH_8C,
     FlashMLAProgramConfig,
 )
 
@@ -260,9 +261,13 @@ def test_flash_mla_decode_wh(device, batch_size, decode_position, k_chunk_size, 
 
 
 @run_for_wormhole_b0()
-def test_flash_mla_wh_grid_layout(device):
+@pytest.mark.parametrize(
+    "grid",
+    [FlashMLAOptimalGridNOC0_WH, FlashMLAOptimalGridNOC0_WH_8C],
+    ids=["wh_4c", "wh_8c"],
+)
+def test_flash_mla_wh_grid_layout(device, grid):
     """Validate WH S block grid layout: no core overlaps, valid rectangles."""
-    grid = FlashMLAOptimalGridNOC0_WH
 
     all_cores = set()
     for s_idx in range(grid.NUM_BLOCKS):
@@ -293,9 +298,13 @@ def test_flash_mla_wh_grid_layout(device):
 
 
 @run_for_wormhole_b0()
-def test_flash_mla_wh_dram_bank_validation(device):
+@pytest.mark.parametrize(
+    "grid",
+    [FlashMLAOptimalGridNOC0_WH, FlashMLAOptimalGridNOC0_WH_8C],
+    ids=["wh_4c", "wh_8c"],
+)
+def test_flash_mla_wh_dram_bank_validation(device, grid):
     """Validate that WH DRAM bank IDs are valid on the current device."""
-    grid = FlashMLAOptimalGridNOC0_WH
 
     optimal_workers = device.get_optimal_dram_bank_to_logical_worker_assignment(ttnn.NOC.NOC_0)
     num_dram_banks = len(optimal_workers)

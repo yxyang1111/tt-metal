@@ -2,21 +2,31 @@
 
 ## Goals
 
-- Explore MLA + Flash Attention integration points.
-- Record implementation decisions, profiling notes, and test commands.
+- Keep the project aligned with the current paper framing: `MLA decode as a spatial mapping problem`.
+- Record implementation decisions, profiling notes, model assumptions, and test commands.
+- Maintain a unified evidence chain for `Characterization -> Design -> Model + DSE -> Evaluation`.
 
 ## Notes
 
 - Preferred model-side entry: `models/demos/deepseek_v3/tt/mla/`
 - Preferred operator-side entry: `ttnn/cpp/ttnn/operations/transformer/sdpa/`
 - Phase 0 scope frozen in `phase-0-scope-note.md`
-- Phase 1 mainline: `single-chip non-causal prefill`
-- `decode` is secondary for now; `multi-chip` is deferred
-- `autotuner` is currently positioned as offline/cached, pending oracle-gap evidence
+- Current paper-side mainline: `single-chip MLA decode`
+- `prefill` remains as supporting evidence for forwarding / multicast / coupling analysis; `multi-chip` is deferred
+- `autotuner` is currently positioned as offline/cached DSE, pending oracle-gap evidence
 - Phase 1 code path map completed in `phase-1-code-path-map.md`
 - Experiment D execution order frozen in `experiment-D-ablation-plan.md`
 - First target test fixed as `tests/ttnn/unit_tests/operations/sdpa/test_mla_prefill_v_embedding_space.py`
 - **B0 (`NC-current-auto`)** baseline doc + result template: `experiment-D-b0-baseline.md`（在目标设备上补全性能数字）
+
+## Paper Framing Update
+
+Current default interpretation for all new writeups:
+
+- The paper is **not** positioned as "a faster FlashMLA kernel".
+- The paper is positioned as `operator characterization + dataflow design + cost model + DSE + architecture implication`.
+- Old `prefill-first` notes remain useful as engineering history, but should no longer be read as the final paper thesis.
+- See `sf-mla-paper-positioning.md` for the current unified wording.
 
 ## 重要警告
 
@@ -198,6 +208,7 @@ pytest models/demos/deepseek_v3_b1/tests/unit_tests/test_flash_mla.py -k "test_f
 
 ## TODO
 
+- [x] 记录 WH 8-core S-block 当前状态（见 `flash-mla-wh-8core-status.md`，2026-04-12）
 - [x] Clarify prefill vs decode scope
 - [x] Identify the first target test
 - [x] Track performance baselines（模板与流程已落地；表中实测数需在 TT 环境补全）

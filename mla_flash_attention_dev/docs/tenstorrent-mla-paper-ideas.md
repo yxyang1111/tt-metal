@@ -1,24 +1,35 @@
-# Tenstorrent 上做 MLA 的论文方向整理
+# [Archived] Tenstorrent 上做 MLA 的论文方向整理
+
+> 已归档（2026-04-13）。
+> 这份文档主要保存早期的论文方向 brainstorm 和候选打包方式，不再作为当前论文定位的主依据。
+> 当前请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`；若需要回看早期选题演化，再继续阅读本文。
 
 ## 1. 先给结论
 
-如果目标是 **尽快发一篇**，最合适的路线不是去发明一个全新的 MLA 变体，而是做：
+如果目标是 **按当前材料尽快收束成一篇完整论文**，最合适的路线不是去发明一个全新的 MLA 变体，也不是把故事写成“再做一个更快的 FlashMLA kernel”，而是做：
 
-`Tenstorrent 上 MLA inference/decode 的系统优化、内核映射、数据布局和性能分析`
+`MLA decode on spatial accelerators` 的问题定义、数据流设计、建模和设计空间探索。
 
-最推荐的第一篇方向是：
+当前最推荐的方向是：
 
-**`Mapping MLA to Tenstorrent: decode 路径的数据流映射、缓存布局与性能优化`**
+**`MLA as a Spatial Mapping Problem: Characterization, Dataflow Design, and DSE on Tenstorrent`**
 
 原因很简单：
 
 - MLA 的主要收益点本来就在 `KV cache 压缩` 和 `decode 内存流量下降`
 - Tenstorrent 的公开软件栈正好强调 `显式 dataflow、L1/DRAM 放置、NoC 访存、tile/shard`
-- 这种组合很适合写成一篇 **系统/算子/性能 case study**，比“新模型结构论文”更快落地
+- 这种组合最适合写成一篇 **operator characterization + dataflow design + cost model + DSE + architecture implication** 的系统/架构论文
 
 一句话建议：
 
-**第一篇只做 inference，优先做 decode-only，不碰训练，不碰 backward，不要一开始就追求全模型复现。**
+**第一篇只做 inference，优先做 decode-only，不碰训练，不碰 backward，不要一开始就追求全模型复现；prefill 保留为 supporting evidence，而不是唯一主战场。**
+
+### 1.1 当前统一口径
+
+本文是早期“论文方向池”文档。当前应以 `sf-mla-paper-positioning.md` 为统一口径，本文中的若干“方向 A-H”更适合理解成：
+
+- 可被纳入 `SF-MLA` 的子问题或实验资产
+- 而不是 8 条彼此并列、竞争主标题的路线
 
 ---
 
@@ -44,13 +55,19 @@
 - 能不能减少 DRAM 读取
 - 能不能降低 NoC 流量
 - 能不能把 latent cache 和 rotary 分支放到更好的 memory layout
-- 能不能把 decode 路径做成更适合 Tensix dataflow 的 fused kernel
+- 能不能把 decode 路径重新表述成更适合 Tensix dataflow 的 spatial mapping 问题
 
-这几点都很像一篇硬件/系统论文该回答的问题。
+这几点都很像一篇硬件/系统论文该回答的问题，但真正的论文主张应从“单点优化”升级为：
+
+- 为什么 MLA decode 已经不是传统 MHA 的小变体
+- 为什么它在 spatial accelerator 上会暴露新的 mapping、multicast 和 pipeline coupling 问题
+- 为什么需要可解释模型和 DSE，而不是只做局部 kernel 优化
 
 ---
 
 ## 3. 适合做的方向总览
+
+> 2026-04 更新：下面这些方向现在更适合作为 `SF-MLA` 的组成模块，而不是并列的论文题目候选。当前最优先的组合仍是 `decode characterization + dataflow design + model/DSE`。
 
 | 方向 | 核心内容 | 出稿速度 | 工程难度 | 论文性 | 我的建议 |
 | --- | --- | --- | --- | --- | --- |
@@ -117,7 +134,11 @@
 
 ### 方向 C：fused MLA decode kernel
 
-这是更偏 kernel co-design 的方向。
+这是更偏 kernel co-design 的方向，但在当前口径下它应被视为：
+
+- 某个特定 mapping / dataflow point
+- `SF-MLA Design` 部分的一个实现实例
+- 而不是论文唯一卖点
 
 你可以做的事情：
 
@@ -312,17 +333,22 @@
 
 ### 推荐主线
 
-直接选择：
+当前建议直接选择：
 
-**`方向 B + 方向 D + 方向 G`**
+**`方向 A + 方向 B + 方向 G`，并把它们统一到 `SF-MLA` 框架下。**
 
 也就是：
 
-- 做 `MLA vs MHA/GQA` 的系统对比
-- 做 `latent cache layout/sharding`
-- 做 `performance model / profiling`
+- 做 `MLA decode characterization`
+- 做 `latent cache layout/sharding + communication topology`
+- 做 `performance model / profiling / DSE`
 
-这是我认为最快形成完整论文闭环的组合。
+这是当前最快形成完整论文闭环的组合，因为它天然对应：
+
+1. `Characterization`
+2. `Design`
+3. `Model + DSE`
+4. `Architecture implication`
 
 ### 不建议一开始做的事情
 
@@ -336,10 +362,10 @@
 
 这条路线最容易形成完整故事：
 
-1. MLA 在这个架构上为什么值得做
-2. baseline 的瓶颈在哪里
-3. 哪种 cache layout 最优
-4. latency 和 traffic 为什么能下降
+1. MLA 在这个架构上为什么是新的 mapping 问题
+2. baseline 的瓶颈和 phase transition 在哪里
+3. 哪种 mapping / cache layout / topology 最优
+4. latency 和 traffic 为什么会随 mapping 切换
 5. 这个结论对显式 dataflow accelerator 有什么普遍意义
 
 ---
@@ -430,7 +456,7 @@
 
 如果你现在就是想 **尽快开题并尽快出第一篇**，我建议你把目标收敛成下面这句话：
 
-**在 Tenstorrent 上实现 MLA decode baseline，比较 MHA/GQA/MLA 三种 attention，在此基础上研究 latent KV cache 的 sharding/layout 对 latency、带宽和 NoC traffic 的影响。**
+**在 Tenstorrent 上把 MLA decode 明确提出为新的 spatial mapping problem，并在此基础上研究 latent KV cache 的 sharding/layout、communication topology、pipeline coupling、cost model 与 DSE。**
 
 这是最像论文、同时也最容易做完的一条线。
 
@@ -455,4 +481,4 @@
 
 ## 12. 最后一句话版本
 
-**最快能发的一篇，不是“我在 Tenstorrent 上重新发明 MLA”，而是“我在 Tenstorrent 上把 MLA decode 做出来，并证明显式 dataflow 架构下 cache layout、NoC traffic 和 kernel design 会决定它的真实收益”。**
+**最快能发的一篇，不是“我在 Tenstorrent 上做了一个更快的 FlashMLA”，而是“我证明了当 attention 从 MHA 走向 MLA、硬件从 GPU 走向 spatial accelerator 时，问题已经上升为 mapping + cost model + DSE 的系统问题”。**

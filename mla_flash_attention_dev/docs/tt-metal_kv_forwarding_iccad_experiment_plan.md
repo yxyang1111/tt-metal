@@ -1,4 +1,8 @@
-# TT-Metal KV Forwarding ICCAD 投稿实验规划
+# [Archived] TT-Metal KV Forwarding ICCAD 投稿实验规划
+
+> 已归档（2026-04-13）。
+> 这份文档对应较早的 `prefill non-causal KV forwarding` 投稿思路，保留作历史实验规划参考。
+> 当前请不要把它当成当前论文主线；请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`。
 
 ## 1. 文档目的
 

@@ -5,4 +5,4 @@
 
 | case | status | key result |
 |---|---|---|
-| standalone_decode_wh | failed | AssertionError: standalone WH decode PCC check failed: 0.0 |
+| standalone_decode_wh | passed | pcc=0.9986749746991035, max_abs_diff=0.210938, latencies_ms=[6141.329450998455, 124.47912700008601] |

@@ -958,28 +958,65 @@ void read_kv_mask_chunks(
     const MaskReaderType& mask_reader,
     uint32_t k_tile_bytes,
     uint32_t v_tile_bytes,
-    uint32_t PSt) {
+    uint32_t PSt,
+    SDPAPagedReadProfiler* profiler = nullptr) {
     uint32_t barrier_count = 0;
     for (uint32_t k_chunk = k_chunk_start; k_chunk < k_chunk_end; ++k_chunk) {
         // Read K chunk transposed
-        cb_reserve_back(cb_k_in, k_chunk_tiles);
+        {
+            uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+            cb_reserve_back(cb_k_in, k_chunk_tiles);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - start;
+                profiler->reserve_cycles += elapsed;
+                profiler->k_reserve_cycles += elapsed;
+            }
+        }
         uint32_t k_write_ptr = get_write_ptr(cb_k_in);
         uint64_t k_base_read_ptr = get_noc_addr(k_write_ptr);
         barrier_count = 0;
         for (uint32_t col = 0; col < DHt; ++col) {
             uint32_t k_tile_id = k_start_tile_id + col;
             for (uint32_t row = 0; row < Sk_chunk_t; ++row) {
+                uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                 noc_async_read_tile(k_tile_id, k_reader, k_write_ptr);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                    profiler->issue_cycles += elapsed;
+                    profiler->k_issue_cycles += elapsed;
+                }
                 if (++barrier_count == barrier_threshold) {
+                    uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read_barrier();
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                        profiler->wait_cycles += elapsed;
+                        profiler->k_wait_cycles += elapsed;
+                    }
                     barrier_count = 0;
                 }
                 k_tile_id += DHt;
                 k_write_ptr += k_tile_bytes;
             }
         }
-        noc_async_read_barrier();
-        cb_push_back(cb_k_in, k_chunk_tiles);
+        {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+            noc_async_read_barrier();
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->k_wait_cycles += elapsed;
+            }
+        }
+        {
+            uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+            cb_push_back(cb_k_in, k_chunk_tiles);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - push_start;
+                profiler->push_cycles += elapsed;
+                profiler->k_push_cycles += elapsed;
+            }
+        }
 
         if constexpr (use_attention_mask) {
             mask_start_tile_id = read_mask_chunk<cb_mask_in, mask_tile_bytes, barrier_threshold, PNHt>(
@@ -988,14 +1025,28 @@ void read_kv_mask_chunks(
 
         // Read V chunk (transpose of K), from K's L1 buffer
         if constexpr (reuse_k) {
-            cb_reserve_back(cb_v_in, v_chunk_tiles);
+            {
+                uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+                cb_reserve_back(cb_v_in, v_chunk_tiles);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - start;
+                    profiler->reserve_cycles += elapsed;
+                    profiler->v_reserve_cycles += elapsed;
+                }
+            }
             uint32_t v_write_ptr = get_write_ptr(cb_v_in);
             uint64_t k_read_ptr = k_base_read_ptr;
             for (uint32_t row = 0; row < Sk_chunk_t; ++row) {       // Row of V
                 k_read_ptr = k_base_read_ptr + row * k_tile_bytes;  // Increment across K's Col
 
                 for (uint32_t col = 0; col < vDHt; ++col) {  // Col of V
+                    uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read(k_read_ptr, v_write_ptr, v_tile_bytes);
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                        profiler->issue_cycles += elapsed;
+                        profiler->v_issue_cycles += elapsed;
+                    }
 
                     v_write_ptr += v_tile_bytes;
                     k_read_ptr += Sk_chunk_t * k_tile_bytes;  // Strid across K's width
@@ -1003,15 +1054,35 @@ void read_kv_mask_chunks(
             }
         } else {
             // V is an independent tensor with its own layout (width = vDHt)
-            cb_reserve_back(cb_v_in, v_chunk_tiles);
+            {
+                uint64_t start = profiler ? read_wall_clock_cycles() : 0;
+                cb_reserve_back(cb_v_in, v_chunk_tiles);
+                if (profiler != nullptr) {
+                    uint64_t elapsed = read_wall_clock_cycles() - start;
+                    profiler->reserve_cycles += elapsed;
+                    profiler->v_reserve_cycles += elapsed;
+                }
+            }
             uint32_t v_write_ptr = get_write_ptr(cb_v_in);
             barrier_count = 0;
             uint32_t v_tile_id = v_start_tile_id;
             for (uint32_t row = 0; row < Sk_chunk_t; ++row) {
                 for (uint32_t col = 0; col < vDHt; ++col) {
+                    uint64_t issue_start = profiler ? read_wall_clock_cycles() : 0;
                     noc_async_read_tile(v_tile_id, v_reader, v_write_ptr);
+                    if (profiler != nullptr) {
+                        uint64_t elapsed = read_wall_clock_cycles() - issue_start;
+                        profiler->issue_cycles += elapsed;
+                        profiler->v_issue_cycles += elapsed;
+                    }
                     if (++barrier_count == barrier_threshold) {
+                        uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
                         noc_async_read_barrier();
+                        if (profiler != nullptr) {
+                            uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                            profiler->wait_cycles += elapsed;
+                            profiler->v_wait_cycles += elapsed;
+                        }
                         barrier_count = 0;
                     }
                     v_tile_id++;
@@ -1020,8 +1091,24 @@ void read_kv_mask_chunks(
                 // No padding to skip - V is an independent tensor with contiguous layout
             }
         }
-        noc_async_read_barrier();
-        cb_push_back(cb_v_in, v_chunk_tiles);
+        {
+            uint64_t wait_start = profiler ? read_wall_clock_cycles() : 0;
+            noc_async_read_barrier();
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - wait_start;
+                profiler->wait_cycles += elapsed;
+                profiler->v_wait_cycles += elapsed;
+            }
+        }
+        {
+            uint64_t push_start = profiler ? read_wall_clock_cycles() : 0;
+            cb_push_back(cb_v_in, v_chunk_tiles);
+            if (profiler != nullptr) {
+                uint64_t elapsed = read_wall_clock_cycles() - push_start;
+                profiler->push_cycles += elapsed;
+                profiler->v_push_cycles += elapsed;
+            }
+        }
 
         // Update the starting tile id for next iteration
         k_start_tile_id += k_chunk_tiles;

@@ -1,0 +1,793 @@
+{
+  "best_plan": {
+    "candidate_key": "460c782cf5828e950c090191cad869767fda8b49",
+    "compile_time_config": {
+      "bank_map": [
+        1,
+        3,
+        2,
+        0,
+        5,
+        7,
+        6,
+        4
+      ],
+      "dual_noc_policy": true,
+      "k_cb_depth": 3,
+      "k_chunk_size": 64,
+      "k_num_pages": 3,
+      "k_page_size_bytes": 12288,
+      "lane_group_capacity": 8,
+      "layout_policy": "bandwidth_balanced",
+      "math_fidelity": "LoFi",
+      "page_size_strategy": "auto_max_divisor",
+      "pipeline_depth": 3,
+      "q_chunk_size": 32,
+      "sblock_topology_name": "bh_sblock_8x8",
+      "topology_mode": "tree",
+      "tree_order": [
+        [
+          [
+            0,
+            1
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            4,
+            5
+          ],
+          [
+            6,
+            7
+          ]
+        ],
+        [
+          [
+            0,
+            2
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        [
+          [
+            0,
+            4
+          ]
+        ]
+      ],
+      "trid_window": 4,
+      "v_cb_depth": 2
+    },
+    "metrics": {
+      "active_core_ratio": 0.5818181818181818,
+      "active_cores": 64,
+      "analytical_score": 0.19506392821541874,
+      "complexity_penalty_ms": 0.0004975352312646371,
+      "compute_ms": 0.0021808573641291973,
+      "dram_bytes": 2498560,
+      "dram_ms": 0.0054831460674157305,
+      "dual_noc_effectiveness": 0.7159288934426229,
+      "estimated_latency_ms": 0.040032681088146,
+      "imbalance_score": 0.0,
+      "k_reuse_groups": 1,
+      "kv_num_chunks": 64,
+      "l1_pressure_ms": 0.0002900390625,
+      "l1_usage_bytes_per_core": 304128,
+      "l1_usage_ratio": 0.193359375,
+      "measured_latency_ms": null,
+      "noc_bytes": 2116638.7199999997,
+      "noc_ms": 0.017426812779920274,
+      "overlap_residual_ms": 0.0005045693626953029,
+      "page_control_ms": 0.0034776,
+      "pipeline_bubble_ms": 0.0,
+      "provisioned_core_ratio": 0.5818181818181818,
+      "provisioned_cores": 64,
+      "q_num_chunks": 1,
+      "q_preamble_ms": 0.0005242632121949158,
+      "reader_backpressure_ms": 0.006442223624030319,
+      "reader_ms": 0.018147108800085406,
+      "reduction_ms": 0.002757303979834867,
+      "selected_latency_ms": 0.040032681088146,
+      "selection_source": "analytical",
+      "sender_hotspot_ms": 0.003451858210593866,
+      "sync_ms": 0.0055,
+      "unused_trid_ratio": 0.07142857142857142,
+      "writer_backpressure_ms": 0.001917779604946687
+    },
+    "runtime_config": {
+      "grouping": {
+        "active_lane_count": 8,
+        "batch_group_size": 1,
+        "effective_kv_parallel_factor": 8,
+        "effective_s_block_count": 8,
+        "head_group_size": 8,
+        "kv_chunk_group_size": 8,
+        "provisioned_kv_parallel_factor": 8,
+        "q_chunk_group_size": 1
+      },
+      "k_reuse_groups": 1,
+      "parallelism_5d": {
+        "batch_parallel_factor": 1,
+        "device_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "kv_parallel_factor": 8,
+        "q_parallel_factor": 1
+      },
+      "reduction_tree_depth": 3,
+      "use_balanced_q_parallel": false
+    }
+  },
+  "cache_hit": false,
+  "cache_key_mode": "sequence_pow2",
+  "cache_source_signature": null,
+  "hardware": {
+    "arch": "blackhole",
+    "clock_GHz": 1.35,
+    "compute_grid_x": 11,
+    "compute_grid_y": 10,
+    "dram_bandwidth_GBs": 512.0,
+    "dram_bank_endpoints": 8,
+    "l1_bytes_per_core": 1572864,
+    "max_noc_page_size": 16384,
+    "max_trid_window": 14,
+    "name": "blackhole",
+    "noc_bandwidth_GBs": 86.4,
+    "noc_count": 2,
+    "num_devices": 1,
+    "supports_dual_noc": true,
+    "supports_multicast": true,
+    "supports_tree": true
+  },
+  "measured_candidate_count": 0,
+  "policy_cache_key": "12532924cc7f6fdd72cda0e77e4ac116afe886ce",
+  "reranked_top_k": 0,
+  "searched_candidate_count": 7524,
+  "top_candidates": [
+    {
+      "candidate_key": "460c782cf5828e950c090191cad869767fda8b49",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          3,
+          2,
+          0,
+          5,
+          7,
+          6,
+          4
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 64,
+        "k_num_pages": 3,
+        "k_page_size_bytes": 12288,
+        "lane_group_capacity": 8,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "bh_sblock_8x8",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 4,
+        "v_cb_depth": 2
+      },
+      "metrics": {
+        "active_core_ratio": 0.5818181818181818,
+        "active_cores": 64,
+        "analytical_score": 0.19506392821541874,
+        "complexity_penalty_ms": 0.0004975352312646371,
+        "compute_ms": 0.0021808573641291973,
+        "dram_bytes": 2498560,
+        "dram_ms": 0.0054831460674157305,
+        "dual_noc_effectiveness": 0.7159288934426229,
+        "estimated_latency_ms": 0.040032681088146,
+        "imbalance_score": 0.0,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 64,
+        "l1_pressure_ms": 0.0002900390625,
+        "l1_usage_bytes_per_core": 304128,
+        "l1_usage_ratio": 0.193359375,
+        "measured_latency_ms": null,
+        "noc_bytes": 2116638.7199999997,
+        "noc_ms": 0.017426812779920274,
+        "overlap_residual_ms": 0.0005045693626953029,
+        "page_control_ms": 0.0034776,
+        "pipeline_bubble_ms": 0.0,
+        "provisioned_core_ratio": 0.5818181818181818,
+        "provisioned_cores": 64,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0005242632121949158,
+        "reader_backpressure_ms": 0.006442223624030319,
+        "reader_ms": 0.018147108800085406,
+        "reduction_ms": 0.002757303979834867,
+        "selected_latency_ms": 0.040032681088146,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.003451858210593866,
+        "sync_ms": 0.0055,
+        "unused_trid_ratio": 0.07142857142857142,
+        "writer_backpressure_ms": 0.001917779604946687
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 8,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 8,
+          "effective_s_block_count": 8,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 8,
+          "provisioned_kv_parallel_factor": 8,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 8,
+          "kv_parallel_factor": 8,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "e45af803115f0792c72d9a815d37f30602a671bc",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          3,
+          2,
+          0,
+          5,
+          7,
+          6,
+          4
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 64,
+        "k_num_pages": 3,
+        "k_page_size_bytes": 12288,
+        "lane_group_capacity": 8,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "bh_sblock_8x8",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 4,
+        "v_cb_depth": 3
+      },
+      "metrics": {
+        "active_core_ratio": 0.5818181818181818,
+        "active_cores": 64,
+        "analytical_score": 0.19518201495141618,
+        "complexity_penalty_ms": 0.001097535231264637,
+        "compute_ms": 0.0021808573641291973,
+        "dram_bytes": 2498560,
+        "dram_ms": 0.0054831460674157305,
+        "dual_noc_effectiveness": 0.7159288934426229,
+        "estimated_latency_ms": 0.04015076782414343,
+        "imbalance_score": 0.0,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 64,
+        "l1_pressure_ms": 0.0003525390625,
+        "l1_usage_bytes_per_core": 369664,
+        "l1_usage_ratio": 0.23502604166666666,
+        "measured_latency_ms": null,
+        "noc_bytes": 2116638.7199999997,
+        "noc_ms": 0.017426812779920274,
+        "overlap_residual_ms": 0.0005045693626953029,
+        "page_control_ms": 0.0034776,
+        "pipeline_bubble_ms": 0.0,
+        "provisioned_core_ratio": 0.5818181818181818,
+        "provisioned_cores": 64,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0005242632121949158,
+        "reader_backpressure_ms": 0.005897810360027757,
+        "reader_ms": 0.018147108800085406,
+        "reduction_ms": 0.002757303979834867,
+        "selected_latency_ms": 0.04015076782414343,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.003451858210593866,
+        "sync_ms": 0.0055,
+        "unused_trid_ratio": 0.07142857142857142,
+        "writer_backpressure_ms": 0.001917779604946687
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 8,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 8,
+          "effective_s_block_count": 8,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 8,
+          "provisioned_kv_parallel_factor": 8,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 8,
+          "kv_parallel_factor": 8,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "143009c432b2c6065226244709c521961d554341",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          3,
+          2,
+          0,
+          5,
+          7,
+          6,
+          4
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 64,
+        "k_num_pages": 3,
+        "k_page_size_bytes": 12288,
+        "lane_group_capacity": 8,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "HiFi2",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "bh_sblock_8x8",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 4,
+        "v_cb_depth": 2
+      },
+      "metrics": {
+        "active_core_ratio": 0.5818181818181818,
+        "active_cores": 64,
+        "analytical_score": 0.195568497578114,
+        "complexity_penalty_ms": 0.0004975352312646371,
+        "compute_ms": 0.004361714728258395,
+        "dram_bytes": 2498560,
+        "dram_ms": 0.0054831460674157305,
+        "dual_noc_effectiveness": 0.7159288934426229,
+        "estimated_latency_ms": 0.0405372504508413,
+        "imbalance_score": 0.0,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 64,
+        "l1_pressure_ms": 0.0002900390625,
+        "l1_usage_bytes_per_core": 304128,
+        "l1_usage_ratio": 0.193359375,
+        "measured_latency_ms": null,
+        "noc_bytes": 2116638.7199999997,
+        "noc_ms": 0.017426812779920274,
+        "overlap_residual_ms": 0.0010091387253906058,
+        "page_control_ms": 0.0034776,
+        "pipeline_bubble_ms": 0.0,
+        "provisioned_core_ratio": 0.5818181818181818,
+        "provisioned_cores": 64,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0005242632121949158,
+        "reader_backpressure_ms": 0.006442223624030319,
+        "reader_ms": 0.018147108800085406,
+        "reduction_ms": 0.002757303979834867,
+        "selected_latency_ms": 0.0405372504508413,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.003451858210593866,
+        "sync_ms": 0.0055,
+        "unused_trid_ratio": 0.07142857142857142,
+        "writer_backpressure_ms": 0.001917779604946687
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 8,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 8,
+          "effective_s_block_count": 8,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 8,
+          "provisioned_kv_parallel_factor": 8,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 8,
+          "kv_parallel_factor": 8,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "c2f77e1305185c9326881050d72725e80366d448",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          3,
+          2,
+          0,
+          5,
+          7,
+          6,
+          4
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 64,
+        "k_num_pages": 3,
+        "k_page_size_bytes": 12288,
+        "lane_group_capacity": 8,
+        "layout_policy": "bandwidth_balanced",
+        "math_fidelity": "HiFi2",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "bh_sblock_8x8",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 4,
+        "v_cb_depth": 3
+      },
+      "metrics": {
+        "active_core_ratio": 0.5818181818181818,
+        "active_cores": 64,
+        "analytical_score": 0.19568658431411146,
+        "complexity_penalty_ms": 0.001097535231264637,
+        "compute_ms": 0.004361714728258395,
+        "dram_bytes": 2498560,
+        "dram_ms": 0.0054831460674157305,
+        "dual_noc_effectiveness": 0.7159288934426229,
+        "estimated_latency_ms": 0.04065533718683873,
+        "imbalance_score": 0.0,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 64,
+        "l1_pressure_ms": 0.0003525390625,
+        "l1_usage_bytes_per_core": 369664,
+        "l1_usage_ratio": 0.23502604166666666,
+        "measured_latency_ms": null,
+        "noc_bytes": 2116638.7199999997,
+        "noc_ms": 0.017426812779920274,
+        "overlap_residual_ms": 0.0010091387253906058,
+        "page_control_ms": 0.0034776,
+        "pipeline_bubble_ms": 0.0,
+        "provisioned_core_ratio": 0.5818181818181818,
+        "provisioned_cores": 64,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0005242632121949158,
+        "reader_backpressure_ms": 0.005897810360027757,
+        "reader_ms": 0.018147108800085406,
+        "reduction_ms": 0.002757303979834867,
+        "selected_latency_ms": 0.04065533718683873,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.003451858210593866,
+        "sync_ms": 0.0055,
+        "unused_trid_ratio": 0.07142857142857142,
+        "writer_backpressure_ms": 0.001917779604946687
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 8,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 8,
+          "effective_s_block_count": 8,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 8,
+          "provisioned_kv_parallel_factor": 8,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 8,
+          "kv_parallel_factor": 8,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    },
+    {
+      "candidate_key": "3d74a7ba0ee6ef3f95e6ff18b3ca53f49d55741d",
+      "compile_time_config": {
+        "bank_map": [
+          1,
+          3,
+          2,
+          0,
+          5,
+          7,
+          6,
+          4
+        ],
+        "dual_noc_policy": true,
+        "k_cb_depth": 3,
+        "k_chunk_size": 64,
+        "k_num_pages": 3,
+        "k_page_size_bytes": 12288,
+        "lane_group_capacity": 8,
+        "layout_policy": "row_packed_by_head",
+        "math_fidelity": "LoFi",
+        "page_size_strategy": "auto_max_divisor",
+        "pipeline_depth": 3,
+        "q_chunk_size": 32,
+        "sblock_topology_name": "bh_sblock_8x8",
+        "topology_mode": "tree",
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ],
+            [
+              4,
+              6
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ],
+        "trid_window": 4,
+        "v_cb_depth": 2
+      },
+      "metrics": {
+        "active_core_ratio": 0.5818181818181818,
+        "active_cores": 64,
+        "analytical_score": 0.19611027470945175,
+        "complexity_penalty_ms": 0.0004975352312646371,
+        "compute_ms": 0.0022731244064577395,
+        "dram_bytes": 2498560,
+        "dram_ms": 0.00602469135802469,
+        "dual_noc_effectiveness": 0.7159288934426229,
+        "estimated_latency_ms": 0.041079027582179024,
+        "imbalance_score": 0.0,
+        "k_reuse_groups": 1,
+        "kv_num_chunks": 64,
+        "l1_pressure_ms": 0.0002900390625,
+        "l1_usage_bytes_per_core": 304128,
+        "l1_usage_ratio": 0.193359375,
+        "measured_latency_ms": null,
+        "noc_bytes": 2116638.7199999997,
+        "noc_ms": 0.018052193259167282,
+        "overlap_residual_ms": 0.0005259165280401039,
+        "page_control_ms": 0.0034776,
+        "pipeline_bubble_ms": 0.0,
+        "provisioned_core_ratio": 0.5818181818181818,
+        "provisioned_cores": 64,
+        "q_num_chunks": 1,
+        "q_preamble_ms": 0.0005439230826522251,
+        "reader_backpressure_ms": 0.0066375114599314545,
+        "reader_ms": 0.018697215380088606,
+        "reduction_ms": 0.0028325778790786746,
+        "selected_latency_ms": 0.041079027582179024,
+        "selection_source": "analytical",
+        "sender_hotspot_ms": 0.0035813028934911354,
+        "sync_ms": 0.0055,
+        "unused_trid_ratio": 0.07142857142857142,
+        "writer_backpressure_ms": 0.0019730060651321876
+      },
+      "runtime_config": {
+        "grouping": {
+          "active_lane_count": 8,
+          "batch_group_size": 1,
+          "effective_kv_parallel_factor": 8,
+          "effective_s_block_count": 8,
+          "head_group_size": 8,
+          "kv_chunk_group_size": 8,
+          "provisioned_kv_parallel_factor": 8,
+          "q_chunk_group_size": 1
+        },
+        "k_reuse_groups": 1,
+        "parallelism_5d": {
+          "batch_parallel_factor": 1,
+          "device_parallel_factor": 1,
+          "head_parallel_factor": 8,
+          "kv_parallel_factor": 8,
+          "q_parallel_factor": 1
+        },
+        "reduction_tree_depth": 3,
+        "use_balanced_q_parallel": false
+      }
+    }
+  ],
+  "workload": {
+    "batch_size": 1,
+    "block_size": 64,
+    "causal": false,
+    "d_rope": 64,
+    "head_dim_qk": 576,
+    "head_dim_v": 512,
+    "kv_dtype_bytes": 1,
+    "kv_lora_rank": 512,
+    "mode": "decode",
+    "name": "flash_decode_bh",
+    "num_kv_heads": 1,
+    "num_q_heads": 64,
+    "output_dtype_bytes": 2,
+    "paged": false,
+    "q_dtype_bytes": 2,
+    "seq_len_kv": 4096,
+    "seq_len_q": 1
+  },
+  "workload_signature": "751cbb331599327af80482978968803448bc941d"
+}

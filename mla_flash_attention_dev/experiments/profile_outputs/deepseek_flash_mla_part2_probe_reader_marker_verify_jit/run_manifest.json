@@ -1,0 +1,127 @@
+{
+  "output_root": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/deepseek_flash_mla_part2_probe_reader_marker_verify_jit",
+  "profile_script": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_deepseek_flash_mla_part2.py",
+  "selected_preset_cases": [
+    "A1"
+  ],
+  "selected_groups": [
+    "A"
+  ],
+  "selected_variants": [
+    "deepseek4c"
+  ],
+  "preflight": {
+    "case": "A1__deepseek4c",
+    "preset_case": "A1",
+    "variant": "deepseek4c",
+    "status": "passed",
+    "command": [
+      "python3",
+      "mla_flash_attention_dev/experiments/profile_deepseek_flash_mla_part2.py",
+      "--child-run",
+      "--preset-case",
+      "A1",
+      "--baseline",
+      "deepseek_flash_mla",
+      "--deepseek-wh-cores-per-block",
+      "4",
+      "--device-id",
+      "0",
+      "--warmup-iterations",
+      "1",
+      "--iterations",
+      "1"
+    ],
+    "error": null,
+    "attempts": 1
+  },
+  "runner_args": {
+    "device_id": 0,
+    "capture_mode": "device_only",
+    "op_support_count": 4000,
+    "sync_host_device": false,
+    "legacy_trigger": "sum",
+    "perf_counter_groups": null,
+    "collect_noc_traces": false,
+    "warmup_iterations": 1,
+    "iterations": 1
+  },
+  "cases": [
+    {
+      "case": "A1__deepseek4c",
+      "preset_case": "A1",
+      "group": "A",
+      "variant": "deepseek4c",
+      "baseline": "deepseek_flash_mla",
+      "variant_label": "DeepSeek FlashMLA 4c",
+      "deepseek_wh_cores_per_block": 4,
+      "seq_len": 1024,
+      "batch": 1,
+      "num_heads": 32,
+      "num_kv_heads": 1,
+      "value_dim": 512,
+      "rope_dim": 64,
+      "config_signature": "b1_h32_hkv1_dv512_ro64_blk64_kc128_dqhpc8",
+      "deepseek_num_q_heads_per_core": 8,
+      "deepseek_num_q_shards": 4,
+      "warmup_iterations": 1,
+      "iterations": 1,
+      "status": "completed",
+      "output_dir": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/deepseek_flash_mla_part2_probe_reader_marker_verify_jit/A1__deepseek4c",
+      "report_dir": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/deepseek_flash_mla_part2_probe_reader_marker_verify_jit/A1__deepseek4c/reports",
+      "ops_csv": "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/deepseek_flash_mla_part2_probe_reader_marker_verify_jit/A1__deepseek4c/reports/ops_perf_results.csv",
+      "available_required_columns": [
+        "DEVICE KERNEL DURATION [ns]",
+        "DEVICE COMPUTE CB WAIT FRONT [ns]",
+        "DEVICE COMPUTE CB RESERVE BACK [ns]"
+      ],
+      "missing_required_columns": [],
+      "available_optional_noc_columns": [],
+      "unsupported_reasons": null,
+      "command": [
+        "python3",
+        "mla_flash_attention_dev/experiments/profile_deepseek_flash_mla_part2.py",
+        "--child-run",
+        "--preset-case",
+        "A1",
+        "--baseline",
+        "deepseek_flash_mla",
+        "--deepseek-wh-cores-per-block",
+        "4",
+        "--device-id",
+        "0",
+        "--warmup-iterations",
+        "1",
+        "--iterations",
+        "1"
+      ],
+      "postprocess_command": [
+        "python3",
+        "tools/tracy/process_ops_logs.py",
+        "-o",
+        "/rshome/yuxin.yang/dev/tt-metal/mla_flash_attention_dev/experiments/profile_outputs/deepseek_flash_mla_part2_probe_reader_marker_verify_jit/A1__deepseek4c",
+        "--device-only",
+        "--force-legacy-device-logs",
+        "-a",
+        "device_kernel_duration",
+        "-a",
+        "device_kernel_first_to_last_start",
+        "-a",
+        "device_brisc_kernel_duration",
+        "-a",
+        "device_ncrisc_kernel_duration",
+        "-a",
+        "device_trisc0_kernel_duration",
+        "-a",
+        "device_trisc1_kernel_duration",
+        "-a",
+        "device_trisc2_kernel_duration",
+        "-a",
+        "device_compute_cb_wait_front",
+        "-a",
+        "device_compute_cb_reserve_back"
+      ],
+      "error": null
+    }
+  ]
+}

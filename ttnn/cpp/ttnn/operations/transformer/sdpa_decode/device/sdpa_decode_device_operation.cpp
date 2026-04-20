@@ -5,7 +5,9 @@
 #include "sdpa_decode_device_operation.hpp"
 #include "ttnn/tensor/tensor_ops.hpp"
 #include "ttnn/device_operation.hpp"
+#include "ttnn/operations/transformer/sdpa/device/sdpa_perf_model.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 #include "ttnn/operation.hpp"
@@ -14,6 +16,87 @@
 using namespace tt::tt_metal;
 
 namespace ttnn::prim {
+namespace {
+
+Tensors get_decode_perf_model_inputs(const SdpaDecodeInputs& tensor_args) {
+    Tensors input_tensors = {tensor_args.q, tensor_args.k};
+    if (tensor_args.v.has_value()) {
+        input_tensors.emplace_back(tensor_args.v.value());
+    }
+    return input_tensors;
+}
+
+uint32_t get_decode_sequence_length(const SdpaDecodeParams& operation_attributes, const SdpaDecodeInputs& tensor_args) {
+    uint32_t sequence_length = tensor_args.k.logical_shape()[2];
+    if (operation_attributes.paged_attention && tensor_args.page_table_tensor.has_value()) {
+        sequence_length *= tensor_args.page_table_tensor.value().padded_shape()[-1];
+    }
+    return sequence_length;
+}
+
+uint32_t get_decode_num_active_cores(
+    const SdpaDecodeParams& operation_attributes, const SdpaDecodeInputs& tensor_args, const Tensor& output_tensor) {
+    const auto& input_tensor_q = tensor_args.q;
+    const auto& input_tensor_k = tensor_args.k;
+    const auto q_shape = input_tensor_q.padded_shape();
+    const auto q_shape_unpadded = input_tensor_q.logical_shape();
+    const auto k_shape = input_tensor_k.padded_shape();
+
+    const bool use_mla = operation_attributes.use_mla.value_or(false);
+    uint32_t batch_size = q_shape[1];
+    uint32_t num_kv_heads = k_shape[1];
+    uint32_t num_q_heads = q_shape_unpadded[2];
+    uint32_t q_heads_parallel_factor = 1;
+
+    if (operation_attributes.paged_attention && tensor_args.page_table_tensor.has_value()) {
+        const auto& page_table_tensor = tensor_args.page_table_tensor.value();
+        batch_size = page_table_tensor.is_sharded()
+                         ? page_table_tensor.padded_shape()[0] / page_table_tensor.memory_config().shard_spec()->grid.num_cores()
+                         : page_table_tensor.padded_shape()[0];
+    }
+
+    if (input_tensor_q.is_sharded() && use_mla) {
+        const uint32_t q_shard_height = input_tensor_q.memory_config().shard_spec()->shape[0];
+        const uint32_t max_cores_per_head_batch =
+            operation_attributes.program_config.has_value() ? operation_attributes.program_config->max_cores_per_head_batch : 16;
+        const uint32_t num_q_shards = input_tensor_q.memory_config().shard_spec()->grid.num_cores();
+        const uint32_t num_groups = max_cores_per_head_batch == 0 ? 0 : num_q_shards / max_cores_per_head_batch;
+        q_heads_parallel_factor = std::max(1u, batch_size == 0 ? 1u : num_groups / batch_size);
+
+        const bool q_locally_available =
+            q_shape[2] == batch_size * q_shard_height * q_heads_parallel_factor * max_cores_per_head_batch;
+        if (!q_locally_available) {
+            q_heads_parallel_factor = std::max(1u, (num_q_heads + q_shard_height - 1) / q_shard_height);
+        }
+        batch_size *= q_heads_parallel_factor;
+    }
+
+    auto* device =
+        output_tensor.storage_type() == StorageType::DEVICE ? output_tensor.device() : ttnn::GetDefaultDevice();
+    CoreCoord grid_size = operation_attributes.program_config.has_value()
+                              ? operation_attributes.program_config->compute_with_storage_grid_size
+                              : device->compute_with_storage_grid_size();
+    uint32_t num_cores_available = grid_size.x * grid_size.y;
+    if (operation_attributes.program_config.has_value() && operation_attributes.program_config->sub_core_grids.has_value()) {
+        num_cores_available = operation_attributes.program_config->sub_core_grids.value().num_cores();
+    }
+
+    const uint32_t max_cores_per_head =
+        operation_attributes.program_config.has_value() ? operation_attributes.program_config->max_cores_per_head_batch
+                                                        : num_cores_available;
+    const uint32_t max_num_cores_for_compute = max_cores_per_head * batch_size * num_kv_heads;
+    const uint32_t num_cores_per_batch_uncapped =
+        std::max(1u, std::min(num_cores_available, max_num_cores_for_compute) / std::max(1u, batch_size));
+    const uint32_t num_cores_per_head = std::max(1u, num_cores_per_batch_uncapped / std::max(1u, num_kv_heads));
+    const uint32_t num_heads_per_core =
+        std::max(1u, static_cast<uint32_t>(std::ceil(static_cast<float>(num_kv_heads) / num_cores_per_batch_uncapped)));
+    const uint32_t num_active_cores = num_cores_per_head * num_kv_heads * batch_size / num_heads_per_core;
+
+    return std::max(1u, std::min(num_active_cores, num_cores_available));
+}
+
+}  // namespace
+
 void SdpaDecodeDeviceOperation::validate_on_program_cache_miss(
     const operation_attributes_t& operation_attributes, const tensor_args_t& tensor_args) {
     bool use_mla = operation_attributes.use_mla.value_or(false);
@@ -399,6 +482,54 @@ TensorSpec SdpaDecodeDeviceOperation::compute_output_specs(
 Tensor SdpaDecodeDeviceOperation::create_output_tensors(
     const operation_attributes_t& operation_attributes, const tensor_args_t& tensor_args) {
     return create_device_tensor(compute_output_specs(operation_attributes, tensor_args), tensor_args.q.device());
+}
+
+tt::tt_metal::operation::OpPerformanceModelGeneral<SdpaDecodeDeviceOperation::tensor_return_value_t>
+SdpaDecodeDeviceOperation::create_op_performance_model(
+    const operation_attributes_t& operation_attributes,
+    const tensor_args_t& tensor_args,
+    tensor_return_value_t& output_tensor) {
+    Tensors input_tensors = get_decode_perf_model_inputs(tensor_args);
+
+    if (output_tensor.storage_type() != StorageType::DEVICE) {
+        log_warning(tt::LogOp, "Output tensor not on DEVICE?!");
+    }
+
+    auto arch = output_tensor.storage_type() == StorageType::DEVICE ? output_tensor.device()->arch()
+                                                                    : ttnn::GetDefaultDevice()->arch();
+    if (arch != tt::ARCH::WORMHOLE_B0 && arch != tt::ARCH::BLACKHOLE) {
+        log_warning(tt::LogOp, "SDPA decode perf model does not support tt::arch '{}'", enchantum::to_string(arch));
+        return operation::OpPerformanceModelGeneral<SdpaDecodeDeviceOperation::tensor_return_value_t>(
+            input_tensors, output_tensor, 0);
+    }
+
+    const auto output_shape = output_tensor.logical_shape();
+    const auto q_shape = tensor_args.q.logical_shape();
+    TT_ASSERT(output_shape.size() == 4, "ScaledDotProductAttention decode perf model expects output rank 4");
+    TT_ASSERT(q_shape.size() == 4, "ScaledDotProductAttention decode perf model expects Q rank 4");
+
+    const uint32_t batch_size = output_shape[1];
+    const uint32_t num_heads_q = output_shape[2];
+    const uint32_t Sq = output_shape[0];
+    const uint32_t Sk = get_decode_sequence_length(operation_attributes, tensor_args);
+    const uint32_t DH = q_shape[3];
+    const uint32_t DV = output_shape[3];
+    const uint32_t num_active_cores = get_decode_num_active_cores(operation_attributes, tensor_args, output_tensor);
+    MathFidelity math_fidelity = ttnn::get_math_fidelity(operation_attributes.compute_kernel_config);
+
+    int ideal_dev_clock_cycles = operations::transformer::sdpa::compute_sdpa_ideal_cycles(
+        batch_size,
+        num_heads_q,
+        Sq,
+        Sk,
+        DH,
+        DV,
+        operation_attributes.is_causal,
+        math_fidelity,
+        num_active_cores);
+
+    return operation::OpPerformanceModelGeneral<SdpaDecodeDeviceOperation::tensor_return_value_t>(
+        input_tensors, output_tensor, ideal_dev_clock_cycles);
 }
 
 ttsl::hash::hash_t SdpaDecodeDeviceOperation::compute_program_hash(

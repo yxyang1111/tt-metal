@@ -607,6 +607,10 @@ def _enrich_ops_from_device_logs(
         for analysis in device_analysis_types:
             assert analysis in available_analysis, f"{analysis} is not calculated in device analysis"
             picked_analysis[analysis] = available_analysis[analysis]
+        # Perf counters are emitted as device-side events, so keep their collector enabled
+        # even when the caller narrows the duration/sum analyses with -a/--device-analysis-types.
+        if "perf_counter_data" in available_analysis:
+            picked_analysis["perf_counter_data"] = available_analysis["perf_counter_data"]
         setup.timerAnalysis = picked_analysis
     setup.deviceInputLog = str(device_log_path)
 

@@ -1,4 +1,8 @@
-# Tenstorrent MLA + Flash Attention 下一阶段执行计划
+# [Archived] SF-MLA 下一阶段执行计划
+
+> 已归档（2026-04-13）。
+> 这份文档保留的是一版过渡期执行计划，不再作为当前项目的直接行动指南。
+> 当前请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`；若需要看历史阶段收敛过程，再继续阅读本文。
 
 ## 1. 文档目的
 
@@ -16,59 +20,73 @@
 - `ref/tt-metal_kv_forwarding_design_space_autotuner.md`
 - `ref/NoC_与多播代码实现详解.md`
 - `dev_log.md`
+- `sf-mla-paper-positioning.md`
 
 ---
 
-## 2. 总体策略
+## 2. 2026-04 定位更新
 
-当前不适合同时把 `MLA 应用`、`NoC/多播优化`、`autotuner`、`decode`、`multi-chip` 全部并行推进。
+这份执行计划早期是按 `non-causal prefill + KV forwarding` 的工程路线写的；当前论文口径已经统一更新为：
+
+- **主问题**：`MLA decode on spatial accelerators` 是新的 `spatial mapping problem`
+- **文章形态**：`operator characterization + dataflow design + cost model + DSE + architecture implication`
+- **主框架**：`SF-MLA`
+- **prefill`/`KV forwarding`/`8-core`/`profiling`/`simulation` 的角色**：作为 `Characterization`、`Design` 或 `Evaluation` 证据，而不是论文本身的唯一主线
+
+因此，本文后续凡是提到早期的 `Experiment D`、`KV forwarding`、`prefill` 或 `speedup`，都应按新的论文结构来解读，而不再被视为“整篇论文的最终标题与主战场”。
+
+---
+
+## 3. 总体策略
+
+当前不适合把 `decode characterization`、`dataflow implementation`、`cost model`、`DSE`、`multi-chip` 全部无约束并行推进。
 
 接下来应采用一条更稳妥的主线：
 
-1. 先固定一个最容易形成闭环的优化主战场
-2. 先拿到稳定的 baseline 和优化项消融结果
-3. 再决定 autotuner 是主贡献还是次要章节
-4. 最后把内容整理成技术报告或论文故事
+1. 先固定论文主线与问题定义
+2. 再把现有 profiling、8-core、实验路径整理成统一的 mapping 证据
+3. 用可解释模型和 DSE 把“经验调参”升级成方法论
+4. 最后把工程结果收束成 challenge-driven 论文故事
 
 一句话版本：
 
-**先把 `single-chip non-causal prefill` 做深做实，再决定是否把 autotuner 升级为主贡献。**
+**先把 `MLA decode as a spatial mapping problem` 讲清楚，再用 `prefill / KV forwarding / 8-core / simulation` 去支撑 `SF-MLA` 的设计、建模与 DSE。**
 
 ---
 
-## 3. 默认决策
+## 4. 默认决策
 
 为避免后续反复摇摆，当前先默认采用下面这些决策：
 
 ### 3.1 主线场景
 
-- 第一阶段主线：`single-chip non-causal prefill`
-- 第一阶段背景：`MLA + Flash Attention`
-- 第一阶段重点：`KV forwarding / multicast / layout / pipeline / NoC`
+- 第一阶段主线：`single-chip MLA decode`
+- 第一阶段问题定义：`MLA decode on spatial accelerators = mapping + communication + pipeline coupling`
+- 第一阶段重点：`characterization / dataflow / model / DSE`
 
 ### 3.2 次要场景
 
-- `decode`：作为应用背景与后续扩展，不作为第一阶段核心工程主线
-- `multi-chip`：先不作为主目标，只保留为后续扩展方向
+- `prefill`：作为 supporting evidence，用于解释 forwarding / multicast / overlap 的结构问题
+- `multi-chip`：先不作为主目标，只保留为架构扩展方向
+- `Blackhole projection / simulation`：作为架构含义与设计空间扩展证据
 
 ### 3.3 autotuner 定位
 
-- 第一阶段先把 autotuner 视为 `offline / cached policy selector`
+- 第一阶段把 autotuner 视为 `SF-MLA` 中的 `offline DSE / cached policy selector`
 - 不默认把它写成在线实时搜索
-- 只有在 `oracle gap` 和 `search overhead` 足够有说服力时，才升级为主贡献
+- 只有在 `oracle gap`、`search overhead`、`top-k quality` 足够有说服力时，才升级为标题级贡献
 
 ### 3.4 评估重点
 
 第一阶段优先关注下面这些指标：
 
-- latency
-- speedup vs `NC-current-auto`
-- speedup vs `NC-naive`
-- NoC bytes
-- DRAM utilization
-- injector stall
-- receiver idle
-- correctness / stability
+- `latency / token`
+- bottleneck phase transition
+- `reader / writer / compute` stall breakup
+- `NoC bytes` / `multicast hotspot` / `bank affinity`
+- first-order vs second-order model 误差
+- tuner `top-1 gap` / search cost
+- correctness / stability / fairness boundary
 
 ---
 
@@ -97,11 +115,11 @@ flowchart TD
 
 | 阶段 | 时间建议 | 主要目标 | 核心输出 |
 | --- | --- | --- | --- |
-| Phase 0 | `2-3` 天 | 冻结范围与 workload | `scope note`、workload family 列表 |
-| Phase 1 | `1` 周 | 建 baseline 和代码地图 | baseline 说明、代码路径图、测试入口 |
-| Phase 2 | `2-3` 周 | 做优化项消融 `D` | 消融结果、profiler 证据、阶段结论 |
-| Phase 3 | `1-2` 周 | 决定 autotuner 级别 | `oracle gap`、搜索开销、是否升级 |
-| Phase 4 | `1` 周 | 整理成报告或论文包 | 图表清单、主结论、报告草稿 |
+| Phase 0 | `2-3` 天 | 冻结论文问题与 workload | `scope note`、主假设、evaluation map |
+| Phase 1 | `1` 周 | 建代码地图与 characterization 资产 | baseline 说明、代码路径图、profile 入口 |
+| Phase 2 | `2-3` 周 | 做 dataflow / mapping 设计与证据收敛 | 设计变量表、关键消融、阶段结论 |
+| Phase 3 | `1-2` 周 | 建 cost model 与 DSE | `oracle gap`、MAPE、tuner 质量 |
+| Phase 4 | `1` 周 | 整理成 `SF-MLA` 论文包 | 图表清单、主结论、报告草稿 |
 
 ---
 
@@ -113,11 +131,11 @@ flowchart TD
 
 ### 6.2 要完成的事
 
-- 明确第一阶段只围绕 `single-chip non-causal prefill` 展开
-- 明确 `decode` 不作为第一阶段主战场
+- 明确第一阶段以 `single-chip MLA decode` 为论文主战场
+- 明确 `prefill` 作为 supporting evidence，而不是论文唯一主线
 - 明确 `multi-chip` 暂不纳入第一阶段必须项
-- 把 workload 按 family 分类
-- 固定第一阶段的主指标和对照基线
+- 把 workload 按 `characterization / design / model / implication` 分类
+- 固定第一阶段的主指标、对照基线和公平性边界
 
 ### 6.3 建议的 workload family
 
@@ -362,12 +380,12 @@ flowchart TD
 
 如果只看最近一周，建议按下面顺序推进：
 
-1. 固定第一阶段主线：`single-chip non-causal prefill`
-2. 从现有文档中抽出 `F1-F4` workload family
-3. 整理一张 `model -> op -> kernel` 的代码路径图
-4. 固定实验 `D` 的 `B0 -> B4` 实现顺序
-5. 先把 `per-chain hybrid / layout-aware mapping / pipelined read-forward / dual NoC` 定为第一批目标
-6. 给 autotuner 写一个明确的“升级条件”，避免后面反复摇摆
+1. 固定论文主线：`MLA decode as a spatial mapping problem`
+2. 把现有文档按 `Characterization / Design / Model+DSE / Evaluation` 重新归类
+3. 整理一张 `model -> op -> kernel -> profiling` 的代码路径图
+4. 把 `8-core`、`profile`、实验性 FlashMLA、主线 FlashMLA 统一到一个设计空间表述里
+5. 先把 `shared-latent reuse / pipeline coupling / multicast-reduction topology` 定为第一批核心设计点
+6. 给模型和 DSE 写一个明确的“升级条件”，避免后面继续停留在经验调参
 
 ---
 
@@ -375,20 +393,20 @@ flowchart TD
 
 如果后续执行顺利，第一阶段应至少达到下面几个结果：
 
-- 能明确解释当前 baseline 的主要瓶颈
-- 能说明每个优化项解决了什么问题
-- 能证明收益不是只在单一 shape 上成立
-- 能决定 autotuner 是否进入主标题
-- 能把整个故事收敛成“应用映射 -> NoC/多播优化 -> 自动调度”的统一框架
+- 能明确解释 MLA decode 的主要瓶颈及其 phase transition
+- 能说明每个设计点缓解了哪一类 pipeline coupling 或 mapping 约束
+- 能证明最优 mapping 会随 workload 和硬件资源变化而切换
+- 能量化 first-order 与 second-order model 的误差差距
+- 能把整个故事收敛成 `Characterization -> Design -> Model+DSE -> Architecture Implication`
 
 ---
 
 ## 13. 当前不建议做的事
 
-- 不要把 `decode`、`multi-chip`、`tree forwarding` 一起并行推进
+- 不要再把论文写成“更快的 FlashMLA kernel”故事
+- 不要把 `prefill`、`decode`、`multi-chip` 三条线并列成三个主标题
 - 不要默认把 autotuner 写成在线实时机制
-- 不要继续只扩写想法总纲，而不推进实验 `D`
-- 不要让应用、优化、autotuner 三条线各自独立发展
+- 不要让 profiling、8-core、simulation、baseline 对比彼此脱节
 
 ---
 

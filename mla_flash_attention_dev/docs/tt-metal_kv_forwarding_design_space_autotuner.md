@@ -1,4 +1,8 @@
-# TT-Metal SDPA KV Forwarding 优化设想、设计空间与自动寻优方案
+# [Archived] TT-Metal SDPA KV Forwarding 优化设想、设计空间与自动寻优方案
+
+> 已归档（2026-04-13）。
+> 这份文档聚焦旧的 `prefill KV forwarding` 设计空间与 autotuner 设想，技术细节可参考，但不再代表当前论文题目与主线。
+> 当前请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`。
 
 ## 1. 文档目标
 

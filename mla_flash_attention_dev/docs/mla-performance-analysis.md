@@ -1,4 +1,4 @@
-# MLA Flash Attention 性能分析报告
+# MLA Flash Attention Characterization 报告
 
 ## 1. 概述
 
@@ -6,6 +6,22 @@
 - **理论性能建模**：基于 Roofline 模型推导算力/带宽瓶颈
 - **实测性能数据**：覆盖 prefill 和 decode 两个阶段的多种工作负载
 - **效率分析与优化方向**：对比理论与实测，定位性能差距来源
+
+## 1.1 当前论文中的角色
+
+在当前 `SF-MLA` 论文口径下，这份文档应被视为 **Characterization** 材料，而不是单纯的 benchmark 报告。
+
+它主要服务于三个问题：
+
+1. `MLA decode` 为什么不是 `MHA decode` 的小变体
+2. 为什么在 spatial accelerator 上会出现 `compute-memory mixed regime`
+3. 为什么仅靠 first-order Roofline 不足以解释真实执行，还需要进一步引入 pipeline coupling、multicast hotspot 和 second-order correction
+
+因此：
+
+- `decode` 结果是论文主战场的直接证据
+- `prefill` 结果主要作为 supporting evidence
+- 本文中的理论模型应被理解为 `first-order model` 的起点，而不是全文最终模型
 
 实验日期：2026-03-23
 
@@ -43,6 +59,12 @@ MLA (Multi-Latent Attention) 是 DeepSeek V3 引入的注意力变体：
 - **KV 共享**：nkv = 1，所有 Q head 共享同一组 KV
 - **非对称维度**：K 维度 = `kv_lora_rank + d_rope` (典型 576)，V 维度 = `kv_lora_rank` (典型 512)
 - **V 复用 K**：V 从 K 的前 `kv_lora_rank` 列切片，无需额外存储
+
+对本文来说，这些差异的重要性不只在于“公式不同”，而在于：
+
+- latent restoration 改变了数据重用方式
+- decode 的最优映射会与传统 MHA 明显不同
+- 在 many-core spatial accelerator 上，它会引出新的 layout、multicast 和 pipeline 问题
 
 ### 3.2 计算量 (FLOPs)
 

@@ -1,28 +1,48 @@
-# Phase 1 Code Path Map
+# [Archived] Phase 1 Code Path Map
+
+> 已归档（2026-04-13）。
+> 这份文档保留的是旧阶段的代码路径整理，仍有技术参考价值，但不再作为当前论文主线的直接入口。
+> 当前请优先参考 `current-docs.md`；若需要回看历史梳理方式，再继续阅读本文。
 
 ## 1. 文档目的
 
 这份文档对应 `next-step-execution-plan.md` 里的 `Phase 1` 第一项，目标是把第一阶段主线涉及的代码路径固定下来。
 
-这里聚焦的是当前已经冻结的主线：
+## 1.1 2026-04 定位更新
 
-**`single-chip non-causal prefill` 场景下，围绕 `MLA + Flash Attention` 的 `KV forwarding / multicast / layout / pipeline / NoC` 系统优化。**
+这份文档最早按 `single-chip non-causal prefill` 的工程主线整理。当前论文主线已经更新为：
+
+- **论文主线**：`MLA decode as a spatial mapping problem`
+- **本文角色**：补充说明 TTNN 主线 MLA 路径如何落到 host/device 栈中
+- **prefill 位置**：保留为 supporting evidence，用来解释 forwarding / multicast / overlap 的结构性来源
+
+因此，本文后面的 `prefill` 路径图仍然有效，但应被视为：
+
+- 主线 `decode` 之外的重要 supporting path
+- 理解 `reader / compute / writer`、program factory 和 kernel 组织方式的背景材料
+- 而不是论文最终唯一主路径
+
+这里当前优先聚焦两条路径：
+
+- `decode`：论文主战场
+- `prefill`：supporting evidence
 
 因此，这份代码路径图主要回答下面几个问题：
 
 1. 模型层是如何进入 TTNN attention/MLA op 的
-2. `flash_mla_prefill` 与标准 SDPA 在实现上如何汇合
+2. `flash_mla_prefill` 与 `flash_multi_latent_attention_decode` 如何分别与主线 SDPA 家族汇合
 3. host 侧哪个文件负责 validate、program 组装和 runtime args 注入
 4. device 侧 reader / compute / writer 各自负责什么
-5. 如果后续做 `Experiment D`，最先应该改哪些文件
+5. 如果后续做 `SF-MLA` 的 design / model / DSE，最先应该看哪些文件
 
 ---
 
 ## 2. 一句话主路径
 
-当前第一阶段最关键的主路径可以先记成一句话：
+当前最关键的两条主路径可以先记成一句话：
 
-**`models/demos/deepseek_v3/tt/mla/mla1d.py` 调用 `ttnn.transformer.flash_mla_prefill`，该接口在 `sdpa_nanobind.cpp` 绑定后进入 `sdpa.cpp`，最终统一落到 `ttnn::prim::sdpa`，再由 `SDPAOperation + SDPAProgramFactory` 生成 program，并下发到 `reader_interleaved.cpp`、`sdpa.cpp`、`writer_interleaved.cpp` 三个 kernel。**
+1. **`decode` 路径**：`models/demos/deepseek_v3/tt/mla/mla1d.py` 调用 `ttnn.transformer.flash_multi_latent_attention_decode` 或 `paged_flash_multi_latent_attention_decode`，再进入 `sdpa_decode` 主栈，由 `sdpa_decode_program_factory.cpp` 生成 program，并下发到 decode reader / compute / writer kernels。
+2. **`prefill` 路径**：`models/demos/deepseek_v3/tt/mla/mla1d.py` 调用 `ttnn.transformer.flash_mla_prefill`，接口经 `sdpa_nanobind.cpp` 与 `sdpa.cpp` 进入 `ttnn::prim::sdpa`，再由 `SDPAOperation + SDPAProgramFactory` 下发到 `reader_interleaved.cpp`、`sdpa.cpp`、`writer_interleaved.cpp`。
 
 ---
 
@@ -31,25 +51,41 @@
 ```mermaid
 flowchart TD
     mlaModel[mla1d.py]
-    pythonApi[ttnn.transformer.flash_mla_prefill]
-    nanobind[sdpa_nanobind.cpp]
-    publicApi[sdpa.cpp]
-    primSdpa[ttnn::prim::sdpa]
-    deviceOp[SDPAOperation]
-    programFactory[SDPAProgramFactory]
-    readerKernel[reader_interleaved.cpp]
-    computeKernel[compute/sdpa.cpp]
-    writerKernel[writer_interleaved.cpp]
 
-    mlaModel --> pythonApi
-    pythonApi --> nanobind
-    nanobind --> publicApi
-    publicApi --> primSdpa
-    primSdpa --> deviceOp
-    deviceOp --> programFactory
-    programFactory --> readerKernel
-    programFactory --> computeKernel
-    programFactory --> writerKernel
+    pyPrefill[flash_mla_prefill]
+    pyDecode[flash_multi_latent_attention_decode]
+
+    nanobind[sdpa_nanobind.cpp]
+    sdpaApi[sdpa.cpp]
+    sdpaDecodeFactory[sdpa_decode_program_factory.cpp]
+    primSdpa[ttnn::prim::sdpa]
+    sdpaOp[SDPAOperation]
+    sdpaFactory[SDPAProgramFactory]
+
+    prefillReader[reader_interleaved.cpp]
+    prefillCompute[compute/sdpa.cpp]
+    prefillWriter[writer_interleaved.cpp]
+
+    decodeReader[reader_decode_all.cpp]
+    decodeCompute[decode compute kernels]
+    decodeWriter[writer_decode_all.cpp]
+
+    mlaModel --> pyPrefill
+    mlaModel --> pyDecode
+
+    pyPrefill --> nanobind
+    nanobind --> sdpaApi
+    sdpaApi --> primSdpa
+    primSdpa --> sdpaOp
+    sdpaOp --> sdpaFactory
+    sdpaFactory --> prefillReader
+    sdpaFactory --> prefillCompute
+    sdpaFactory --> prefillWriter
+
+    pyDecode --> sdpaDecodeFactory
+    sdpaDecodeFactory --> decodeReader
+    sdpaDecodeFactory --> decodeCompute
+    sdpaDecodeFactory --> decodeWriter
 ```
 
 ---
@@ -58,21 +94,25 @@ flowchart TD
 
 ## 4.1 模型层入口
 
-第一阶段应用层最重要的入口是：
+应用层最重要的入口是：
 
 - `models/demos/deepseek_v3/tt/mla/mla1d.py`
 - `models/demos/deepseek_v3/tt/mla/mla2d.py`
 
-其中 `mla1d.py` 已经直接调用：
+其中 `mla1d.py` 已经直接调用或间接接到：
 
 - `ttnn.transformer.flash_mla_prefill`
+- `ttnn.transformer.chunked_flash_mla_prefill`
+- `ttnn.transformer.flash_multi_latent_attention_decode`
+- `ttnn.transformer.paged_flash_multi_latent_attention_decode`
 
-这说明当前仓库里的 MLA prefill 并不是独立的专用栈，而是已经接到了 TTNN 的 transformer SDPA 家族之上。
+这说明当前仓库里的 MLA 路径并不是孤立 demo，而是已经接到了 TTNN 的 transformer SDPA 家族之上。
 
-对第一阶段来说，这意味着：
+对当前论文主线来说，这意味着：
 
 - 模型侧不需要重新发明一套 MLA attention 接口
-- 重点是理解 `flash_mla_prefill` 如何在 host/device 侧复用现有 SDPA 框架
+- 真正需要分析的是 decode / prefill 分别如何落到不同的 host/device dataflow
+- program factory 与 kernel 组织才是 `SF-MLA` 设计空间的核心入口
 
 ---
 

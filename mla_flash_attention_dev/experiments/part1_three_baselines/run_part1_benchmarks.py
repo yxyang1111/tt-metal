@@ -21,8 +21,8 @@ from loguru import logger
 import ttnn
 from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
     FlashMLADecode,
-    FlashMLAOptimalGridNOC0_WH,
     FlashMLAProgramConfig,
+    get_flash_mla_wormhole_grid,
 )
 from models.common.utility_functions import nearest_y
 from models.tt_transformers.tt.common import PagedAttentionConfig
@@ -289,6 +289,13 @@ def parse_args() -> argparse.Namespace:
             "'fixed' uses the explicit list; 'align_with_tt_mainline' derives per-config values "
             "so DeepSeek num_q_shards tracks TT mainline max_cores_per_head_batch."
         ),
+    )
+    parser.add_argument(
+        "--deepseek-wh-cores-per-block",
+        type=int,
+        choices=(4, 8),
+        default=4,
+        help="Experimental Wormhole DeepSeek FlashMLA S-block width used for input sharding capacity.",
     )
     parser.add_argument(
         "--run-capability-probe",
@@ -872,9 +879,15 @@ def build_decode_tt_inputs(device: Any, inputs: dict[str, Any], workload: Worklo
     }
 
 
-def build_deepseek_decode_tt_inputs(device: Any, inputs: dict[str, Any], workload: Workload) -> dict[str, Any]:
+def build_deepseek_decode_tt_inputs(
+    device: Any,
+    inputs: dict[str, Any],
+    workload: Workload,
+    *,
+    wh_cores_per_block: int,
+) -> dict[str, Any]:
     config = workload.config
-    grid = FlashMLAOptimalGridNOC0_WH
+    grid = get_flash_mla_wormhole_grid(cores_per_block=wh_cores_per_block)
     num_q_shards = config.deepseek_num_q_shards
     if num_q_shards is None:
         raise RuntimeError(
@@ -1093,6 +1106,8 @@ def validate_workload_baseline_support(
     workload: Workload,
     baseline: BaselineConfig,
     device: Any | None,
+    *,
+    deepseek_wh_cores_per_block: int,
 ) -> list[str]:
     config = workload.config
     reasons: list[str] = []
@@ -1123,6 +1138,7 @@ def validate_workload_baseline_support(
                 reasons.append(f"{name} must be divisible by 32")
 
     if baseline.key == "deepseek_flash_mla":
+        grid = get_flash_mla_wormhole_grid(cores_per_block=deepseek_wh_cores_per_block)
         if workload.mode != "decode":
             reasons.append("DeepSeek FlashMLA currently supports decode only")
         if config.num_kv_heads != 1:
@@ -1137,7 +1153,7 @@ def validate_workload_baseline_support(
         if config.deepseek_num_q_shards is None:
             reasons.append("num_heads must be divisible by deepseek_num_q_heads_per_core")
         else:
-            available_q_cores = len([core for block_cores, _ in FlashMLAOptimalGridNOC0_WH.BLOCKS for core in block_cores])
+            available_q_cores = len([core for block_cores, _ in grid.BLOCKS for core in block_cores])
             required_q_cores = workload.batch * config.deepseek_num_q_shards
             if required_q_cores > available_q_cores:
                 reasons.append(
@@ -1147,6 +1163,10 @@ def validate_workload_baseline_support(
             grid_size = device.compute_with_storage_grid_size()
             if grid_size.x < 8 or grid_size.y < 7:
                 reasons.append("DeepSeek FlashMLA on Wormhole requires compute grid >= 8x7")
+            try:
+                grid.validate_grid(device)
+            except AssertionError as exc:
+                reasons.append(str(exc))
 
     return reasons
 
@@ -1159,6 +1179,7 @@ def run_tt_baseline(
     *,
     warmup: int,
     iters: int,
+    deepseek_wh_cores_per_block: int,
 ) -> list[float]:
     if workload.mode == "prefill":
         tt_inputs = build_prefill_tt_inputs(device, inputs, baseline.key)
@@ -1181,7 +1202,12 @@ def run_tt_baseline(
             safe_deallocate(tt_inputs["tt_q"], tt_inputs["tt_k"], tt_inputs["tt_v"])
 
     if baseline.key == "deepseek_flash_mla":
-        tt_inputs = build_deepseek_decode_tt_inputs(device, inputs, workload)
+        tt_inputs = build_deepseek_decode_tt_inputs(
+            device,
+            inputs,
+            workload,
+            wh_cores_per_block=deepseek_wh_cores_per_block,
+        )
         try:
             return benchmark_device(
                 device,
@@ -1231,6 +1257,7 @@ def run_single_benchmark(
     iters_device: int,
     warmup_reference: int,
     iters_reference: int,
+    deepseek_wh_cores_per_block: int,
 ) -> dict[str, Any]:
     head_dim_qk, head_dim_v = baseline_head_dims(workload, baseline.key)
     record: dict[str, Any] = {
@@ -1254,7 +1281,12 @@ def run_single_benchmark(
     else:
         record["measurement_scope"] = "host_wall_clock_with_inputs_prebuilt"
 
-    support_reasons = validate_workload_baseline_support(workload, baseline, device)
+    support_reasons = validate_workload_baseline_support(
+        workload,
+        baseline,
+        device,
+        deepseek_wh_cores_per_block=deepseek_wh_cores_per_block,
+    )
     if support_reasons:
         record["status"] = "unsupported"
         record["unsupported_reasons"] = support_reasons
@@ -1287,6 +1319,7 @@ def run_single_benchmark(
                 inputs,
                 warmup=warmup_device,
                 iters=iters_device,
+                deepseek_wh_cores_per_block=deepseek_wh_cores_per_block,
             )
 
         record["latencies_ms"] = [round(value, 6) for value in latencies_ms]
@@ -1348,6 +1381,7 @@ def run_all_benchmarks(args: argparse.Namespace) -> dict[str, Any]:
                         iters_device=args.iters_device,
                         warmup_reference=args.warmup_reference,
                         iters_reference=args.iters_reference,
+                        deepseek_wh_cores_per_block=args.deepseek_wh_cores_per_block,
                     )
                 )
     finally:
@@ -1390,6 +1424,7 @@ def run_all_benchmarks(args: argparse.Namespace) -> dict[str, Any]:
             "block_size": args.block_size,
             "k_chunk_size": args.k_chunk_size,
             "max_cores_per_head_batch": args.max_cores_per_head_batch,
+            "deepseek_wh_cores_per_block": args.deepseek_wh_cores_per_block,
             "deepseek_num_q_heads_per_core": default_config.deepseek_num_q_heads_per_core,
             "deepseek_num_q_heads_per_core_list": sorted({config.deepseek_num_q_heads_per_core for config in configs}),
             "deepseek_parallelism_policy": args.deepseek_parallelism_policy,
@@ -1496,6 +1531,7 @@ def build_probe_payload(
             "iters_device": 1,
             "warmup_reference": 0,
             "iters_reference": 1,
+            "deepseek_wh_cores_per_block": args.deepseek_wh_cores_per_block,
             "configs": [config.to_dict() for config in probe_configs],
             "default_config": probe_default_config.to_dict(),
             "status": status,
@@ -1558,6 +1594,17 @@ def load_probe_checkpoint(
     if actual_probe_axes is not None and actual_probe_axes != expected_probe_axes:
         raise RuntimeError(
             f"Capability probe checkpoint {source_path} does not match the current probe axes. "
+            "Use --probe-reset-checkpoint to start fresh."
+        )
+    actual_wh_cores_per_block = metadata.get("deepseek_wh_cores_per_block")
+    if (
+        actual_wh_cores_per_block is not None
+        and int(actual_wh_cores_per_block) != int(args.deepseek_wh_cores_per_block)
+    ):
+        raise RuntimeError(
+            f"Capability probe checkpoint {source_path} was created with "
+            f"deepseek_wh_cores_per_block={actual_wh_cores_per_block}, "
+            f"but the current run requests {args.deepseek_wh_cores_per_block}. "
             "Use --probe-reset-checkpoint to start fresh."
         )
 
@@ -1635,6 +1682,7 @@ def run_capability_probe(
                     iters_device=1,
                     warmup_reference=0,
                     iters_reference=1,
+                    deepseek_wh_cores_per_block=args.deepseek_wh_cores_per_block,
                 )
                 probe_results.append(row)
                 case_rows.append(row)

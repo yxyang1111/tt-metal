@@ -9,6 +9,21 @@
 3. 每个方向具体可以怎么改，先改哪里，改哪些文件。
 4. 每一类改动最合适用什么 case 验证。
 
+## 1.1 2026-04 论文定位更新
+
+本文最早更偏“实验 kernel 优化计划”。  
+当前统一口径下，它应被解释为：
+
+- `SF-MLA Design` 的实现侧补充材料
+- 一个用于研究 `pipeline coupling / multicast / reduction topology / shared planner` 的具体 mapping 实例
+- 而不是“把实验性 FlashMLA 单独做成更快 kernel”的独立叙事
+
+因此，下面的 `P0-P4` 更适合读成：
+
+- 对不同设计旋钮的优先级排序
+- 对 second-order effects 的实现化落点
+- 对后续 DSE 变量的候选池
+
 本文默认你已经看过：
 
 - `mla_flash_attention_dev/docs/experimental-flash-mla-dataflow-analysis.md`
@@ -40,6 +55,13 @@
 | P2 | 把 tree reduction 从块级等待改成更流式 | sender/tree 是 writer 的主等待来源，不是 final gather | `models/demos/deepseek_v3_b1/unified_kernels/flash_mla.hpp`、`models/demos/deepseek_v3_b1/micro_ops/flash_mla/op.py` |
 | P3 | 去掉 dummy handoff，收敛 SP 空路径 | 当前仍需要 `push_dummy_sdpa_inputs()` 才能防止下游 hang | `models/demos/deepseek_v3_b1/unified_kernels/flash_mla.hpp`、`models/demos/deepseek_v3_b1/fused_ops/attention_block/kernels/attention_block_kernel.cpp` |
 | P4 | 抽共享 planner | `flash_mla` standalone 和 fused block 在 grid / page / CB / semaphore 上重复规划 | `models/demos/deepseek_v3_b1/micro_ops/flash_mla/op.py`、`models/demos/deepseek_v3_b1/fused_ops/attention_block/op.py` |
+
+这些优先级的论文含义分别对应：
+
+- `P0 / P1`：缓解 `reader-writer-compute coupling`
+- `P2`：改变 `reduction topology` 的流式程度
+- `P3`：修正 decoupled execution 下的协议空洞
+- `P4`：把实现经验上升为可枚举的 planner / DSE 变量
 
 ### 3.2 暂时不建议优先做的方向
 

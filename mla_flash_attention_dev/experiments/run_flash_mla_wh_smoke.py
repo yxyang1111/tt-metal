@@ -14,8 +14,8 @@ import ttnn
 from models.common.utility_functions import comp_pcc
 from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
     FlashMLADecode,
-    FlashMLAOptimalGridNOC0_WH,
     FlashMLAProgramConfig,
+    get_flash_mla_wormhole_grid,
 )
 from tests.ttnn.unit_tests.operations.sdpa.mla_test_utils import (
     run_flash_mla_decode_impl,
@@ -42,10 +42,16 @@ def ensure_wormhole(device: Any) -> None:
 
 
 def build_standalone_wh_decode_inputs(
-    device: Any, *, batch_size: int, decode_position: int, k_chunk_size: int, max_seq_len: int
+    device: Any,
+    *,
+    batch_size: int,
+    decode_position: int,
+    k_chunk_size: int,
+    max_seq_len: int,
+    num_heads: int,
+    num_q_heads_per_core: int,
+    wh_cores_per_block: int,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    num_heads = 32
-    num_q_heads_per_core = 8
     kv_lora_rank = 512
     qk_nope_head_dim = 128
     qk_rope_head_dim = 64
@@ -53,14 +59,24 @@ def build_standalone_wh_decode_inputs(
     kvpe_dim = kv_lora_rank + qk_rope_head_dim
     scale = qk_head_dim**-0.5
 
+    if num_heads % num_q_heads_per_core != 0:
+        raise ValueError(
+            f"num_heads={num_heads} must be divisible by num_q_heads_per_core={num_q_heads_per_core}"
+        )
+
     num_q_shards = num_heads // num_q_heads_per_core
-    grid = FlashMLAOptimalGridNOC0_WH
+    grid = get_flash_mla_wormhole_grid(cores_per_block=wh_cores_per_block)
     if num_q_shards > grid.CORES_PER_BLOCK:
         raise RuntimeError(f"num_q_shards {num_q_shards} exceeds cores_per_block {grid.CORES_PER_BLOCK}")
+    all_active_cores = [core for block_cores, _ in grid.BLOCKS for core in block_cores]
+    required_q_cores = batch_size * num_q_shards
+    if required_q_cores > len(all_active_cores):
+        raise RuntimeError(
+            f"batch_size * num_q_shards {batch_size} * {num_q_shards} exceeds active_q_cores {len(all_active_cores)}"
+        )
 
     tiny_tile = ttnn.Tile((num_q_heads_per_core, 32))
-    s1_cores, _ = grid.BLOCKS[0]
-    q_cores = s1_cores[:num_q_shards]
+    q_cores = all_active_cores[:required_q_cores]
     q_core_grid = ttnn.CoreRangeSet(
         [ttnn.CoreRange(ttnn.CoreCoord(x, y), ttnn.CoreCoord(x, y)) for x, y in q_cores]
     )
@@ -114,23 +130,12 @@ def build_standalone_wh_decode_inputs(
         memory_config=kv_mem_config,
     )
 
-    grid_size = device.compute_with_storage_grid_size()
     position_ids = torch.full((batch_size,), decode_position, dtype=torch.int32)
-    position_replicated = position_ids.repeat(grid_size.x * grid_size.y, 1)
-    pos_core_grid = ttnn.CoreRangeSet(
-        [ttnn.CoreRange(ttnn.CoreCoord(0, 0), ttnn.CoreCoord(grid_size.x - 1, grid_size.y - 1))]
-    )
-    pos_mem_config = ttnn.MemoryConfig(
-        ttnn.TensorMemoryLayout.HEIGHT_SHARDED,
-        ttnn.BufferType.L1,
-        ttnn.ShardSpec(pos_core_grid, (1, 1), ttnn.ShardOrientation.ROW_MAJOR),
-    )
     tt_position_ids = ttnn.from_torch(
-        position_replicated,
+        position_ids,
         dtype=ttnn.int32,
         layout=ttnn.ROW_MAJOR_LAYOUT,
         device=device,
-        memory_config=pos_mem_config,
     )
 
     out_shape = (1, batch_size, num_heads, kv_lora_rank)
@@ -164,18 +169,30 @@ def build_standalone_wh_decode_inputs(
         "k_chunk_size": k_chunk_size,
         "max_seq_len": max_seq_len,
         "num_heads": num_heads,
+        "num_q_heads_per_core": num_q_heads_per_core,
+        "num_q_shards": num_q_shards,
         "kv_lora_rank": kv_lora_rank,
         "qk_rope_head_dim": qk_rope_head_dim,
         "scale": scale,
         "torch_q": torch_q,
         "torch_cache": torch_cache,
         "position_ids": position_ids,
+        "wh_cores_per_block": wh_cores_per_block,
         "grid_name": grid.__name__,
     }
     return tensors, metadata
 
 
-def run_standalone_decode_wh(device: Any, *, decode_position: int, max_seq_len: int) -> dict[str, Any]:
+def run_standalone_decode_wh(
+    device: Any,
+    *,
+    batch_size: int,
+    decode_position: int,
+    max_seq_len: int,
+    num_heads: int,
+    num_q_heads_per_core: int,
+    wh_cores_per_block: int,
+) -> dict[str, Any]:
     if decode_position >= max_seq_len:
         raise ValueError(f"decode_position {decode_position} must be < max_seq_len {max_seq_len}")
 
@@ -183,10 +200,13 @@ def run_standalone_decode_wh(device: Any, *, decode_position: int, max_seq_len: 
 
     tensors, metadata = build_standalone_wh_decode_inputs(
         device,
-        batch_size=1,
+        batch_size=batch_size,
         decode_position=decode_position,
         k_chunk_size=128,
         max_seq_len=max_seq_len,
+        num_heads=num_heads,
+        num_q_heads_per_core=num_q_heads_per_core,
+        wh_cores_per_block=wh_cores_per_block,
     )
 
     reference_output = FlashMLADecode.golden(
@@ -242,6 +262,7 @@ def run_standalone_decode_wh(device: Any, *, decode_position: int, max_seq_len: 
     return {
         "case": "standalone_decode_wh",
         "status": "passed",
+        "batch_size": batch_size,
         "grid": metadata["grid_name"],
         "decode_position": decode_position,
         "max_seq_len": max_seq_len,
@@ -358,6 +379,10 @@ def main() -> None:
     parser.add_argument("--cases", nargs="+", choices=DEFAULT_CASES, default=list(DEFAULT_CASES))
     parser.add_argument("--standalone-max-seq-len", type=int, default=4096)
     parser.add_argument("--standalone-decode-position", type=int, default=2047)
+    parser.add_argument("--standalone-batch-size", type=int, default=1)
+    parser.add_argument("--standalone-num-heads", type=int, default=32)
+    parser.add_argument("--standalone-num-q-heads-per-core", type=int, default=8)
+    parser.add_argument("--wh-cores-per-block", type=int, choices=(4, 8), default=4)
     parser.add_argument("--decode-seq-len", type=int, default=4096)
     parser.add_argument("--prefill-seq-len", type=int, default=1024)
     args = parser.parse_args()
@@ -365,8 +390,12 @@ def main() -> None:
     case_runners = {
         "standalone_decode_wh": lambda device: run_standalone_decode_wh(
             device,
+            batch_size=args.standalone_batch_size,
             decode_position=args.standalone_decode_position,
             max_seq_len=args.standalone_max_seq_len,
+            num_heads=args.standalone_num_heads,
+            num_q_heads_per_core=args.standalone_num_q_heads_per_core,
+            wh_cores_per_block=args.wh_cores_per_block,
         ),
         "decode": lambda device: run_decode_smoke(device, seq_len=args.decode_seq_len),
         "prefill": lambda device: run_prefill_smoke(device, seq_len=args.prefill_seq_len),
@@ -379,6 +408,7 @@ def main() -> None:
             "metadata": {
                 "arch": str(device.arch()),
                 "selected_cases": args.cases,
+                "wh_cores_per_block": args.wh_cores_per_block,
             },
             "results": [],
         }

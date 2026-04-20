@@ -346,12 +346,24 @@ void kernel_main() {
                 mask_reader,
                 k_tile_bytes,
                 v_tile_bytes,
-                PSt);
+                PSt,
+                &paged_read_profiler);
         }
     }
 
-    if (paged_read_profiler.page_table_cycles > 0) {
-        DeviceTimestampedData("SDPA-PAGE-TABLE-SUM", paged_read_profiler.page_table_cycles);
+    const bool has_any_paged_read_profile =
+        paged_read_profiler.page_table_cycles > 0 || paged_read_profiler.reserve_cycles > 0 ||
+        paged_read_profiler.issue_cycles > 0 || paged_read_profiler.wait_cycles > 0 ||
+        paged_read_profiler.push_cycles > 0 || paged_read_profiler.k_reserve_cycles > 0 ||
+        paged_read_profiler.k_issue_cycles > 0 || paged_read_profiler.k_wait_cycles > 0 ||
+        paged_read_profiler.k_push_cycles > 0 || paged_read_profiler.v_reserve_cycles > 0 ||
+        paged_read_profiler.v_issue_cycles > 0 || paged_read_profiler.v_wait_cycles > 0 ||
+        paged_read_profiler.v_push_cycles > 0;
+
+    if (has_any_paged_read_profile) {
+        if (paged_read_profiler.page_table_cycles > 0) {
+            DeviceTimestampedData("SDPA-PAGE-TABLE-SUM", paged_read_profiler.page_table_cycles);
+        }
         DeviceTimestampedData("SDPA-PAGED-RESERVE-SUM", paged_read_profiler.reserve_cycles);
         DeviceTimestampedData("SDPA-PAGED-ISSUE-SUM", paged_read_profiler.issue_cycles);
         DeviceTimestampedData("SDPA-PAGED-WAIT-SUM", paged_read_profiler.wait_cycles);

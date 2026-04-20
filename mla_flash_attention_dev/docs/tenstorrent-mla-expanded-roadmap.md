@@ -1,14 +1,29 @@
-# Tenstorrent 上 MLA + Flash Attention 的扩展研究框架
+# [Archived] Tenstorrent 上 MLA + Flash Attention 的扩展研究框架
+
+> 已归档（2026-04-13）。
+> 这份文档主要保存早期扩展路线与系统故事草稿，仍可作为历史参考，但不再作为当前论文执行总纲。
+> 当前请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`；若需要回看旧版总纲，再继续阅读本文。
 
 ## 1. 文档定位
 
 这份文档是在 `tenstorrent-mla-paper-ideas.md` 的基础上做进一步扩展。
 
-原文档更偏“论文方向筛选”和“最小可投稿版本”，而这份扩展稿希望把你的想法收敛成一个更完整的系统故事，覆盖下面三条主线：
+原文档更偏“论文方向筛选”和“最小可投稿版本”，而这份扩展稿希望把你的想法收敛成一个更完整的系统故事。
 
-1. `MLA + Flash Attention` 在 Tenstorrent 上的应用与落地路径
-2. `MLA + FA` 在 Tenstorrent 上的系统优化，重点是片上网络、KV forwarding 和 multicast
-3. 面向不同输入规模和硬件拓扑的自动寻优模型，用来自动选择最优分组、通信拓扑和流水排布
+## 1.1 2026-04 统一口径
+
+当前应把这份文档理解为 `SF-MLA` 的总纲，而不是“MLA + Flash Attention 优化点列表”。  
+统一口径如下：
+
+- **核心命题**：`MLA decode on spatial accelerators` 是新的 `spatial mapping problem`
+- **文章类型**：`operator characterization + dataflow design + cost model + DSE + architecture implication`
+- **具体硬件语境**：Tenstorrent / Tensix，使 `reader / compute / writer`、`CB`、`dual NoC`、`hardware multicast` 这些问题显性化
+
+因此，这份文档后面提到的三条主线更适合被改写为：
+
+1. `Characterization`：为什么 MLA decode 在 spatial accelerator 上是新的 mapping 对象
+2. `Design`：怎样围绕 shared-latent reuse、projection-attention pipeline 与 multicast/reduction topology 设计数据流
+3. `Model + DSE`：怎样从 first-order 走向 second-order，并搜索最优 mapping
 
 如果后续要继续写成论文、技术报告，或者拆成多个实现文档，这份稿子可以作为总纲。
 
@@ -18,17 +33,17 @@
 
 一句话概括整个方向：
 
-**MLA 把注意力的主要瓶颈从“巨大的传统 KV cache”转成了“更紧凑但更依赖布局与通信组织的 latent cache”，而 Tenstorrent 恰好暴露了显式 dataflow、L1 放置、NoC 路径和多核调度，因此可以把 MLA + Flash Attention 做成一个“算子映射 + 通信优化 + 自动调度”的系统研究问题。**
+**MLA 把注意力的主要瓶颈从“巨大的传统 KV cache”转成了“更紧凑但更依赖布局、通信拓扑和异步流水组织的 latent restoration”，而 Tenstorrent 恰好暴露了显式 dataflow、L1 放置、NoC 路径和多核调度，因此可以把 MLA decode 写成一个“spatial mapping + pipeline coupling + DSE”的系统研究问题。**
 
 这条主线有三个层次：
 
-- **应用层**：把 MLA + Flash Attention 真正映射到 Tenstorrent 的 prefill / decode / paged / multi-chip 场景
-- **优化层**：围绕 NoC、multicast、KV forwarding、core layout 和流水重叠做系统优化
-- **调度层**：让不同输入、不同拓扑、不同资源约束下的最优配置可以自动被搜索出来，而不是手工调
+- **Characterization 层**：解释 MLA 为什么不再是传统 MHA 的小变体
+- **Design 层**：围绕 dataflow、layout、multicast、pipeline 和 reduction 定义参数化 mapping
+- **Model + DSE 层**：让不同输入、不同拓扑、不同资源约束下的最优配置可以被解释和搜索出来，而不是只靠手工调
 
 所以最终要讲的不是“我在 TT 上跑了 MLA”，而是：
 
-**MLA 在显式 dataflow 架构上的收益，不只是 KV cache 压缩本身，还来自对数据布局、通信拓扑和流水调度的联合优化。**
+**MLA 在显式 dataflow 架构上的收益，不只是 KV cache 压缩本身，还来自对数据布局、通信拓扑、流水耦合和 mapping 切换的联合优化。**
 
 ---
 
@@ -57,6 +72,8 @@
 - tree reduction / tree forwarding
 - 还是 compute 本身
 
+这里需要特别强调：对 `decode` 来说，问题已经不再只是“减少一次 kernel 的 IO”，而是如何把 `latent restoration + attention + reduction` 组织成适合 spatial accelerator 的跨核执行计划。
+
 ### 3.3 调度问题
 
 给定一个 workload 和一个硬件拓扑，怎样选择下面这些配置才最优：
@@ -78,6 +95,12 @@
 - 不同 grid 形状和不同物理布局
 
 如果不能，就需要引入自动寻优器。
+
+换句话说，这篇文章不应被包装为“一个固定 kernel 在所有场景下都最好”，而应强调：
+
+- 最优 mapping 会切换
+- 切换原因可被 profiling 与模型解释
+- 这正是 `SF-MLA` 要解决的问题
 
 ---
 

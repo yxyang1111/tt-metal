@@ -1,4 +1,8 @@
-# Phase 0 Scope Note
+# [Archived] Phase 0 Scope Note
+
+> 已归档（2026-04-13）。
+> 这份文档记录的是旧阶段的范围冻结结论，带有明显的阶段性工程口径。
+> 当前请优先参考 `current-docs.md` 与 `sf-mla-paper-positioning.md`；若需要回看历史决策，再继续阅读本文。
 
 ## 1. 文档目的
 
@@ -15,216 +19,152 @@
 
 ## 2. Phase 0 结论
 
-### 2.1 第一阶段主线
+### 2.1 当前统一主线
 
 第一阶段正式固定为：
 
-**`single-chip non-causal prefill` 场景下，围绕 `MLA + Flash Attention` 的 `KV forwarding / multicast / layout / pipeline / NoC` 系统优化。**
+**把 `MLA decode on spatial accelerators` 明确写成新的 `spatial mapping problem`，并用 `SF-MLA` 作为统一框架来组织 characterization、dataflow design、cost model、DSE 和 architecture implication。**
 
-这里的重点不是把所有 MLA 路径都同时做完，而是先围绕最容易形成闭环的场景，把：
+### 2.2 decode、prefill 与实验资产的定位
 
-- 基线建立清楚
-- 通信瓶颈解释清楚
-- 优化项收益证明清楚
+当前各条线的角色固定如下：
 
-### 2.2 MLA + Flash Attention 在第一阶段中的定位
+- `decode`：论文主战场，负责问题定义、mapping 设计、建模与 DSE
+- `prefill`：supporting evidence，主要用于解释 forwarding / multicast / overlap 等结构性行为
+- `8-core`、`WH/BH`、实验性 FlashMLA：设计空间中的不同 mapping point
+- `simulation / projection`：未来架构含义与资源变化分析
 
-第一阶段中，`MLA + Flash Attention` 的定位是：
+### 2.3 autotuner 的定位
 
-- 作为应用背景和算子映射对象
-- 作为解释为什么 latent cache、布局和 NoC 组织重要的核心案例
-- 作为后续扩展到 decode 与 paged 场景的统一入口
+当前把 autotuner 固定为：
 
-但第一阶段真正的工程主战场是：
+- `offline DSE / cached policy selector`
+- `SF-MLA` 框架的一部分，而不是独立的在线系统
 
-- `non-causal prefill`
-- `KV forwarding`
-- `multicast / hybrid`
-- `layout-aware mapping`
-- `pipelined read/forward`
-- `dual NoC`
-
-### 2.3 decode 的定位
-
-`decode` 在第一阶段不作为核心优化主线，而是：
-
-- 用于补充 MLA 应用背景
-- 用于解释后续为什么可能扩展到 `flash decode` / tree-style 通信
-- 作为第二阶段或对照场景保留
-
-第一阶段不把下面这些问题作为必须完成项：
-
-- decode 主路径性能优化
-- decode 树形归约的系统性扩展
-- decode 作为论文主贡献
-
-### 2.4 multi-chip 的定位
-
-`multi-chip` 暂不纳入第一阶段必须项。
-
-它保留为：
-
-- 后续自然扩展方向
-- 未来讨论 ring distributed / joint attention / chip 间 cache 切分时的接口
-
-但在当前阶段，不要求把它纳入主实验矩阵或主叙事。
-
-### 2.5 autotuner 的定位
-
-第一阶段先把 autotuner 定位为：
-
-- `offline / cached policy selector`
-- 设计空间搜索和配置选择机制
-
-第一阶段明确不把 autotuner 默认写成：
-
-- 在线实时搜索
-- request-time tuning
-
-只有在后续满足下面几个条件时，才考虑把 autotuner 升级为主贡献：
+只有在后续满足下面条件时，才升级为标题级贡献：
 
 - reduced-space `oracle` 可获得
-- `oracle gap` 数据完整
+- `oracle gap` 与 `top-1 gap` 数据完整
 - 搜索开销可解释
-- 相比固定 expert 规则确实稳定更优
+- 相比固定 expert 规则稳定更优
+
+### 2.4 当前不把什么当成主标题
+
+当前不把下面这些内容单独当成论文主标题：
+
+- “更快的 FlashMLA kernel”
+- 单一 `prefill` 优化故事
+- 仅以 `8-core` 为核心的 benchmark 结论
+- 在线 request-time autotuning
 
 ---
 
 ## 3. 为什么这样冻结范围
 
-当前做这个范围冻结，主要基于下面几条判断：
+### 3.1 现在最有论文闭环的是 decode mapping
 
-### 3.1 当前最容易形成闭环的是 non-causal prefill
+现有材料已经覆盖了：
 
-现有材料已经说明：
+- MLA decode 的 baseline / fairness / capability probe
+- 主线 FlashMLA 与实验性 FlashMLA 的数据流差异
+- `4c vs 8c` 的容量边界与 mapping 切换
+- Wormhole profiling 与 Blackhole projection / simulation
 
-- `A/B/C` 类实验资产已经比较完整
-- 真正最值得继续投入的是 `D：优化项消融`
-- `E：autotuner` 是否值得升级，取决于后续数据
+这些资产天然适合收束为：
 
-所以最稳妥的推进方式不是再扩方向，而是先把 `non-causal prefill` 做深。
+- 问题定义
+- 设计空间
+- cost model
+- DSE
+- 架构含义
 
-### 3.2 这个场景最适合讲通信优化
+### 3.2 prefill 仍然重要，但不再是唯一主战场
 
-相比标准应用映射问题，`single-chip non-causal prefill` 更容易直接暴露：
+prefill 不是要被删除，而是要被重新解释为：
 
-- injector 热点
-- NoC forwarding 开销
-- multicast 资格受限
-- layout 对覆盖率的影响
-- overlap 不足造成的瓶颈
+- shared-latent reuse 与 forwarding 机制的 supporting evidence
+- `pipeline coupling` 和 `multicast` 行为的额外观测窗口
+- decode 论文主线之外的补充对照
 
-这正好对应第一阶段最想解决的系统问题。
+### 3.3 这更符合当前研究空白
 
-### 3.3 decode 和 multi-chip 都更适合第二阶段
+当前真正有论文价值的，不是“又做了一个更快 kernel”，而是：
 
-`decode` 更偏单 token 路径与归约组织。  
-`multi-chip` 更偏系统扩展与跨设备通信。
-
-这两条线当然重要，但它们会显著增加：
-
-- 实现复杂度
-- 叙事分叉
-- 实验矩阵规模
-
-因此不适合和第一阶段主线并行展开。
-
-### 3.4 autotuner 必须有条件地推进
-
-如果没有：
-
-- `oracle gap`
-- search overhead
-- workload 差异性
-
-那么 autotuner 很容易退化成“包装层”，而不是一个真正站得住的贡献点。
-
-所以第一阶段的正确姿势是：
-
-- 先做设计空间和优化项
-- 再决定 autotuner 是否升级
+- 为什么 MLA 在 spatial accelerator 上暴露出新的 mapping 问题
+- 为什么最优 dataflow 会随 workload 和硬件资源变化而切换
+- 为什么需要 `first-order + second-order model + DSE`
 
 ---
 
 ## 4. 第一阶段固定研究问题
 
-在当前冻结范围下，第一阶段只回答下面四类问题：
+在当前冻结范围下，第一阶段优先回答下面四类问题：
 
-### 4.1 baseline 瓶颈是什么
+### 4.1 Characterization：MLA decode 到底是什么问题
 
 要回答清楚：
 
-- `NC-current-auto` 的主要瓶颈到底在哪里
-- 瓶颈如何随着链长、序列长度和布局变化而切换
+- MLA decode 何时处于 `compute-memory mixed regime`
+- bottleneck 如何随 `seq_len`、batch、head、硬件资源变化而切换
+- `reader / compute / writer` 的回压如何形成 `pipeline coupling`
 
-### 4.2 每个优化项解决了什么问题
+### 4.2 Design：哪些 dataflow 设计最关键
 
 重点关注：
 
-- `per-chain hybrid`
-- `layout-aware mapping`
-- `pipelined read/forward`
-- `dual NoC`
+- shared-latent reuse
+- projection-attention pipeline
+- multicast / reduction topology
+- S-block / lane / bank-affinity mapping
 
-### 4.3 收益是否跨 workload 稳定
+### 4.3 Model + DSE：为什么不能只靠经验调参
 
-要证明收益不是只在单一 shape 或单一布局上成立，而是至少覆盖：
+要证明：
 
-- 主形状
-- 长序列
-- `GQA / MQA`
-- stress case
+- first-order model 不足以解释真实机器行为
+- second-order correction 能显著降低误差
+- 最优 mapping 会在不同 workload 上切换
 
-### 4.4 autotuner 是否值得进入主标题
+### 4.4 Architecture implication：这些结论对未来硬件意味着什么
 
-第一阶段不默认回答“autotuner 一定是主贡献”，而是要通过后续结果决定：
+重点关注：
 
-- 升级为主贡献
-- 保留为次要章节
-- 降级为 future work
+- lane 容量与 active-core 覆盖
+- multicast 扇出和热点
+- reader / writer 饱和的 phase transition
+- 新架构资源变化下最优 mapping 的迁移
 
 ---
 
 ## 5. 第一批 workload family
 
-第一批 workload 按 `F1-F4` 四类固定下来。
+第一批 workload 按 `D1-D4` 四类固定下来。
 
 | Family | 目的 | 建议参数 | 当前状态 |
 | --- | --- | --- | --- |
-| `F1: 当前主形状` | 复用已有结果，快速迭代 | `B=1, NH=8, NKV=1, S=1024, D=128, q_chunk=128, k_chunk=128` | 已覆盖 |
-| `F2: 更长序列` | 放大 `chain / sync / overlap` 问题 | `S=2048/4096/8192, D=128`，其余尽量保持接近 `F1` | 已部分覆盖 |
-| `F3: GQA/MQA 变化` | 观察 `NKV` 变化对 sharing 价值的影响 | `NH=8/16, NKV=1/4, S=1024 or 2048, D=128` | 已部分覆盖 |
-| `F4: 不利布局/尾部` | 验证 `hybrid/layout/tail policy` 的价值 | 非同行、非完美矩形、`q_chunk_count` 不均匀、`mcast` 不可用 | 当前最缺 |
+| `D1: Decode baseline` | 建立标准 MLA decode 行为画像 | `B=1/2`, `H=32`, `seq_len=256/1k/4k` | 已覆盖 |
+| `D2: Long-context phase transition` | 观察 bottleneck 切换 | `seq_len=8k/16k/32k/128k` | 已部分覆盖 |
+| `D3: Mapping stress` | 放大 lane / q_shards / 容量边界 | `B=6/8/12`, `H=24/32`, `dqhpc=8` | 已覆盖较多 |
+| `D4: Architecture sensitivity` | 观察不同 mapping / 架构资源下的最优点迁移 | `4c vs 8c`、WH vs BH projection | 已部分覆盖 |
 
-### 5.1 核数 sweep 约定
+### 5.1 第一批代表 workload
 
-所有 family 默认至少 sweep 一组核心数：
+为了避免一开始把矩阵铺得过大，第一批先固定为下面 8 个代表 case：
 
-- `4`
-- `8`
-- `16`
-- `24`
-- `32`
-- `48`
-- `56/64`
-
-### 5.2 第一批代表 workload
-
-为了避免一开始就把实验矩阵铺得过大，第一批先固定为下面 8 个代表 case：
-
-1. `W1_F1_base`: `B=1, NH=8, NKV=1, S=1024, D=128`
-2. `W2_F2_s2048`: `B=1, NH=8, NKV=1, S=2048, D=128`
-3. `W3_F2_s4096`: `B=1, NH=8, NKV=1, S=4096, D=128`
-4. `W4_F2_s8192`: `B=1, NH=8, NKV=1, S=8192, D=128`
-5. `W5_F3_gqa`: `B=1, NH=8, NKV=4, S=1024, D=128`
-6. `W6_F3_heads16`: `B=1, NH=16, NKV=4, S=1024, D=128`
-7. `W7_F4_badLayout`: `mcast` 不可用、几何布局不利的 stress case
-8. `W8_F4_tailUneven`: `q_chunk_count` 不均匀的尾部 stress case
+1. `W1_D1_decode_1k`: `B=1, H=32, seq_len=1k`
+2. `W2_D1_decode_4k`: `B=1, H=32, seq_len=4k`
+3. `W3_D2_decode_8k`: `B=1, H=32, seq_len=8k`
+4. `W4_D2_decode_32k`: `B=1, H=32, seq_len=32k`
+5. `W5_D3_qshard3`: `B=8, H=24, seq_len=8k`
+6. `W6_D3_qshard4`: `B=6, H=32, seq_len=8k`
+7. `W7_D3_capacity_boundary`: `B=8/12, H=32, seq_len=8k`
+8. `W8_D4_arch_switch`: `WH 4c vs 8c` 或 `WH vs BH projection`
 
 说明：
 
-- `W1-W6` 主要用于复用已有基线和做 feature ablation
-- `W7-W8` 是第一阶段必须补齐的 stress case
+- `W1-W4` 用于 characterization 与模型校准
+- `W5-W7` 用于 design / mapping / 容量边界
+- `W8` 用于 architecture implication
 
 ---
 
@@ -234,32 +174,28 @@
 
 第一阶段主表默认使用下面四类 baseline：
 
-- `CP`
-- `NC-naive`
-- `NC-current-auto`
-- `NC-proposed`
+- `Reference Attention`
+- `Flash Attention`
+- `FlashMLA (TT Mainline)`
+- `DeepSeek / experimental FlashMLA`
 
-### 6.2 通信策略层
+### 6.2 设计空间层
 
-如果需要做策略消融，按下面层次组织：
+如果需要做设计空间对照，按下面层次组织：
 
-- `unicast`
-- `multicast`
-- `per-chain hybrid`
-- `tree`（仅当实现后再加入）
-
-说明：
-
-- `unicast` 作为弱基线和消融项保留
-- 主 baseline 默认是 `NC-current-auto`
+- `mainline vs experimental`
+- `4c vs 8c`
+- `with vs without multicast`
+- `first-order vs second-order`
 
 ### 6.3 配置策略层
 
-如果进入 autotuner 阶段，再增加：
+如果进入 DSE 阶段，再增加：
 
 - `expert default`
 - `heuristic`
 - `autotuner`
+- `oracle / exhaustive on reduced space`
 
 ---
 
@@ -269,24 +205,31 @@
 
 ### 主指标
 
-- latency
-- speedup vs `NC-current-auto`
-- speedup vs `NC-naive`
+- `latency / token`
+- throughput
+- supported coverage / capacity boundary
 
-### 通信与资源指标
+### 微架构与资源指标
 
-- NoC bytes
-- DRAM utilization
-- injector stall
-- receiver idle
-- overlap ratio
-- FPU utilization
+- `reader / writer / compute` stall breakup
+- `NoC bytes`
+- `multicast hotspot`
+- `DRAM utilization`
+- `active core ratio`
+- `bank affinity`
+
+### 模型与搜索指标
+
+- first-order MAPE
+- second-order MAPE
+- tuner `top-1 gap`
+- search cost
 
 ### 兜底指标
 
 - correctness
 - seed-to-seed stability
-- metadata overhead
+- fairness boundary / measurement scope
 
 ---
 
@@ -294,12 +237,11 @@
 
 为了保证第一阶段闭环，下面这些内容先明确不作为必须项：
 
-- 把 `decode` 做成第一阶段主优化主线
+- 把论文写成“谁比谁更快”的 benchmark 故事
 - 把 `multi-chip` 纳入第一阶段主实验
-- 把 `tree forwarding` 作为第一批必须实现项
-- 把 `rotating injector` 作为第一批必须实现项
-- 把 autotuner 写成在线实时搜索
-- 在没有 stress case 之前继续扩写大而全的总纲文档
+- 把在线 autotuner 写成主系统
+- 把 `8 q_shards` 打通当成第一阶段是否成立的前提
+- 在证据链还没闭环时继续扩写大而全的总纲文档
 
 ---
 
@@ -309,9 +251,9 @@
 
 1. 已明确一句话主线
 2. 已明确第一阶段不做什么
-3. 已固定 `F1-F4` workload family
+3. 已固定 `D1-D4` workload family
 4. 已固定第一批代表 workload
-5. 已固定 baseline 与指标层次
+5. 已固定 baseline、指标与 DSE 口径
 
 ---
 
@@ -319,10 +261,10 @@
 
 在这份文档基础上，下一步直接进入：
 
-- `Phase 1：建立 baseline 和代码地图`
+- `Phase 1：建立代码地图与 characterization 资产`
 
 最具体的动作是：
 
-1. 整理 `model -> op -> program factory -> kernel` 的代码路径图
-2. 固定第一批实验入口和测试入口
-3. 准备 `Experiment D` 的 `B0 -> B4` 消融执行顺序
+1. 整理 `model -> op -> program factory -> kernel -> profiler` 的代码路径图
+2. 统一 `mainline / experimental / 8-core / simulation` 的设计空间表述
+3. 准备 first-order / second-order model 所需的最小实验集

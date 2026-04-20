@@ -369,6 +369,45 @@ class FlashMLAOptimalGridNOC0_WH:
         cls.validate_dram_banks(device)
 
 
+class FlashMLAOptimalGridNOC0_WH_8C(FlashMLAOptimalGridNOC0_WH):
+    """
+    Experimental Wormhole B0 grid with 8 cores per S block.
+
+    This keeps the existing 6-bank/6-S-block Wormhole topology but widens each
+    S block into a 4x2 rectangle so a single S block can host up to 8 Q shards.
+    Total active cores: 6 S blocks x 8 cores = 48.
+    """
+
+    BLOCKS = (
+        # S1 → Bank 1 (top-left)
+        (((0, 0), (1, 0), (2, 0), (3, 0), (0, 1), (1, 1), (2, 1), (3, 1)), 1),
+        # S2 → Bank 2 (mid-left)
+        (((0, 3), (1, 3), (2, 3), (3, 3), (0, 4), (1, 4), (2, 4), (3, 4)), 2),
+        # S3 → Bank 0 (bottom-left)
+        (((0, 5), (1, 5), (2, 5), (3, 5), (0, 6), (1, 6), (2, 6), (3, 6)), 0),
+        # S4 → Bank 4 (top-right)
+        (((4, 0), (5, 0), (6, 0), (7, 0), (4, 1), (5, 1), (6, 1), (7, 1)), 4),
+        # S5 → Bank 9 (mid-right)
+        (((4, 2), (5, 2), (6, 2), (7, 2), (4, 3), (5, 3), (6, 3), (7, 3)), 9),
+        # S6 → Bank 8 (bottom-right)
+        (((4, 5), (5, 5), (6, 5), (7, 5), (4, 6), (5, 6), (6, 6), (7, 6)), 8),
+    )
+
+    NUM_BLOCKS = len(BLOCKS)
+    CORES_PER_BLOCK = len(BLOCKS[0][0])
+    OPTIMAL_DRAM_BANK_ORDER = tuple(block[1] for block in BLOCKS)  # (1, 2, 0, 4, 9, 8)
+    TREE_REDUCTION_ORDER = FlashMLAOptimalGridNOC0_WH.TREE_REDUCTION_ORDER
+    NUM_TREE_REDUCTION_STEPS = len(TREE_REDUCTION_ORDER)
+
+
+def get_flash_mla_wormhole_grid(*, cores_per_block: int = 4) -> type:
+    if cores_per_block == FlashMLAOptimalGridNOC0_WH.CORES_PER_BLOCK:
+        return FlashMLAOptimalGridNOC0_WH
+    if cores_per_block == FlashMLAOptimalGridNOC0_WH_8C.CORES_PER_BLOCK:
+        return FlashMLAOptimalGridNOC0_WH_8C
+    raise ValueError(f"Unsupported Wormhole FlashMLA cores_per_block={cores_per_block}; expected 4 or 8")
+
+
 def get_interleaved_tensor_accessor_args(tensor):
     """
     Construct tensor accessor compile-time args for interleaved tensors (DRAM or L1).
