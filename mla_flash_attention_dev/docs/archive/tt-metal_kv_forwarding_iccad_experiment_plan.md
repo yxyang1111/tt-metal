@@ -12,7 +12,7 @@
 
 本文默认配套阅读：
 
-- `docs/tt-metal_kv_forwarding_design_space_autotuner.md`
+- `docs/archive/tt-metal_kv_forwarding_design_space_autotuner.md`
 - `test/profile_results/sdpa_multi_core_detailed_report.md`
 - `test/profile_sdpa_multi_core.py`
 
@@ -49,7 +49,7 @@
 | `test/profile_results/sdpa_multi_core_detailed_report.md` | 已有 4/8/16/24/32/48/56 核的 CP vs NC 结果 | 已经证明 `16` 核后 NC 瓶颈切到 `NoC forwarding / Sync` |
 | `test/profile_results/README.md` | 已汇总单核 / 多核 / 双芯片结果 | 可以直接提炼论文摘要数字和初始图表 |
 | `test/test_sdpa_single_core.py`、`test/test_sdpa_multi_core.py`、`test/test_sdpa_two_chips.py` | 已有 `cosine similarity`、`max abs diff` | 可复用为 correctness 验证入口 |
-| `docs/tt-metal_kv_forwarding_design_space_autotuner.md` | 已明确设计空间 knob | 可以直接转成论文中的方法表和 ablation 维度 |
+| `docs/archive/tt-metal_kv_forwarding_design_space_autotuner.md` | 已明确设计空间 knob | 可以直接转成论文中的方法表和 ablation 维度 |
 | `tt-metal/tests/tt_metal/tt_metal/perf_microbenchmark/` | 已有 DRAM / NoC / remote CB sync / fabric 微基准 | 适合给通信 cost model 和论文的微架构分析做支撑 |
 | `TT_METAL_DEVICE_PROFILER` / Tracy / op report 能力 | 仓库内已具备工具链 | 适合做时间线和等待分解，而不只是端到端 latency |
 | `experiments/iccad_exp_5_1/` | 已完成 `CP vs NC` 在 `S=1024/2048/4096`、多核数 sweep 与基础图表 | 已足够支撑问题陈述主图、chain onset 和 bottleneck 转折叙事 |

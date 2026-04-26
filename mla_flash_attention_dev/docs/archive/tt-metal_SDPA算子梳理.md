@@ -1,4 +1,8 @@
-# tt-metal 中 SDPA 算子梳理
+# [Archived] tt-metal 中 SDPA 算子梳理
+
+> 已归档（2026-04-23）。
+> 这份文档在最近一个月内未继续更新，保留作历史背景参考。
+> 当前默认不作为 `docs/` 根目录主入口；如需当前主线，请优先参考 `current-docs.md`。
 
 本文整理 `tt-metal/ttnn` 推理侧与 SDPA（Scaled Dot Product Attention）相关的公开 API、核心实现、张量约定、并行策略、测试入口和阅读路径，目标是帮助快速建立一张“从 Python 调用到 device kernel”的全景图。
 

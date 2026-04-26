@@ -294,199 +294,203 @@ We make the following contributions:
 %% ============================================================
 \section{Background}\label{sec:background}
 
-This section reviews the attention formulations, MLA computation,
-architectural mechanisms, and performance concepts needed for the
-challenge analysis that follows.
+We establish the two foundations required for the remainder of the
+paper: the operator semantics of MLA and FlashMLA-style decode
+(Section~\ref{sec:bg-mla}), and the architectural primitives of
+Tenstorrent's spatial accelerator that determine feasible dataflow
+strategies (Section~\ref{sec:bg-arch}).
 
 
-%%% ----- 2.1 Attention Mechanisms: From MHA to MLA -----
+%%% ----- 2.1 MLA / FlashMLA -----
 
-\subsection{Attention Mechanisms: From MHA to MLA}\label{sec:bg-attn}
+\subsection{Multi-Latent Attention and FlashMLA Decode}\label{sec:bg-mla}
 
-The Transformer architecture~\cite{vaswani2017attention} employs
-multi-head attention (MHA) as its core sequence-modeling primitive.
-For each of $H$ attention heads, query, key, and value triples
-$(Q_h, K_h, V_h)$ are derived via learned projections, and attention
-is computed as:
-\begin{equation}\label{eq:mha}
-  \mathrm{Attn}_h
-    = \mathrm{softmax}\!\Bigl(\frac{Q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h ,
-\end{equation}
-where $d$ is the per-head dimension.
-
-\paragraph{Prefill versus decode.}
-Autoregressive LLM inference has two distinct
-phases~\cite{pope2023efficiently}.
-The \emph{prefill} phase processes the entire prompt in one forward
-pass, computing $\mathcal{O}(L^2 d H)$ FLOPs over $\mathcal{O}(LdH)$
-data---typically \emph{compute-bound} in modern serving
-stacks~\cite{aminabadi2022deepspeed, zhong2024distserve}.
-The \emph{decode} phase generates one token per step: the new query
-$q_h \in \mathbb{R}^{1 \times d}$ attends over the full KV cache of
-length $L$:
-\begin{equation}\label{eq:decode-attn}
+\paragraph{Conventional decode and the KV cache.}
+Autoregressive decode generates one output token per step by attending
+over the full token history.  The attention for head $h$ is:
+\begin{equation}
   o_h = \mathrm{softmax}\!\Bigl(
-    \frac{q_h\, K_h^\top}{\sqrt{d}}\Bigr)\, V_h,
-  \quad K_h, V_h \in \mathbb{R}^{L \times d},
+    \tfrac{1}{\sqrt{d}}\,q_h K_h^\top + M\Bigr)\, V_h,
+  \qquad K_h, V_h \in \mathbb{R}^{L \times d},
 \end{equation}
-requiring $\mathcal{O}(Ld)$ FLOPs but reading $\mathcal{O}(Ld)$
-KV elements from memory---arithmetic intensity $\mathcal{O}(1)$,
-firmly \emph{memory-bound}.
+where $L$ is the current context length and $M$ is a causal mask.
+Because the new query accesses the \emph{full} key-value (KV) cache at
+each step, decode has arithmetic intensity $\mathcal{O}(1)$~FLOP/Byte
+and is strongly memory-bandwidth
+bound~\cite{pope2023efficiently}.  GQA~\cite{ainslie2023gqa} and
+MQA~\cite{shazeer2019mqa} reduce head count but retain the per-head KV
+structure.
 
-\paragraph{From GQA/MQA to MLA.}
-Grouped-query attention (GQA)~\cite{ainslie2023gqa} and multi-query
-attention (MQA)~\cite{shazeer2019mqa} reduce the number of KV heads,
-proportionally shrinking cache size and DRAM traffic, complementing
-system-level KV-cache optimizations such as
-PagedAttention~\cite{kwon2023pagedattention},
-StreamingLLM~\cite{xiao2024streamingllm}, and
-H\textsubscript{2}O~\cite{zhang2024h2o}.
-Multi-Latent Attention (MLA)~\cite{deepseekai2024deepseekv2} goes
-further by compressing the KV representation itself into a low-rank
-latent space.
+\paragraph{Multi-Latent Attention.}
+MLA~\cite{deepseekai2024deepseekv2, deepseekai2024deepseekv3}
+eliminates per-head KV storage by projecting each token's key--value
+state into a shared low-rank latent $c_t \in \mathbb{R}^{d_c}$, with
+$d_c \ll 2Hd$.  A separate RoPE branch~\cite{su2024roformer} retains
+explicit positional information.  During decode, head-$h$ keys and
+values are on-the-fly reconstructed via learned up-projections
+$W_{UK}^{(h)}, W_{UV}^{(h)} \in \mathbb{R}^{d_c \times d}$.  The
+result is a per-token cache footprint of $\mathcal{O}(d_c)$ instead of
+$\mathcal{O}(2Hd)$; for DeepSeek-V2/V3 ($H{=}128$, $d{=}128$,
+$d_c{=}512$), this is a $64\times$ reduction.  The key architectural
+consequence is that decode is no longer a direct cache lookup but a
+\emph{restore-and-attend} operator, whose compute and data-movement
+structure differs qualitatively from MHA and GQA.
 
-
-%%% ----- 2.2 Multi-Latent Attention (MLA) -----
-
-\subsection{Multi-Latent Attention}\label{sec:bg-mla}
-
-In MLA~\cite{deepseekai2024deepseekv2, deepseekai2024deepseekv3}, the KV
-cache for each token position $t$ is compressed into a
-single latent vector $c_t \in \mathbb{R}^{d_c}$ via a learned
-down-projection:
-\begin{equation}\label{eq:mla-compress}
-  c_t = W_{\mathrm{DKV}} \, x_t ,
+\paragraph{FlashMLA: a unified-cache view.}
+The FlashMLA-style decode kernel studied in this
+paper~\cite{flashmla2024gpu} implements MLA by representing the cached
+state as a single unified tensor.  After query-side projection, the
+kernel receives:
+\begin{equation}\label{eq:flashmla-kernel}
+  \begin{aligned}
+    Q_{\mathrm{attn}} &= \bigl[Q_{\mathrm{latent}} \mid Q_{\mathrm{rope}}\bigr]
+      \in \mathbb{R}^{1 \times (d_c + d_r)}, \\
+    K_{\mathrm{cache}} &= \bigl[C \mid K_{\mathrm{rope}}\bigr]
+      \in \mathbb{R}^{L \times (d_c + d_r)},
+  \end{aligned}
 \end{equation}
-where $d_c \ll H \cdot d$ is the latent rank (e.g., $d_c = 512$ in
-DeepSeek-V2 with $H{=}128$ and $d{=}128$).  Only $c_t$ is stored
-in the KV cache, reducing per-token storage from $2Hd$ to $d_c$ elements.
-
-During decode, the full key and value for each head $h$ are
-\emph{online-restored}:
-\begin{equation}\label{eq:mla-restore}
-  K_h = W_{UK}^{(h)}\, C, \quad V_h = W_{UV}^{(h)}\, C ,
+and computes exact attention using the full cache width for score
+accumulation while treating the leading $d_v{=}d_c$ columns as the
+value view:
+\begin{equation}\label{eq:flashmla-attn}
+  O = \mathrm{softmax}\!\bigl(
+    \alpha\, Q_{\mathrm{attn}} K_{\mathrm{cache}}^\top + M
+  \bigr)\, K_{\mathrm{cache}}[\,:,\!:\!d_v].
 \end{equation}
-where $C = [c_1; c_2; \ldots; c_L] \in \mathbb{R}^{L \times d_c}$
-is the cached latent matrix and $W_{UK}^{(h)}, W_{UV}^{(h)}$ are
-per-head up-projection matrices.
+For the DeepSeek-V2/V3 configuration, $d_c{=}512$ and $d_r{=}64$,
+giving a cache width of 576 with a 512-wide value view.  This asymmetry
+between the score computation width ($d_c+d_r$) and the output width
+($d_v$) is a key source of tile-packing and DRAM-traffic constraints
+examined in Section~\ref{sec:challenges}.
 
-In practice, DeepSeek models also incorporate a rotary position
-embedding (RoPE)~\cite{su2024roformer} component: the query and key
-each contain a RoPE subspace of dimension $d_{\mathrm{rope}}$
-(e.g., 64) that is not compressed into the latent, requiring separate
-handling in the dataflow.
+Flash-style chunked execution~\cite{dao2022flashattention} processes
+$K_{\mathrm{cache}}$ in sequence blocks $\Bkv$ and maintains only the
+running online-softmax state $(m, \ell, o)$ in L1, avoiding
+materialization of the full $1 \times L$ score
+matrix~\cite{flashmla2024gpu}.  Two properties of
+Equation~\eqref{eq:flashmla-attn} are central to this paper's
+contributions.  First, the latent cache is \emph{shared across all
+heads}, creating cross-head data reuse that conventional decode entirely
+lacks.  Second, the decode computation combines a sequence-length-linear
+DRAM read, per-head projection work, and a reduction over blocks---a
+mixed compute--memory regime whose balance depends on dataflow choices
+rather than fixed kernel parameters.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/bg_mla_overview.pdf}
+  \caption{%
+    (a)~Conventional MHA decode stores independent per-head KV caches.
+    (b)~MLA compresses per-token state into a shared latent $C$ plus a
+    RoPE branch; per-head K/V are restored on-the-fly during decode.
+    (c)~FlashMLA-style execution streams $K_{\mathrm{cache}}$ in blocks
+    of size $\Bkv$, maintaining only the running softmax state $(m,\ell,o)$
+    in L1.  Cache widths for DeepSeek-V2/V3:
+    $512\,{+}\,64\,{=}\,576$; value view consumes the leading 512 columns.
+  }
+  \Description{Three-panel figure: (a) conventional MHA decode with per-head KV caches, (b) MLA with shared latent and RoPE branch, (c) FlashMLA chunked decode with online softmax state.}
+  \label{fig:bg-mla-overview}
+\end{figure}
 
 
-%%% ----- 2.3 Tenstorrent Architecture -----
+%%% ----- 2.2 Tenstorrent Architecture -----
 
-\subsection{Tenstorrent Spatial Accelerator Architecture}\label{sec:bg-arch}
+\subsection{Tenstorrent Spatial Accelerator}\label{sec:bg-arch}
 
-Tenstorrent's Wormhole~\cite{tenstorrent2024wormhole} and
-Blackhole chips are many-core spatial accelerators designed for
-neural-network workloads~\cite{tt-fft2025}.  We describe the features most relevant
-to MLA dataflow design.
+Tenstorrent's Wormhole and Blackhole are many-core spatial
+accelerators~\cite{tenstorrent2024wormhole} organized as a 2-D mesh of
+Tensix cores with distributed scratchpad SRAM, explicitly managed data
+movement, and hardware-assisted collective communication.
+Table~\ref{tab:hw-params} summarizes key parameters.  We use
+\emph{spatial accelerator} to denote this class of architectures
+characterized by many processing elements, per-PE local memory, and
+explicit inter-PE communication over an on-chip network.
 
 \paragraph{Tensix core microarchitecture.}
-Each Tensix core integrates five lightweight RISC-V processors with
-specialized roles:
-\begin{itemize}
-  \item \textbf{NCRISC (Reader):} Manages DRAM-to-L1 DMA transfers;
-    in MLA, responsible for reading K/V latent pages from ND-sharded
-    DRAM.
-  \item \textbf{BRISC (Writer/Coordinator):} Manages L1-to-L1 and
-    L1-to-DRAM transfers; in MLA, orchestrates Q distribution,
-    K multicast to receiver cores, and tree-reduction send/receive
-    protocols.
-  \item \textbf{TRISC (Compute):} Three processors (TRISC0--2)
-    driving the unpack--math--pack pipeline; in MLA, executes
-    $QK^\top$, online softmax, $\mathrm{Attn} \cdot V$, and
-    tail-reduction merges.
-\end{itemize}
+Each Tensix core contains approximately 1.5\,MB of L1 SRAM partitioned
+into software-managed circular buffers (CBs), plus three classes of
+lightweight controllers operating concurrently.  NCRISC drives
+DMA-style DRAM-to-L1 transfers; BRISC orchestrates L1-to-L1 unicast or
+multicast injections and result write-back; three TRISCs execute the
+unpack--math--pack compute pipeline.  Stages synchronize through CB
+slot reservations and release notifications: the reader (NCRISC) must
+reserve a free slot before issuing a DMA, the compute stage (TRISC)
+blocks on \texttt{cb\_wait\_front} until data arrives, and the writer
+(BRISC) stalls until compute produces valid output.  This decoupled
+architecture allows DRAM latency to be hidden under compute in the
+common case, but creates bidirectional \emph{back-pressure coupling}
+when any stage falls behind---a behavior we quantify in
+Section~\ref{sec:challenge-coupling}.
 
-Because NCRISC, BRISC, and TRISC operate as \emph{decoupled pipeline
-stages}, data movement and computation can overlap---but they also
-exhibit \emph{pipeline coupling} when downstream back-pressure
-propagates upstream, a phenomenon central to our analysis
-(Section~\ref{sec:challenge-coupling}).
+\paragraph{On-chip network and collective communication.}
+Two independent 2-D mesh NoCs serve unicast and multicast traffic
+independently, enabling full-duplex data movement.  A sender core
+addresses a rectangular destination region in a single transaction;
+the NoC replicates the payload internally without redundant DRAM
+reads.  This hardware multicast primitive is the cornerstone of
+\sysname's shared-latent distribution strategy
+(Section~\ref{sec:concept-mcast}): one DRAM read of a latent block is
+broadcast to all cores in a worker group processing distinct attention
+heads, eliminating $\mathcal{O}(H)$~DRAM reads and replacing them with
+$\mathcal{O}(1)$ DRAM read plus one NoC multicast.
 
-\paragraph{Circular buffers.}
-Inter-stage communication within a core uses software-managed
-\emph{circular buffers} (CBs) in L1 SRAM.
-A producer (e.g., NCRISC) pushes tiles into CB slots; a consumer
-(e.g., TRISC unpack) pops them.  CB depth ($\geq 2$ slots) enables
-double-buffering or deeper pipelining.  When all slots are full, the
-producer \emph{stalls on reserve}; when all slots are empty, the
-consumer \emph{stalls on wait-front}.  These stall events are directly
-observable in profiling and form the basis of our second-order cost
-model terms.
+\paragraph{DRAM banking and placement.}
+DRAM controllers are distributed along the chip boundary and mapped to
+contiguous NoC rows.  The physical proximity of a worker group to its
+DRAM banks directly affects read latency and available bandwidth.  An
+MLA mapping must therefore jointly optimize (i)~the rectangular shape
+of the worker group for multicast efficiency, (ii)~its placement for
+bank affinity, and (iii)~the reduction topology for partial-output
+aggregation.  These dimensions are coupled: changing the worker-group
+shape alters both the multicast fanout and the set of reachable DRAM
+banks.  Section~\ref{sec:design} formalizes this coupling through the
+\SblockName{} abstraction.
 
-\paragraph{Dual NoC and hardware multicast.}
-Two independent 2-D mesh networks (NoC\,0 and NoC\,1) each support
-unicast and \emph{hardware multicast}: a source core specifies a
-rectangular destination region, and the network replicates data at
-branch points, delivering to all targets in a single traversal.
-In our MLA dataflow, NoC\,0 carries K/V data distribution while
-NoC\,1 handles partial-result reduction, enabling concurrent use
-of both fabrics.
+\paragraph{Dataflow terminology.}
+Following Eyeriss\,v2~\cite{chen2019eyerissv2} and
+FlatAttention~\cite{flatattention2024}, we use \emph{dataflow} to
+refer to the algorithmic organization of tensor tiling, compute order,
+spatial parallelism, and collective communication, and \emph{mapping}
+for its concrete instantiation on hardware: the assignment of tensor
+shards to DRAM banks, CB slots, worker groups, and NoC paths.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/bg_tt_arch.pdf}
+  \caption{%
+    Tenstorrent Wormhole architecture overview.
+    \emph{Left}: chip-level view with DRAM controllers on the mesh
+    boundary, a rectangular worker group, and NoC\,0 multicast
+    (latent distribution) and NoC\,1 unicast (partial-output
+    reduction) paths.
+    \emph{Right}: zoomed Tensix core showing L1 SRAM partitioned into
+    circular buffers shared by NCRISC (reader), BRISC (writer), and
+    TRISC0--2 (compute), with CB reserve/release synchronization points.
+  }
+  \Description{Chip-level view of Wormhole with DRAM banks, a rectangular worker group, and NoC multicast/reduction paths; plus a zoomed Tensix core with decoupled NCRISC/BRISC/TRISC pipeline and circular-buffer synchronization.}
+  \label{fig:bg-tt-arch}
+\end{figure}
 
 \begin{table}[t]
-  \caption{Key hardware parameters: Wormhole vs.\ Blackhole.}
+  \caption{Key hardware parameters for Tenstorrent Wormhole and Blackhole.}
   \label{tab:hw-params}
   \centering\small
   \begin{tabular}{lll}
     \toprule
     \textbf{Parameter} & \textbf{Wormhole (N300)} & \textbf{Blackhole} \\
     \midrule
-    Tensix cores          & 128 (2$\times$64)    & $\sim$140 (2$\times$70) \\
-    L1 SRAM / core        & $\sim$1.5\,MB        & $\sim$1.5\,MB \\
+    Tensix cores          & 128 ($2{\times}64$)  & ${\sim}140$ ($2{\times}70$) \\
+    L1 SRAM / core        & ${\sim}1.5$\,MB      & ${\sim}1.5$\,MB \\
     DRAM capacity         & 12\,GB GDDR6         & 16\,GB GDDR6 \\
     DRAM controllers      & 6                    & 8 \\
-    DRAM BW (aggregate)   & $\sim$200\,GB/s      & $\sim$300\,GB/s \\
+    DRAM BW (aggregate)   & ${\sim}200$\,GB/s    & ${\sim}300$\,GB/s \\
     NoC topology          & Dual 2-D mesh        & Dual 2-D mesh \\
-    Multicast             & HW rect.\ region     & HW rect.\ region \\
-    NOC max page          & 8\,KB                & 16\,KB \\
-    Compute/core (BF16)   & $\sim$1\,GFLOPS      & $\sim$1\,GFLOPS \\
+    Multicast primitive   & HW rect.\ region     & HW rect.\ region \\
+    NoC max page size     & 8\,KB                & 16\,KB \\
+    Peak compute / core (BF16) & ${\sim}1$\,GFLOPS & ${\sim}1$\,GFLOPS \\
     \bottomrule
   \end{tabular}
 \end{table}
-
-
-%%% ----- 2.4 Performance Considerations (NEW, like FLAT §2.1) -----
-
-\subsection{Performance Considerations for Attention}\label{sec:bg-perf}
-
-%% Introduce operational intensity and dataflow concepts
-%% (Mirrors FLAT §2.1: operational intensity, roofline, dataflow)
-
-Following the methodology of prior dataflow
-analysis~\cite{parashar2019timeloop}, we review two key
-concepts that underpin our challenge analysis in
-Section~\ref{sec:challenges}.
-
-\paragraph{Operational intensity.}
-The operational intensity of an operator is the ratio of arithmetic
-operations to memory accesses, serving as a proxy for the achievable
-fraction of peak compute on a given accelerator~\cite{williams2009roofline}:
-\begin{equation}\label{eq:op-intensity}
-  I = \frac{\text{\# of operations}}{\text{\# of memory accesses}}.
-\end{equation}
-An operator with low $I$ is memory-bandwidth bound and cannot
-achieve high compute utilization regardless of available
-FLOPs~\cite{williams2009roofline}.
-
-\paragraph{Dataflow on spatial accelerators.}
-Following~\cite{kao2023flat, chen2019eyerissv2}, dataflow on a spatial
-accelerator encompasses three dimensions:
-(i)~\emph{tiling}---how tensors are sliced and staged across the
-memory hierarchy;
-(ii)~\emph{compute order}---the order in which loop iterations execute;
-and (iii)~\emph{parallelism}---how work is mapped across PEs spatially.
-On tile-based many-PE architectures, a fourth dimension
-emerges~\cite{flatattention2024}: \emph{collective communication}---how
-data is shared across PEs via multicast, reduction, and broadcast
-primitives on the on-chip network fabric.  The dataflow along with
-specific tile sizes is called a \emph{mapping}~\cite{parashar2019timeloop,
-kwon2019maestro}.
 
 
 %% ============================================================

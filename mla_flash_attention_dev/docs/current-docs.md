@@ -1,6 +1,6 @@
 # 当前推荐文档
 
-更新时间：`2026-04-13`
+更新时间：`2026-04-24`
 
 为了避免旧文档继续干扰后续工作，当前建议优先使用下面这些文档。
 
@@ -24,6 +24,15 @@
 
 - 统一主线 FlashMLA 与实验性 FlashMLA 的 dataflow 视角
 - 作为后续 design / model / DSE 的主要技术入口
+
+## 外部模型演进 / 通用性压力测试
+
+- `deepseek-v4-attention-and-tt-dataflow-notes.md`
+
+用途：
+
+- 记录 DeepSeek V4 公开 attention 线索（`CSA/HCA`、`local window`、`indexer`、`compression schedule`）
+- 把这些变化翻译成 TT 数据流 / perf model 的通用性测试矩阵
 
 ## Characterization / Profiling
 
@@ -58,6 +67,6 @@
 
 ## 已归档文档
 
-旧的路线规划与 prefill-first / ICCAD 叙事，请参考：
+旧的路线规划与 prefill-first / ICCAD 叙事已迁移到 `archive/` 目录，请参考：
 
 - `archive-index.md`

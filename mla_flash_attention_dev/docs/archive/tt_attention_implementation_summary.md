@@ -1,4 +1,8 @@
-# TT Attention 能力现状总结
+# [Archived] TT Attention 能力现状总结
+
+> 已归档（2026-04-23）。
+> 这份文档在最近一个月内未继续更新，保留作历史背景参考。
+> 当前默认不作为 `docs/` 根目录主入口；如需当前主线，请优先参考 `current-docs.md`。
 
 本文总结 `tt-metal` 仓内当前已经落地的 Attention 相关能力，重点聚焦 `FlashAttention` 风格实现与 `MLA`（Multi-Head Latent Attention）支持现状。
 

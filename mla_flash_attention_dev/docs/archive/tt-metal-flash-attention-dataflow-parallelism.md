@@ -1,4 +1,8 @@
-# TT-Metal Flash Attention 当前数据传输模式与并行划分
+# [Archived] TT-Metal Flash Attention 当前数据传输模式与并行划分
+
+> 已归档（2026-04-23）。
+> 这份文档在最近一个月内未继续更新，保留作历史背景参考。
+> 当前默认不作为 `docs/` 根目录主入口；如需当前主线，请优先参考 `current-docs.md`。
 
 本文基于当前仓库里的 `tt-metal/ttnn/cpp/ttnn/operations/transformer/sdpa/` 实现整理，重点回答两个问题：
 

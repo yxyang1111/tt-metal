@@ -10,11 +10,11 @@
 
 - Preferred model-side entry: `models/demos/deepseek_v3/tt/mla/`
 - Preferred operator-side entry: `ttnn/cpp/ttnn/operations/transformer/sdpa/`
-- Phase 0 scope frozen in `phase-0-scope-note.md`
+- Phase 0 scope frozen in `archive/phase-0-scope-note.md`
 - Current paper-side mainline: `single-chip MLA decode`
 - `prefill` remains as supporting evidence for forwarding / multicast / coupling analysis; `multi-chip` is deferred
 - `autotuner` is currently positioned as offline/cached DSE, pending oracle-gap evidence
-- Phase 1 code path map completed in `phase-1-code-path-map.md`
+- Phase 1 code path map completed in `archive/phase-1-code-path-map.md`
 - Experiment D execution order frozen in `experiment-D-ablation-plan.md`
 - First target test fixed as `tests/ttnn/unit_tests/operations/sdpa/test_mla_prefill_v_embedding_space.py`
 - **B0 (`NC-current-auto`)** baseline doc + result template: `experiment-D-b0-baseline.md`（在目标设备上补全性能数字）

@@ -63,6 +63,8 @@
 - Decode bubble 组成：`visuals/decode_bubble_composition.svg`
 - Decode reader source attribution：`visuals/decode_reader_source_breakdown.svg`
 - Decode writer source attribution：`visuals/decode_writer_source_breakdown.svg`
+- 核内泳道图（Reader / Compute / Writer）：`visuals/decode_intra_core_swimlane.svg`
+- 核间泳道图（sender / worker / tree / root）：`visuals/decode_inter_core_swimlane.svg`
 - Prefill 控制对照：`visuals/prefill_control.svg`
 
 ## 7. 论文表格

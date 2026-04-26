@@ -124,9 +124,11 @@
       <figure><img src="visuals/decode_bubble_composition.svg" alt="decode_bubble_composition"></figure>
       <figure><img src="visuals/decode_reader_source_breakdown.svg" alt="decode_reader_source_breakdown"></figure>
       <figure><img src="visuals/decode_writer_source_breakdown.svg" alt="decode_writer_source_breakdown"></figure>
+      <figure><img src="visuals/decode_intra_core_swimlane.svg" alt="decode_intra_core_swimlane"></figure>
+      <figure><img src="visuals/decode_inter_core_swimlane.svg" alt="decode_inter_core_swimlane"></figure>
       <figure><img src="visuals/prefill_control.svg" alt="prefill_control"></figure>
     </section>
-    <p class="footnote">说明：decode 图中的 `wait-front / reserve-back` 统一按 accumulated stall density 解读。Part II 的 decode 仍使用 mixed-batch characterization：`256~8k=batch=2`，`16k/32k=batch=1`。`DeepSeek FlashMLA` 的 direct representative-point profiler 仍是后续可补资产。</p>
+    <p class="footnote">说明：decode 图中的 `wait-front / reserve-back` 统一按 accumulated stall density 解读。新增的核内 / 核间泳道图按 `decode_32k` representative steady-state 绘制，强调相对先后与主等待位置，不等价于 exact timestamp trace。Part II 的 decode 仍使用 mixed-batch characterization：`256~8k=batch=2`，`16k/32k=batch=1`。`DeepSeek FlashMLA` 的 direct representative-point profiler 仍是后续可补资产。</p>
   </div>
 </body>
 </html>

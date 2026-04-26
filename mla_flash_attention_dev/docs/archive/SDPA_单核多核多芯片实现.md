@@ -1,4 +1,8 @@
-# TensTorrent SDPA：单核、多核与多芯片实现说明
+# [Archived] TensTorrent SDPA：单核、多核与多芯片实现说明
+
+> 已归档（2026-04-23）。
+> 这份文档在最近一个月内未继续更新，保留作历史背景参考。
+> 当前默认不作为 `docs/` 根目录主入口；如需当前主线，请优先参考 `current-docs.md`。
 
 本文档说明 TensTorrent SDPA 在单核、多核（单芯片）和多芯片三个层级上的实现方式。
 

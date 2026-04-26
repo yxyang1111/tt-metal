@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1420" height="502" viewBox="0 0 1420 502">
+  <rect width="100%" height="100%" rx="22" fill="#111722"></rect>
+  <text x="230" y="38" font-size="24" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">核内泳道图（decode_32k，按时间比例）</text>
+  <text x="230" y="62" font-size="13" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">横轴按同一次 kernel 的相对 wall-time 归一化；实心块表示有效工作，虚框表示 bubble / stall。</text>
+  <rect x="230" y="80" width="16" height="16" rx="4" fill="#2ec4b6" stroke="#2ec4b6" stroke-width="1.5"></rect>
+  <text x="254" y="92" font-size="13" fill="#dfe7f1" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">有效工作</text>
+  <rect x="314" y="80" width="16" height="16" rx="4" fill="#ff595e22" stroke="#ff595e" stroke-width="1.5" stroke-dasharray="7 5"></rect>
+  <text x="338" y="92" font-size="13" fill="#dfe7f1" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">bubble / wait</text>
+  <rect x="524" y="80" width="16" height="16" rx="4" fill="#3a4352" stroke="#3a4352" stroke-width="1.5"></rect>
+  <text x="548" y="92" font-size="13" fill="#dfe7f1" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">线程已退休</text>
+  <line x1="230.00" y1="126" x2="230.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="230.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">0%</text>
+  <line x1="408.00" y1="126" x2="408.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="408.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">20%</text>
+  <line x1="586.00" y1="126" x2="586.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="586.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">40%</text>
+  <line x1="764.00" y1="126" x2="764.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="764.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">60%</text>
+  <line x1="942.00" y1="126" x2="942.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="942.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">80%</text>
+  <line x1="1120.00" y1="126" x2="1120.00" y2="412.00" stroke="#223046" stroke-width="1"></line>
+  <text x="1120.00" y="116" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">100%</text>
+  <text x="675.00" y="96" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">kernel-normalized wall time -&gt;</text>
+  <rect x="230" y="156" width="890" height="64" rx="18" fill="#0f141d" stroke="#223046"></rect>
+<text x="28.00" y="188.00" text-anchor="start" font-size="14" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="28.00" dy="0">Reader RISC-V</tspan></text>
+<text x="1138.00" y="180.50" text-anchor="start" font-size="12" font-weight="500" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="1138.00" dy="0">NCRISC ~= 94.3% of kernel</tspan><tspan x="1138.00" dy="15">bubble = 61.3%, 其中 K reserve = 54.8%</tspan></text>
+  <rect x="1068.83" y="164.00" width="51.17" height="48.00" rx="12" fill="#2a3340" opacity="0.55"></rect>
+  <rect x="232.00" y="164.00" width="317.43" height="48.00" rx="12" fill="#1982c4" stroke="#1982c4" stroke-width="1.8"></rect>
+  <line x1="240.00" y1="171.00" x2="541.43" y2="171.00" stroke="#ffffff55" stroke-width="1.4"></line>
+<text x="390.71" y="180.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="390.71" dy="0">issue (K+V)</tspan><tspan x="390.71" dy="15">38.1%</tspan></text>
+  <rect x="553.43" y="164.00" width="26.77" height="48.00" rx="12" fill="#ffca3a18" stroke="#ffca3a" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+  <rect x="584.20" y="164.00" width="482.63" height="48.00" rx="12" fill="#ff595e18" stroke="#ff595e" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+<text x="825.52" y="180.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="825.52" dy="0">bubble: reserve</tspan><tspan x="825.52" dy="15">57.6%</tspan></text>
+  <rect x="230" y="248" width="890" height="64" rx="18" fill="#0f141d" stroke="#223046"></rect>
+<text x="28.00" y="280.00" text-anchor="start" font-size="14" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="28.00" dy="0">Compute / TRISC</tspan></text>
+<text x="1138.00" y="272.50" text-anchor="start" font-size="12" font-weight="500" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="1138.00" dy="0">TRISC ~= 100.0% of kernel</tspan><tspan x="1138.00" dy="15">active compute (PM) = 25.6%, bubble = 74.4%</tspan></text>
+  <rect x="232.00" y="256.00" width="465.41" height="48.00" rx="12" fill="#ff595e18" stroke="#ff595e" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+<text x="464.71" y="272.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="464.71" dy="0">bubble: wait-front</tspan><tspan x="464.71" dy="15">52.8%</tspan></text>
+  <rect x="701.41" y="256.00" width="223.86" height="48.00" rx="12" fill="#2ec4b6" stroke="#2ec4b6" stroke-width="1.8"></rect>
+  <line x1="709.41" y1="263.00" x2="917.28" y2="263.00" stroke="#ffffff55" stroke-width="1.4"></line>
+<text x="813.35" y="272.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="813.35" dy="0">active compute</tspan><tspan x="813.35" dy="15">25.6%</tspan></text>
+  <rect x="929.28" y="256.00" width="188.53" height="48.00" rx="12" fill="#ffca3a18" stroke="#ffca3a" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+<text x="1023.54" y="272.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="1023.54" dy="0">bubble: reserve-back</tspan><tspan x="1023.54" dy="15">21.6%</tspan></text>
+  <rect x="230" y="340" width="890" height="64" rx="18" fill="#0f141d" stroke="#223046"></rect>
+<text x="28.00" y="372.00" text-anchor="start" font-size="14" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="28.00" dy="0">Writer RISC-V</tspan></text>
+<text x="1138.00" y="364.50" text-anchor="start" font-size="12" font-weight="500" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="1138.00" dy="0">BRISC ~= 98.9% of kernel</tspan><tspan x="1138.00" dy="15">bubble ~= 99.8%, sender/tree ~ 1:1</tspan></text>
+  <rect x="1110.17" y="348.00" width="9.83" height="48.00" rx="12" fill="#2a3340" opacity="0.55"></rect>
+  <rect x="232.00" y="348.00" width="434.70" height="48.00" rx="12" fill="#ff595e18" stroke="#ff595e" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+<text x="449.35" y="364.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="449.35" dy="0">bubble: sender wait</tspan><tspan x="449.35" dy="15">49.8%</tspan></text>
+  <rect x="670.70" y="348.00" width="435.54" height="48.00" rx="12" fill="#1982c418" stroke="#1982c4" stroke-width="1.8" stroke-dasharray="7 5"></rect>
+<text x="888.47" y="364.50" text-anchor="middle" font-size="12" font-weight="700" fill="#f5f7fb" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="888.47" dy="0">bubble: tree wait</tspan><tspan x="888.47" dy="15">49.9%</tspan></text>
+  <rect x="1110.25" y="348.00" width="1.00" height="48.00" rx="12" fill="#2ec4b6" stroke="#2ec4b6" stroke-width="1.8"></rect>
+  <text x="675.00" y="432.00" text-anchor="middle" font-size="12" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif">同一横轴表示同一次 decode kernel 的相对 wall-time；虚框区就是 bubble / stall。</text>
+<text x="230.00" y="454.50" text-anchor="start" font-size="12" font-weight="500" fill="#9fb0c3" font-family="DejaVu Sans, Noto Sans CJK SC, sans-serif"><tspan x="230.00" dy="0">Reader / Writer lane 宽度分别按 NCRISC / BRISC share 对 kernel 归一化；内部占比用 decode_32k source-share。</tspan><tspan x="230.00" dy="15">Compute lane 的有效计算时间用 A3(TT, 32k) corrected-runtime `PM FPU util = 25.61%` 近似，剩余时间再按 wait-front / reserve-back 比例拆成 bubble。</tspan></text>
+</svg>

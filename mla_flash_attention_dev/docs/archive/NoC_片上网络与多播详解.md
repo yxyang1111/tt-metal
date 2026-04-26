@@ -1,4 +1,8 @@
-# Tenstorrent 片上网络 (NoC) 与多播 (Multicast) 详解
+# [Archived] Tenstorrent 片上网络 (NoC) 与多播 (Multicast) 详解
+
+> 已归档（2026-04-23）。
+> 这份文档在最近一个月内未继续更新，保留作历史背景参考。
+> 当前默认不作为 `docs/` 根目录主入口；如需当前主线，请优先参考 `current-docs.md`。
 
 本文档详细解释 Wormhole B0 芯片上 **Network-on-Chip (NoC)** 的工作原理、地址编码方式、API 用法，
 并以 SDPA 内核中的实际代码为例说明单播 (unicast)、多播 (multicast) 和核间通信的完整流程。
