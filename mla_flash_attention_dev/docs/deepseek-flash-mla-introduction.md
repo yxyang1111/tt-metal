@@ -282,18 +282,84 @@ V    = v
 
 ##### 第三步：理论上的 attention 怎么算
 
-有了上面的 `Q / K / V`，理论上的 attention 仍然是标准 softmax attention：
+有了上面的 `Q / K / V`，理论上的 attention 仍然是标准 softmax attention。但这里要先区分两种写法：
+
+1. **单个 query 向量和单个 key 向量的点积写法**
+2. **当前 query 对整段历史 key/value 的矩阵写法**
+
+如果只看**单个 query 向量** `q = [q^C | q^R]` 和**单个 key 向量** `k = [k^C | k^R]` 的相似度，那么写成：
 
 ```text
-score = Q^T K
-p     = softmax(score)
-o     = p V
+score(q, k) = q^T k
 ```
 
-把前面的定义代进去，`score` 可以拆成两部分：
+这里的 `q^T k` 只是一个标量点积，所以这一步不是完整 attention，只是在定义“单个 query 和单个 key 之间的匹配分数”。
+
+如果把当前 query 和整段历史 key/value 放在一起做真正的 attention，那么在**理论语义级**的粗粒度写法里，可以先用一组更短的记号：
+
+- `K_s`：整段历史的语义级完整 key 集合
+- `V_s`：整段历史的语义级完整 value 集合
+- `C`：整段历史的 KV latent 集合
+- `R`：整段历史的 RoPE key 集合
+- `s`：分数向量
+- `o`：语义级输出向量
 
 ```text
-score
+s = q^T K_s
+p = softmax(s)
+o = p V_s
+```
+
+这里：
+
+- `K_s` 表示整段历史的**语义级完整 key 集合**
+- `V_s` 表示整段历史的**语义级完整 value 集合**
+- `s` 是当前 query 对所有历史位置的理论语义级分数向量
+- `p` 是对这些分数做 softmax 后得到的权重向量
+- `o` 是理论语义级输出向量
+
+这里最关键的一点是：
+
+> **`K_s / V_s` 只是为了表达“attention 从语义上等价于在什么 `K/V` 上计算”；它们不是 MLA 推理时真正缓存的 runtime 张量。**
+
+如果改成更接近 MLA 实际缓存状态的粗粒度写法，那么应该记住：
+
+- 历史侧真正长期保留的是 `C` 和 `R`
+- 其中 `C` 是整段历史的 KV latent 集合
+- `R` 是整段历史的 RoPE key 集合
+
+于是，利用 Q 吸收之后，同一件事也可以等价地写成：
+
+```text
+s     = (q^abs)^T C + (q^R)^T R
+o^lat = p C
+o     = W_UV o^lat
+```
+
+这里：
+
+- `q^abs` 是吸收了 `W_UK` 之后的 query 内容分支
+- `C` 是整段历史的 KV latent 集合
+- `R` 是整段历史的 key 位置分支集合
+- `o_lat` 是在 latent 空间里的输出
+- `o` 是恢复到语义级 value/output 空间后的输出
+
+如果采用更常见的“每个 key/value 向量作为矩阵一行”的机器学习记法，那么同一件事通常会写成：
+
+```text
+s = q K_s^T
+p = softmax(s)
+o = p V_s
+```
+
+所以你问“为什么不是 `Q K^T`”，答案就是：
+
+> **如果 `Q/K` 表示一批 query/key 组成的矩阵，常见写法确实是 `Q K^T`；如果 `q/k` 表示单个 query/key 向量，那么对应的点积写法就是 `q^T k`。而这里的 `K_s` 还要额外理解成“语义级完整 K 的集合”，不是 runtime cache 本身。**
+
+下面为了说明 MLA 的打分结构，我先继续用“单个 query 向量 `q` 和单个 key 向量 `k` 的点积形式”来展开。把前面的定义代进去，`score(q, k)` 可以拆成两部分：
+
+```text
+score(q, k)
 = [q^C | q^R]^T [k^C | k^R]
 = (q^C)^T k^C + (q^R)^T k^R
 = (q^C)^T (W_UK c^KV) + (q^R)^T k^R
