@@ -10,11 +10,11 @@
     ]
   },
   "proxy_context": {
-    "decode_1k_ratio": 0.8635836098908477,
-    "decode_4k_ratio": 1.0250789841894108,
-    "decode_16k_ratio": 0.9755948688893568,
-    "decode_32k_ratio": 0.9974147450680516,
-    "long_seq_max_gap_pct": 2.507898418941079
+    "decode_1k_ratio": 0.8939105965986227,
+    "decode_4k_ratio": 0.9561654809972441,
+    "decode_16k_ratio": 0.9732546003059722,
+    "decode_32k_ratio": 0.9941395874910308,
+    "long_seq_max_gap_pct": 4.383451900275592
   },
   "empirical_rows": [
     {

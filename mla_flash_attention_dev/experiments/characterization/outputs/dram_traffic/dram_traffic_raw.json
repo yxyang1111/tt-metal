@@ -1,0 +1,25 @@
+{
+  "theoretical": [
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "batch": 2,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "k_cache_logical_MB": 0.59,
+      "k_cache_tiled_MB": 0.627,
+      "total_actual_logical_MB": 4.719,
+      "total_actual_tiled_MB": 5.014,
+      "total_ideal_logical_MB": 1.18,
+      "total_ideal_tiled_MB": 1.253,
+      "redundancy_factor": 4,
+      "waste_pct": 75.0,
+      "total_actual_bytes": 4718592,
+      "total_actual_tiled_bytes": 5013504,
+      "total_ideal_bytes": 1179648,
+      "total_ideal_tiled_bytes": 1253376,
+      "note": "V not counted: reuse_k=true in MLA, V read from K L1 buffer"
+    }
+  ],
+  "measured": {}
+}

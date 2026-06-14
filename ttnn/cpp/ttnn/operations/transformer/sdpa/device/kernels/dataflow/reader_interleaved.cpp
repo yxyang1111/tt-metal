@@ -427,6 +427,10 @@ void kernel_main() {
                             if constexpr (is_chunked) {
                                 // Use page table to read K chunk (forwarding not supported for paged mode)
                                 const uint32_t k_chunk_start_row_num = k_chunk * Sk_chunk_t;
+                                const uint64_t reserve_before = paged_read_profiler.reserve_cycles;
+                                const uint64_t issue_before = paged_read_profiler.issue_cycles;
+                                const uint64_t wait_before = paged_read_profiler.wait_cycles;
+                                const uint64_t push_before = paged_read_profiler.push_cycles;
                                 read_paged_chunk_with_padding<NKH, block_size_t, DHt>(
                                     k_reader,
                                     cb_k_in,
@@ -443,6 +447,11 @@ void kernel_main() {
                                     0,
                                     &paged_read_profiler
                                 );
+                                paged_read_profiler.k_reserve_cycles +=
+                                    paged_read_profiler.reserve_cycles - reserve_before;
+                                paged_read_profiler.k_issue_cycles += paged_read_profiler.issue_cycles - issue_before;
+                                paged_read_profiler.k_wait_cycles += paged_read_profiler.wait_cycles - wait_before;
+                                paged_read_profiler.k_push_cycles += paged_read_profiler.push_cycles - push_before;
                             } else {
                                 if (should_forward) {
                                     cb_k_start_address = read_chunk_for_forwarding<k_tile_bytes, true>(
@@ -576,6 +585,10 @@ void kernel_main() {
                                 // Use page table to read V chunk (forwarding not supported for paged mode)
                                 const uint32_t kv_chunk_start_row_num = k_chunk * Sk_chunk_t;
                                 constexpr uint32_t head_dim = (use_mla && !mla_kv_overlap) ? vDHt : DHt;
+                                const uint64_t reserve_before = paged_read_profiler.reserve_cycles;
+                                const uint64_t issue_before = paged_read_profiler.issue_cycles;
+                                const uint64_t wait_before = paged_read_profiler.wait_cycles;
+                                const uint64_t push_before = paged_read_profiler.push_cycles;
                                 read_paged_chunk_with_padding<NVH, block_size_t, head_dim>(
                                     v_reader,
                                     cb_v_in,
@@ -591,6 +604,11 @@ void kernel_main() {
                                     false,
                                     skip_src_cols,
                                     &paged_read_profiler);
+                                paged_read_profiler.v_reserve_cycles +=
+                                    paged_read_profiler.reserve_cycles - reserve_before;
+                                paged_read_profiler.v_issue_cycles += paged_read_profiler.issue_cycles - issue_before;
+                                paged_read_profiler.v_wait_cycles += paged_read_profiler.wait_cycles - wait_before;
+                                paged_read_profiler.v_push_cycles += paged_read_profiler.push_cycles - push_before;
                             } else {
                                 if (should_forward) {
                                     cb_v_start_address = read_chunk_for_forwarding<v_tile_bytes, false>(
@@ -655,5 +673,13 @@ void kernel_main() {
         DeviceTimestampedData("SDPA-PAGED-ISSUE-SUM", paged_read_profiler.issue_cycles);
         DeviceTimestampedData("SDPA-PAGED-WAIT-SUM", paged_read_profiler.wait_cycles);
         DeviceTimestampedData("SDPA-PAGED-PUSH-SUM", paged_read_profiler.push_cycles);
+        DeviceTimestampedData("SDPA-K-RESERVE-SUM", paged_read_profiler.k_reserve_cycles);
+        DeviceTimestampedData("SDPA-K-ISSUE-SUM", paged_read_profiler.k_issue_cycles);
+        DeviceTimestampedData("SDPA-K-WAIT-SUM", paged_read_profiler.k_wait_cycles);
+        DeviceTimestampedData("SDPA-K-PUSH-SUM", paged_read_profiler.k_push_cycles);
+        DeviceTimestampedData("SDPA-V-RESERVE-SUM", paged_read_profiler.v_reserve_cycles);
+        DeviceTimestampedData("SDPA-V-ISSUE-SUM", paged_read_profiler.v_issue_cycles);
+        DeviceTimestampedData("SDPA-V-WAIT-SUM", paged_read_profiler.v_wait_cycles);
+        DeviceTimestampedData("SDPA-V-PUSH-SUM", paged_read_profiler.v_push_cycles);
     }
 }

@@ -1,0 +1,352 @@
+{
+  "target_seq_len": 32768,
+  "baseline": "wormhole_b0",
+  "sram_sweep": [
+    {
+      "label": "384 KB (0.25x)",
+      "n_feasible": 4896,
+      "max_bkv": 64,
+      "top1": {
+        "latency_ms": 0.45174,
+        "dram_ms": 0.09065,
+        "noc_ms": 0.223046,
+        "compute_ms": 0.033229,
+        "reader_bp_ms": 0.136814,
+        "writer_bp_ms": 0.017969,
+        "l1_usage_ratio": 0.7266,
+        "k_chunk": 64,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "768 KB (0.5x)",
+      "n_feasible": 9792,
+      "max_bkv": 128,
+      "top1": {
+        "latency_ms": 0.357634,
+        "dram_ms": 0.09065,
+        "noc_ms": 0.223046,
+        "compute_ms": 0.033229,
+        "reader_bp_ms": 0.127661,
+        "writer_bp_ms": 0.016884,
+        "l1_usage_ratio": 0.6784,
+        "k_chunk": 128,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "1.5 MB (1x, WH)",
+      "n_feasible": 14688,
+      "max_bkv": 256,
+      "top1": {
+        "latency_ms": 0.34433,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "3 MB (2x)",
+      "n_feasible": 19584,
+      "max_bkv": 512,
+      "top1": {
+        "latency_ms": 0.332376,
+        "dram_ms": 0.094948,
+        "noc_ms": 0.239801,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.131778,
+        "writer_bp_ms": 0.017586,
+        "l1_usage_ratio": 0.6305,
+        "k_chunk": 512,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "6 MB (4x)",
+      "n_feasible": 24480,
+      "max_bkv": 1024,
+      "top1": {
+        "latency_ms": 0.332376,
+        "dram_ms": 0.094948,
+        "noc_ms": 0.239801,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.131778,
+        "writer_bp_ms": 0.017139,
+        "l1_usage_ratio": 0.3153,
+        "k_chunk": 512,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    }
+  ],
+  "dram_bw_sweep": [
+    {
+      "label": "128 GB/s (0.5x)",
+      "top1": {
+        "latency_ms": 0.04323,
+        "dram_ms": 0.209434,
+        "noc_ms": 0.265424,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.145714,
+        "writer_bp_ms": 0.019312,
+        "l1_usage_ratio": 0.5745,
+        "k_chunk": 256,
+        "pipeline_depth": 2,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "dominant": "NoC"
+      }
+    },
+    {
+      "label": "258 GB/s (1x, WH)",
+      "top1": {
+        "latency_ms": 0.34433,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "dominant": "NoC"
+      }
+    },
+    {
+      "label": "512 GB/s (2x, BH)",
+      "top1": {
+        "latency_ms": 0.482644,
+        "dram_ms": 0.046444,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.128553,
+        "writer_bp_ms": 0.017097,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "dominant": "NoC"
+      }
+    },
+    {
+      "label": "1024 GB/s (4x)",
+      "top1": {
+        "latency_ms": 0.547163,
+        "dram_ms": 0.021103,
+        "noc_ms": 0.220591,
+        "compute_ms": 0.031891,
+        "reader_bp_ms": 0.124737,
+        "writer_bp_ms": 0.016578,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "dominant": "NoC"
+      }
+    },
+    {
+      "label": "2048 GB/s (8x)",
+      "top1": {
+        "latency_ms": 0.579081,
+        "dram_ms": 0.010551,
+        "noc_ms": 0.220591,
+        "compute_ms": 0.031891,
+        "reader_bp_ms": 0.124708,
+        "writer_bp_ms": 0.016575,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "dominant": "NoC"
+      }
+    }
+  ],
+  "noc_bw_sweep": [
+    {
+      "label": "16 GB/s (0.5x)",
+      "top1": {
+        "latency_ms": 0.657271,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.457105,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.231283,
+        "writer_bp_ms": 0.031098,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "noc_share_pct": 69.5
+      }
+    },
+    {
+      "label": "32 GB/s (1x, WH)",
+      "top1": {
+        "latency_ms": 0.34433,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "noc_share_pct": 66.5
+      }
+    },
+    {
+      "label": "64 GB/s (2x)",
+      "top1": {
+        "latency_ms": 0.179346,
+        "dram_ms": 0.103905,
+        "noc_ms": 0.133087,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.085766,
+        "writer_bp_ms": 0.011195,
+        "l1_usage_ratio": 0.5745,
+        "k_chunk": 256,
+        "pipeline_depth": 2,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "noc_share_pct": 74.2
+      }
+    },
+    {
+      "label": "128 GB/s (4x)",
+      "top1": {
+        "latency_ms": 0.160732,
+        "dram_ms": 0.091024,
+        "noc_ms": 0.09229,
+        "compute_ms": 0.031038,
+        "reader_bp_ms": 0.067338,
+        "writer_bp_ms": 0.009245,
+        "l1_usage_ratio": 0.6728,
+        "k_chunk": 256,
+        "pipeline_depth": 2,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "noc_share_pct": 57.4
+      }
+    },
+    {
+      "label": "256 GB/s (8x)",
+      "top1": {
+        "latency_ms": 0.265128,
+        "dram_ms": 0.088822,
+        "noc_ms": 0.057349,
+        "compute_ms": 0.031038,
+        "reader_bp_ms": 0.065758,
+        "writer_bp_ms": 0.008594,
+        "l1_usage_ratio": 0.6728,
+        "k_chunk": 256,
+        "pipeline_depth": 2,
+        "head_parallel": 4,
+        "kv_parallel": 6,
+        "noc_share_pct": 21.6
+      }
+    }
+  ],
+  "core_count_sweep": [
+    {
+      "label": "4x4 (16)",
+      "top1": {
+        "latency_ms": 0.911026,
+        "dram_ms": 0.348685,
+        "noc_ms": 0.003257,
+        "compute_ms": 0.045811,
+        "reader_bp_ms": 0.188626,
+        "writer_bp_ms": 0.011904,
+        "l1_usage_ratio": 0.3559,
+        "k_chunk": 128,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 4
+      }
+    },
+    {
+      "label": "6x6 (36)",
+      "top1": {
+        "latency_ms": 0.343981,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.032581,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "8x8 (64, WH)",
+      "top1": {
+        "latency_ms": 0.34433,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033262,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "10x10 (100)",
+      "top1": {
+        "latency_ms": 0.344497,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033587,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    },
+    {
+      "label": "16x16 (256)",
+      "top1": {
+        "latency_ms": 0.344681,
+        "dram_ms": 0.092167,
+        "noc_ms": 0.228927,
+        "compute_ms": 0.033946,
+        "reader_bp_ms": 0.128676,
+        "writer_bp_ms": 0.01711,
+        "l1_usage_ratio": 0.6783,
+        "k_chunk": 256,
+        "pipeline_depth": 3,
+        "head_parallel": 4,
+        "kv_parallel": 6
+      }
+    }
+  ]
+}

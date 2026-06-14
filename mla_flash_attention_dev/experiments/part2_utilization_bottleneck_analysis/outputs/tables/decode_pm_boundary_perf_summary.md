@@ -25,5 +25,5 @@
 | D2 | cross_48q | DeepSeek-8c | completed | 8k | 12 | 4 | 48 | 18.53% | 204396 | n/a |
 
 - 在已 fit 的 `B2` anchor 上，`PM FPU util (TT / 4c / 8c) = 21.86% / 12.08% / 12.08%`；`8c-4c` 的 `PM FPU util` 差值只有 `0.00 pp`。
-- 沿 densified q-core 轴 `24q/28q/32q/40q/48q`，`TT PM FPU util` = `24q` 21.86%；`28q` 21.60%；`32q` 21.27%；`40q` 20.36%；`48q` 18.21%，`DeepSeek-8c PM FPU util` = `24q` 12.08%；`28q` 13.78%；`32q` 13.74%；`40q` 16.40%；`48q` 18.53%；`DeepSeek-4c` 只在 `<=24q` 仍可运行，`28q` 起就会直接 `unsupported_precheck`。
-- 这说明 `8c` 的第一作用是跨越 q-core admission boundary，而不是让已 fit 点的算术利用率发生跳变；`B2` 上 `4c≈8c` 时，算术利用率本身也没有被明显改写，而 `D28` 已经直接给出了“刚越墙就被 admission 拦下”的第一手证据。
+- 沿 densified q-core 轴 `24q/28q/32q/40q/48q`，`TT PM FPU util` = 24q 21.86%; 28q 21.60%; 32q 21.27%; 40q 20.36%; 48q 18.21%，`DeepSeek-8c PM FPU util` = 24q 12.08%; 28q 13.78%; 32q 13.74%; 40q 16.40%; 48q 18.53%；`DeepSeek-4c` 只在 `<= 24q` 仍可运行，`28q` 起就会直接 `unsupported_precheck`。
+- 这说明 `8c` 的第一作用是跨越 q-core admission boundary，而不是让已 fit 点的算术利用率发生跳变；`B2` 上 `4c≈8c` 时，算术利用率本身也没有被明显改写。

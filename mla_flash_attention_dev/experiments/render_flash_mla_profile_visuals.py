@@ -236,6 +236,11 @@ def render_stacked_bar_chart(
     labels: list[str],
     series: list[dict[str, Any]],
     y_label: str,
+    *,
+    y_min: float = 0.0,
+    y_max: float | None = 1.0,
+    tick_count: int = 5,
+    value_formatter=None,
 ) -> str:
     chart_w = SVG_WIDTH - MARGIN_LEFT - MARGIN_RIGHT
     chart_h = SVG_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
@@ -243,14 +248,36 @@ def render_stacked_bar_chart(
     bar_width = min(66.0, bar_group_width * 0.64)
     x_vals = [MARGIN_LEFT + bar_group_width * i + bar_group_width / 2.0 for i in range(len(labels))]
 
+    stacked_totals = []
+    for idx in range(len(labels)):
+        total = 0.0
+        for item in series:
+            value = item["values"][idx]
+            if value is None:
+                continue
+            total += max(float(value), 0.0)
+        stacked_totals.append(total)
+
+    if y_max is None:
+        ymax = max(stacked_totals) if stacked_totals else 1.0
+        y_max = ymax * 1.08 if ymax > 0 else 1.0
+    if y_max <= y_min:
+        y_max = y_min + 1.0
+
+    if value_formatter is None:
+        if y_min == 0.0 and y_max == 1.0:
+            value_formatter = lambda tick: f"{tick * 100:.0f}%"
+        else:
+            value_formatter = lambda tick: f"{tick:.1f}"
+
     grid_parts = []
-    for tick in y_ticks(0.0, 1.0, 5):
-        y = y_linear(tick, 0.0, 1.0, MARGIN_TOP, chart_h)
+    for tick in y_ticks(y_min, y_max, tick_count):
+        y = y_linear(tick, y_min, y_max, MARGIN_TOP, chart_h)
         grid_parts.append(
             f'<line x1="{MARGIN_LEFT}" y1="{y:.2f}" x2="{SVG_WIDTH - MARGIN_RIGHT}" y2="{y:.2f}" stroke="#273142" stroke-width="1"></line>'
         )
         grid_parts.append(
-            f'<text x="{MARGIN_LEFT - 12}" y="{y + 4:.2f}" text-anchor="end" font-size="12" fill="#9fb0c3">{tick * 100:.0f}%</text>'
+            f'<text x="{MARGIN_LEFT - 12}" y="{y + 4:.2f}" text-anchor="end" font-size="12" fill="#9fb0c3">{svg_escape(value_formatter(tick))}</text>'
         )
 
     axis_parts = [
@@ -265,13 +292,16 @@ def render_stacked_bar_chart(
 
     bar_parts = []
     for idx, x in enumerate(x_vals):
-        running = 0.0
+        running = y_min
         for item in series:
-            value = float(item["values"][idx])
+            raw_value = item["values"][idx]
+            if raw_value is None:
+                continue
+            value = float(raw_value)
             if value <= 0:
                 continue
-            y1 = y_linear(running + value, 0.0, 1.0, MARGIN_TOP, chart_h)
-            y0 = y_linear(running, 0.0, 1.0, MARGIN_TOP, chart_h)
+            y1 = y_linear(running + value, y_min, y_max, MARGIN_TOP, chart_h)
+            y0 = y_linear(running, y_min, y_max, MARGIN_TOP, chart_h)
             bar_parts.append(
                 f'<rect x="{x - bar_width / 2:.2f}" y="{y1:.2f}" width="{bar_width:.2f}" height="{(y0 - y1):.2f}" '
                 f'rx="8" fill="{item["color"]}"></rect>'

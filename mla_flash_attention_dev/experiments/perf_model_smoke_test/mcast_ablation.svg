@@ -1,0 +1,2129 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="490.438812pt" height="130.011844pt" viewBox="0 0 490.438812 130.011844" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-06-05T12:02:00.774027</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.7, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 130.011844 
+L 490.438812 130.011844 
+L 490.438812 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 25.318812 101.081719 
+L 238.01606 101.081719 
+L 238.01606 10.793719 
+L 25.318812 10.793719 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m1cce303830" d="M 0 0 
+L 0 2.5 
+" style="stroke: #000000; stroke-width: 0.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#m1cce303830" x="46.561303" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <!-- 1K -->
+      <g transform="translate(40.683366 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-31" d="M 2141 344 
+L 2869 269 
+L 2869 0 
+L 513 0 
+L 513 269 
+L 1238 344 
+L 1238 3503 
+L 516 3266 
+L 516 3531 
+L 1697 4225 
+L 2141 4225 
+L 2141 344 
+z
+" transform="scale(0.015625)"/>
+        <path id="Tinos-Bold-4b" d="M 4591 4191 
+L 4591 3963 
+L 4078 3881 
+L 2694 2659 
+L 4538 313 
+L 4928 228 
+L 4928 0 
+L 3559 0 
+L 1994 2019 
+L 1631 1706 
+L 1631 313 
+L 2234 228 
+L 2234 0 
+L 109 0 
+L 109 228 
+L 647 313 
+L 647 3881 
+L 109 3963 
+L 109 4191 
+L 2172 4191 
+L 2172 3963 
+L 1631 3881 
+L 1631 2175 
+L 3541 3881 
+L 3156 3963 
+L 3156 4191 
+L 4591 4191 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m1cce303830" x="80.603757" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <!-- 2K -->
+      <g transform="translate(74.725819 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-32" d="M 2925 0 
+L 269 0 
+L 269 591 
+Q 538 878 766 1106 
+Q 1266 1600 1497 1883 
+Q 1728 2166 1836 2469 
+Q 1944 2772 1944 3159 
+Q 1944 3500 1778 3709 
+Q 1613 3919 1338 3919 
+Q 1144 3919 1028 3878 
+Q 913 3838 816 3756 
+L 681 3150 
+L 409 3150 
+L 409 4103 
+Q 659 4159 898 4198 
+Q 1138 4238 1419 4238 
+Q 2109 4238 2476 3953 
+Q 2844 3669 2844 3144 
+Q 2844 2816 2734 2548 
+Q 2625 2281 2389 2028 
+Q 2153 1775 1450 1203 
+Q 1181 984 869 706 
+L 2925 706 
+L 2925 0 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-32"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m1cce303830" x="114.64621" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <!-- 4K -->
+      <g transform="translate(108.768272 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-34" d="M 2663 828 
+L 2663 0 
+L 1822 0 
+L 1822 828 
+L 88 828 
+L 88 1338 
+L 1975 4213 
+L 2663 4213 
+L 2663 1469 
+L 3081 1469 
+L 3081 828 
+L 2663 828 
+z
+M 1822 2709 
+Q 1822 3059 1853 3372 
+L 606 1469 
+L 1822 1469 
+L 1822 2709 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-34"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m1cce303830" x="148.688663" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <!-- 8K -->
+      <g transform="translate(142.810725 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-38" d="M 2891 3159 
+Q 2891 2816 2722 2573 
+Q 2553 2331 2247 2222 
+Q 2606 2088 2797 1806 
+Q 2988 1525 2988 1131 
+Q 2988 538 2645 237 
+Q 2303 -63 1581 -63 
+Q 213 -63 213 1131 
+Q 213 1531 406 1812 
+Q 600 2094 944 2222 
+Q 641 2338 475 2578 
+Q 309 2819 309 3169 
+Q 309 3681 648 3968 
+Q 988 4256 1606 4256 
+Q 2213 4256 2552 3964 
+Q 2891 3672 2891 3159 
+z
+M 2100 1131 
+Q 2100 1613 1975 1831 
+Q 1850 2050 1581 2050 
+Q 1325 2050 1212 1837 
+Q 1100 1625 1100 1131 
+Q 1100 647 1214 450 
+Q 1328 253 1581 253 
+Q 1850 253 1975 459 
+Q 2100 666 2100 1131 
+z
+M 2003 3159 
+Q 2003 3569 1900 3755 
+Q 1797 3941 1588 3941 
+Q 1388 3941 1292 3756 
+Q 1197 3572 1197 3159 
+Q 1197 2734 1290 2559 
+Q 1384 2384 1588 2384 
+Q 1803 2384 1903 2564 
+Q 2003 2744 2003 3159 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-38"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#m1cce303830" x="182.731116" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <!-- 16K -->
+      <g transform="translate(174.553179 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-36" d="M 3013 1300 
+Q 3013 641 2672 289 
+Q 2331 -63 1703 -63 
+Q 984 -63 601 484 
+Q 219 1031 219 2069 
+Q 219 2744 420 3234 
+Q 622 3725 984 3981 
+Q 1347 4238 1819 4238 
+Q 2306 4238 2759 4103 
+L 2759 3150 
+L 2488 3150 
+L 2353 3756 
+Q 2138 3919 1881 3919 
+Q 1569 3919 1373 3519 
+Q 1178 3119 1144 2400 
+Q 1484 2547 1819 2547 
+Q 2391 2547 2702 2225 
+Q 3013 1903 3013 1300 
+z
+M 1691 253 
+Q 1919 253 2006 500 
+Q 2094 747 2094 1241 
+Q 2094 1681 1972 1918 
+Q 1850 2156 1609 2156 
+Q 1378 2156 1138 2084 
+L 1138 2069 
+Q 1138 253 1691 253 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-36" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(100 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_6">
+     <g id="line2d_6">
+      <g>
+       <use xlink:href="#m1cce303830" x="216.773569" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_6">
+      <!-- 32K -->
+      <g transform="translate(208.595632 113.465656) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-33" d="M 2981 1141 
+Q 2981 569 2572 253 
+Q 2163 -63 1434 -63 
+Q 853 -63 278 63 
+L 241 1078 
+L 528 1078 
+L 691 406 
+Q 963 253 1259 253 
+Q 1638 253 1850 495 
+Q 2063 738 2063 1172 
+Q 2063 1550 1892 1751 
+Q 1722 1953 1341 1978 
+L 978 2000 
+L 978 2378 
+L 1328 2403 
+Q 1606 2422 1739 2608 
+Q 1872 2794 1872 3169 
+Q 1872 3519 1714 3719 
+Q 1556 3919 1266 3919 
+Q 1097 3919 989 3867 
+Q 881 3816 784 3756 
+L 650 3150 
+L 378 3150 
+L 378 4103 
+Q 697 4184 928 4211 
+Q 1159 4238 1384 4238 
+Q 2794 4238 2794 3206 
+Q 2794 2781 2569 2518 
+Q 2344 2256 1925 2194 
+Q 2981 2066 2981 1141 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-33"/>
+       <use xlink:href="#Tinos-Bold-32" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(100 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_7">
+     <!-- Sequence length -->
+     <g transform="translate(97.083061 126.364031) scale(0.1 -0.1)">
+      <defs>
+       <path id="Tinos-Bold-53" d="M 341 1284 
+L 616 1284 
+L 756 613 
+Q 888 459 1153 356 
+Q 1419 253 1703 253 
+Q 2600 253 2600 991 
+Q 2600 1222 2429 1381 
+Q 2259 1541 1894 1666 
+Q 1356 1844 1120 1955 
+Q 884 2066 721 2216 
+Q 559 2366 462 2580 
+Q 366 2794 366 3106 
+Q 366 3659 742 3948 
+Q 1119 4238 1844 4238 
+Q 2369 4238 3006 4103 
+L 3006 3106 
+L 2728 3106 
+L 2588 3681 
+Q 2269 3913 1844 3913 
+Q 1459 3913 1253 3770 
+Q 1047 3628 1047 3334 
+Q 1047 3125 1219 2976 
+Q 1391 2828 1756 2713 
+Q 2472 2478 2739 2304 
+Q 3006 2131 3147 1875 
+Q 3288 1619 3288 1272 
+Q 3288 -63 1716 -63 
+Q 1356 -63 982 -2 
+Q 609 59 341 159 
+L 341 1284 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-65" d="M 1544 3009 
+Q 2141 3009 2408 2690 
+Q 2675 2372 2675 1700 
+L 2675 1444 
+L 1134 1444 
+L 1134 1394 
+Q 1134 928 1209 731 
+Q 1284 534 1453 431 
+Q 1622 328 1916 328 
+Q 2191 328 2609 419 
+L 2609 178 
+Q 2438 75 2164 8 
+Q 1891 -59 1631 -59 
+Q 909 -59 564 317 
+Q 219 694 219 1484 
+Q 219 2253 548 2631 
+Q 878 3009 1544 3009 
+z
+M 1509 2694 
+Q 1322 2694 1230 2491 
+Q 1138 2288 1138 1772 
+L 1819 1772 
+Q 1819 2191 1791 2361 
+Q 1763 2531 1695 2612 
+Q 1628 2694 1509 2694 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-71" d="M 3181 -1081 
+L 3500 -1156 
+L 3500 -1363 
+L 1847 -1363 
+L 1847 -1156 
+L 2278 -1081 
+L 2278 -409 
+Q 2278 -119 2309 181 
+Q 2003 -63 1544 -63 
+Q 891 -63 577 323 
+Q 263 709 263 1481 
+Q 263 2234 614 2625 
+Q 966 3016 1653 3016 
+Q 1878 3016 2525 2944 
+L 2897 3078 
+L 3181 3078 
+L 3181 -1081 
+z
+M 1178 1400 
+Q 1178 838 1323 561 
+Q 1469 284 1803 284 
+Q 1922 284 2055 317 
+Q 2188 350 2278 403 
+L 2278 2641 
+Q 2066 2694 1803 2694 
+Q 1484 2694 1331 2378 
+Q 1178 2063 1178 1400 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-75" d="M 2203 256 
+L 1991 147 
+Q 1553 -78 1203 -78 
+Q 391 -78 391 788 
+L 391 2656 
+L 97 2731 
+L 97 2938 
+L 1294 2938 
+L 1294 909 
+Q 1294 647 1405 500 
+Q 1516 353 1722 353 
+Q 1959 353 2197 459 
+L 2197 2656 
+L 1928 2731 
+L 1928 2938 
+L 3100 2938 
+L 3100 281 
+L 3388 206 
+L 3388 0 
+L 2247 0 
+L 2203 256 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-6e" d="M 1356 2681 
+L 1569 2791 
+Q 2006 3016 2356 3016 
+Q 3169 3016 3169 2150 
+L 3169 281 
+L 3463 206 
+L 3463 0 
+L 2003 0 
+L 2003 206 
+L 2266 281 
+L 2266 2028 
+Q 2266 2291 2155 2437 
+Q 2044 2584 1838 2584 
+Q 1600 2584 1363 2478 
+L 1363 281 
+L 1631 206 
+L 1631 0 
+L 172 0 
+L 172 206 
+L 459 281 
+L 459 2656 
+L 172 2731 
+L 172 2938 
+L 1313 2938 
+L 1356 2681 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-63" d="M 2681 178 
+Q 2541 66 2292 3 
+Q 2044 -59 1781 -59 
+Q 997 -59 608 319 
+Q 219 697 219 1475 
+Q 219 1959 395 2304 
+Q 572 2650 900 2833 
+Q 1228 3016 1663 3016 
+Q 2100 3016 2616 2906 
+L 2616 2038 
+L 2391 2038 
+L 2259 2553 
+Q 2153 2631 2050 2662 
+Q 1947 2694 1778 2694 
+Q 1594 2694 1444 2547 
+Q 1294 2400 1211 2133 
+Q 1128 1866 1128 1494 
+Q 1128 866 1323 597 
+Q 1519 328 1944 328 
+Q 2375 328 2681 419 
+L 2681 178 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-20" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-6c" d="M 1347 281 
+L 1669 206 
+L 1669 0 
+L 125 0 
+L 125 206 
+L 444 281 
+L 444 4159 
+L 144 4234 
+L 144 4441 
+L 1347 4441 
+L 1347 281 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-67" d="M 803 1084 
+Q 247 1319 247 2000 
+Q 247 2488 587 2752 
+Q 928 3016 1563 3016 
+Q 1697 3016 1908 2992 
+Q 2119 2969 2216 2938 
+L 2919 3284 
+L 3028 3150 
+L 2672 2644 
+Q 2866 2406 2866 2000 
+Q 2866 1503 2530 1236 
+Q 2194 969 1550 969 
+Q 1303 969 1072 1006 
+L 997 769 
+Q 1003 678 1112 598 
+Q 1222 519 1381 519 
+L 2066 519 
+Q 3138 519 3138 -306 
+Q 3138 -647 2952 -892 
+Q 2766 -1138 2405 -1275 
+Q 2044 -1413 1506 -1413 
+Q 869 -1413 519 -1230 
+Q 169 -1047 169 -728 
+Q 169 -588 283 -456 
+Q 397 -325 725 -134 
+Q 541 -63 411 115 
+Q 281 294 281 491 
+L 803 1084 
+z
+M 2453 -519 
+Q 2453 -222 2056 -222 
+L 1066 -222 
+Q 791 -422 791 -675 
+Q 791 -875 983 -975 
+Q 1175 -1075 1509 -1075 
+Q 1963 -1075 2208 -928 
+Q 2453 -781 2453 -519 
+z
+M 1544 1281 
+Q 1775 1281 1878 1461 
+Q 1981 1641 1981 2000 
+Q 1981 2359 1879 2529 
+Q 1778 2700 1544 2700 
+Q 1328 2700 1229 2529 
+Q 1131 2359 1131 2000 
+Q 1131 1641 1228 1461 
+Q 1325 1281 1544 1281 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-74" d="M 1369 -63 
+Q 947 -63 717 128 
+Q 488 319 488 678 
+L 488 2613 
+L 103 2613 
+L 103 2816 
+L 556 2938 
+L 922 3603 
+L 1391 3603 
+L 1391 2938 
+L 2009 2938 
+L 2009 2613 
+L 1391 2613 
+L 1391 734 
+Q 1391 531 1475 428 
+Q 1559 325 1697 325 
+Q 1863 325 2103 375 
+L 2103 109 
+Q 2009 44 1782 -9 
+Q 1556 -63 1369 -63 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-68" d="M 1363 3169 
+Q 1363 2963 1344 2681 
+L 1559 2791 
+Q 2003 3016 2356 3016 
+Q 3169 3016 3169 2150 
+L 3169 281 
+L 3463 206 
+L 3463 0 
+L 2003 0 
+L 2003 206 
+L 2266 281 
+L 2266 2028 
+Q 2266 2291 2155 2437 
+Q 2044 2584 1838 2584 
+Q 1600 2584 1363 2478 
+L 1363 281 
+L 1631 206 
+L 1631 0 
+L 172 0 
+L 172 206 
+L 459 281 
+L 459 4159 
+L 159 4234 
+L 159 4441 
+L 1363 4441 
+L 1363 3169 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#Tinos-Bold-53"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(55.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-71" transform="translate(100 0)"/>
+      <use xlink:href="#Tinos-Bold-75" transform="translate(155.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(211.230469 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(255.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(311.230469 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(355.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(400 0)"/>
+      <use xlink:href="#Tinos-Bold-6c" transform="translate(425 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(452.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(497.167969 0)"/>
+      <use xlink:href="#Tinos-Bold-67" transform="translate(552.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(602.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-68" transform="translate(636.083984 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_7">
+      <path d="M 25.318812 101.081719 
+L 238.01606 101.081719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_8">
+      <defs>
+       <path id="m779c60b9ff" d="M 0 0 
+L -2.5 0 
+" style="stroke: #000000; stroke-width: 0.6"/>
+      </defs>
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <!-- 0 -->
+      <g transform="translate(14.718813 104.273687) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-30" d="M 2956 2113 
+Q 2956 -63 1581 -63 
+Q 919 -63 581 493 
+Q 244 1050 244 2113 
+Q 244 3153 581 3704 
+Q 919 4256 1606 4256 
+Q 2269 4256 2612 3711 
+Q 2956 3166 2956 2113 
+z
+M 2041 2113 
+Q 2041 3088 1931 3514 
+Q 1822 3941 1588 3941 
+Q 1356 3941 1257 3528 
+Q 1159 3116 1159 2113 
+Q 1159 1094 1259 672 
+Q 1359 250 1588 250 
+Q 1819 250 1930 683 
+Q 2041 1116 2041 2113 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-30"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_9">
+      <path d="M 25.318812 86.033719 
+L 238.01606 86.033719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_10">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="86.033719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_9">
+      <!-- 1 -->
+      <g transform="translate(14.718813 89.225687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-31"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_11">
+      <path d="M 25.318812 70.985719 
+L 238.01606 70.985719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_12">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="70.985719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_10">
+      <!-- 2 -->
+      <g transform="translate(14.718813 74.177687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-32"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_13">
+      <path d="M 25.318812 55.937719 
+L 238.01606 55.937719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_14">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="55.937719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_11">
+      <!-- 3 -->
+      <g transform="translate(14.718813 59.129687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-33"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_15">
+      <path d="M 25.318812 40.889719 
+L 238.01606 40.889719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_16">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="40.889719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_12">
+      <!-- 4 -->
+      <g transform="translate(14.718813 44.081687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-34"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_17">
+      <path d="M 25.318812 25.841719 
+L 238.01606 25.841719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_18">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="25.841719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_13">
+      <!-- 5 -->
+      <g transform="translate(14.718813 29.033687) scale(0.092 -0.092)">
+       <defs>
+        <path id="Tinos-Bold-35" d="M 1500 2478 
+Q 2244 2478 2605 2172 
+Q 2966 1866 2966 1247 
+Q 2966 616 2573 276 
+Q 2181 -63 1450 -63 
+Q 869 -63 294 63 
+L 256 1078 
+L 544 1078 
+L 706 406 
+Q 828 338 1006 295 
+Q 1184 253 1328 253 
+Q 2047 253 2047 1216 
+Q 2047 1716 1864 1939 
+Q 1681 2163 1281 2163 
+Q 1059 2163 875 2081 
+L 778 2041 
+L 466 2041 
+L 466 4191 
+L 2653 4191 
+L 2653 3494 
+L 813 3494 
+L 813 2394 
+Q 1194 2478 1500 2478 
+z
+" transform="scale(0.015625)"/>
+       </defs>
+       <use xlink:href="#Tinos-Bold-35"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_7">
+     <g id="line2d_19">
+      <path d="M 25.318812 10.793719 
+L 238.01606 10.793719 
+" clip-path="url(#p0bd692800f)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_20">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="25.318812" y="10.793719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_14">
+      <!-- 6 -->
+      <g transform="translate(14.718813 13.985687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-36"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_15">
+     <!-- Latency (s) -->
+     <g transform="translate(8.517844 80.157937) rotate(-90) scale(0.102 -0.102)">
+      <defs>
+       <path id="Tinos-Bold-4c" d="M 2278 3963 
+L 1631 3881 
+L 1631 331 
+L 2484 331 
+Q 3150 331 3463 394 
+L 3719 1266 
+L 4000 1266 
+L 3881 0 
+L 109 0 
+L 109 228 
+L 647 313 
+L 647 3881 
+L 113 3963 
+L 113 4191 
+L 2278 4191 
+L 2278 3963 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-61" d="M 1706 3003 
+Q 2809 3003 2809 2191 
+L 2809 281 
+L 3103 206 
+L 3103 0 
+L 2022 0 
+L 1953 225 
+Q 1709 59 1512 -2 
+Q 1316 -63 1116 -63 
+Q 206 -63 206 813 
+Q 206 1144 340 1342 
+Q 475 1541 728 1636 
+Q 981 1731 1525 1744 
+L 1906 1753 
+L 1906 2181 
+Q 1906 2713 1472 2713 
+Q 1209 2713 884 2550 
+L 766 2184 
+L 559 2184 
+L 559 2894 
+Q 1031 2966 1253 2984 
+Q 1475 3003 1706 3003 
+z
+M 1906 1475 
+L 1644 1466 
+Q 1341 1453 1223 1306 
+Q 1106 1159 1106 831 
+Q 1106 566 1200 441 
+Q 1294 316 1444 316 
+Q 1656 316 1906 425 
+L 1906 1475 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-79" d="M 1444 -91 
+L 269 2656 
+L 63 2731 
+L 63 2938 
+L 1566 2938 
+L 1566 2731 
+L 1216 2650 
+L 1906 1025 
+L 2522 2656 
+L 2178 2731 
+L 2178 2938 
+L 3138 2938 
+L 3138 2731 
+L 2925 2669 
+L 1766 -184 
+Q 1566 -694 1416 -923 
+Q 1266 -1153 1083 -1267 
+Q 900 -1381 666 -1381 
+Q 413 -1381 150 -1322 
+L 150 -566 
+L 338 -566 
+L 472 -959 
+Q 563 -1031 703 -1031 
+Q 822 -1031 912 -975 
+Q 1003 -919 1083 -812 
+Q 1163 -706 1234 -551 
+Q 1306 -397 1444 -91 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-28" d="M 1134 1544 
+Q 1134 803 1214 350 
+Q 1294 -103 1467 -447 
+Q 1641 -791 1925 -1006 
+L 1925 -1363 
+Q 1306 -1034 957 -645 
+Q 609 -256 445 270 
+Q 281 797 281 1547 
+Q 281 2291 445 2816 
+Q 609 3341 957 3728 
+Q 1306 4116 1925 4441 
+L 1925 4084 
+Q 1641 3869 1469 3528 
+Q 1297 3188 1215 2734 
+Q 1134 2281 1134 1544 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-73" d="M 2334 931 
+Q 2334 441 2032 189 
+Q 1731 -63 1156 -63 
+Q 919 -63 633 -11 
+Q 347 41 200 97 
+L 200 897 
+L 406 897 
+L 525 484 
+Q 634 375 812 301 
+Q 991 228 1175 228 
+Q 1447 228 1580 345 
+Q 1713 463 1713 644 
+Q 1713 816 1584 919 
+Q 1456 1022 1025 1156 
+Q 572 1297 383 1540 
+Q 194 1784 194 2141 
+Q 194 2541 491 2778 
+Q 788 3016 1256 3016 
+Q 1578 3016 2122 2925 
+L 2122 2172 
+L 1916 2172 
+L 1816 2516 
+Q 1725 2606 1561 2664 
+Q 1397 2722 1250 2722 
+Q 1025 2722 917 2630 
+Q 809 2538 809 2378 
+Q 809 2213 943 2106 
+Q 1078 2000 1497 1875 
+Q 1953 1734 2143 1504 
+Q 2334 1275 2334 931 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-29" d="M 206 -1363 
+L 206 -1006 
+Q 491 -788 664 -444 
+Q 838 -100 917 358 
+Q 997 816 997 1544 
+Q 997 2284 915 2737 
+Q 834 3191 662 3528 
+Q 491 3866 206 4084 
+L 206 4441 
+Q 831 4106 1178 3720 
+Q 1525 3334 1687 2811 
+Q 1850 2288 1850 1547 
+Q 1850 800 1687 273 
+Q 1525 -253 1176 -642 
+Q 828 -1031 206 -1363 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#Tinos-Bold-4c"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(66.699219 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(116.699219 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(150 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(194.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(250 0)"/>
+      <use xlink:href="#Tinos-Bold-79" transform="translate(294.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(344.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-28" transform="translate(369.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(402.685547 0)"/>
+      <use xlink:href="#Tinos-Bold-29" transform="translate(441.601562 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 25.318812 101.081719 
+L 25.318812 10.793719 
+" style="fill: none; stroke: #000000; stroke-width: 0.7; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 25.318812 101.081719 
+L 238.01606 101.081719 
+" style="fill: none; stroke: #000000; stroke-width: 0.7; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 34.986869 101.081719 
+L 46.561303 101.081719 
+L 46.561303 100.986334 
+L 34.986869 100.986334 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 69.029322 101.081719 
+L 80.603757 101.081719 
+L 80.603757 100.737439 
+L 69.029322 100.737439 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 103.071776 101.081719 
+L 114.64621 101.081719 
+L 114.64621 99.76685 
+L 103.071776 99.76685 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 137.114229 101.081719 
+L 148.688663 101.081719 
+L 148.688663 95.804555 
+L 137.114229 95.804555 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 171.156682 101.081719 
+L 182.731116 101.081719 
+L 182.731116 79.973063 
+L 171.156682 79.973063 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 205.199135 101.081719 
+L 216.773569 101.081719 
+L 216.773569 16.647095 
+L 205.199135 16.647095 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_11">
+    <path d="M 46.561303 101.081719 
+L 58.135737 101.081719 
+L 58.135737 100.90621 
+L 46.561303 100.90621 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_12">
+    <path d="M 80.603757 101.081719 
+L 92.178191 101.081719 
+L 92.178191 100.248563 
+L 80.603757 100.248563 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_13">
+    <path d="M 114.64621 101.081719 
+L 126.220644 101.081719 
+L 126.220644 98.504576 
+L 114.64621 98.504576 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_14">
+    <path d="M 148.688663 101.081719 
+L 160.263097 101.081719 
+L 160.263097 88.627612 
+L 148.688663 88.627612 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_15">
+    <path d="M 182.731116 101.081719 
+L 194.30555 101.081719 
+L 194.30555 61.397446 
+L 182.731116 61.397446 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_16">
+    <path d="M 216.773569 101.081719 
+L 228.348003 101.081719 
+L 228.348003 -87.207491 
+L 216.773569 -87.207491 
+z
+" clip-path="url(#p0bd692800f)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_16">
+    <!-- 1.84x -->
+    <g style="fill: #2f3a45" transform="translate(37.336303 99.154601) scale(0.082 -0.082)">
+     <defs>
+      <path id="Tinos-Bold-2e" d="M 800 -91 
+Q 584 -91 432 59 
+Q 281 209 281 428 
+Q 281 644 431 795 
+Q 581 947 800 947 
+Q 1016 947 1167 797 
+Q 1319 647 1319 428 
+Q 1319 213 1169 61 
+Q 1019 -91 800 -91 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-78" d="M 97 2734 
+L 97 2938 
+L 1666 2938 
+L 1666 2734 
+L 1338 2650 
+L 1766 1991 
+L 2331 2656 
+L 2038 2734 
+L 2038 2938 
+L 3038 2938 
+L 3038 2734 
+L 2778 2669 
+L 1953 1700 
+L 2884 269 
+L 3166 203 
+L 3166 0 
+L 1597 0 
+L 1597 203 
+L 1925 275 
+L 1413 1066 
+L 731 269 
+L 1025 203 
+L 1025 0 
+L 25 0 
+L 25 203 
+L 288 253 
+L 1225 1353 
+L 381 2656 
+L 97 2734 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-38" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-34" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_17">
+    <!-- 2.42x -->
+    <g style="fill: #2f3a45" transform="translate(71.378757 98.477224) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-32"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-34" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-32" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_18">
+    <!-- 1.96x -->
+    <g style="fill: #2f3a45" transform="translate(105.42121 96.680918) scale(0.082 -0.082)">
+     <defs>
+      <path id="Tinos-Bold-39" d="M 175 2913 
+Q 175 3550 540 3894 
+Q 906 4238 1556 4238 
+Q 2291 4238 2630 3722 
+Q 2969 3206 2969 2106 
+Q 2969 1400 2770 915 
+Q 2572 431 2200 184 
+Q 1828 -63 1306 -63 
+Q 788 -63 334 72 
+L 334 1025 
+L 606 1025 
+L 741 419 
+Q 850 341 1001 297 
+Q 1153 253 1294 253 
+Q 1631 253 1820 636 
+Q 2009 1019 2041 1744 
+Q 1716 1628 1394 1628 
+Q 828 1628 501 1965 
+Q 175 2303 175 2913 
+z
+M 1094 2900 
+Q 1094 2006 1581 2006 
+Q 1819 2006 2050 2063 
+L 2050 2106 
+Q 2050 3009 1942 3465 
+Q 1834 3922 1563 3922 
+Q 1094 3922 1094 2900 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-39" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-36" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_19">
+    <!-- 2.36x -->
+    <g style="fill: #2f3a45" transform="translate(139.463663 86.507645) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-32"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-33" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-36" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_20">
+    <!-- 1.88x -->
+    <g style="fill: #2f3a45" transform="translate(173.506116 58.460574) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-38" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-38" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_21">
+    <!-- 2.23x -->
+    <g style="fill: #2f3a45" transform="translate(181.302343 16.813179) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-32"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-32" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-33" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_22">
+    <!-- 12.5s -->
+    <g style="fill: #2f3a45" transform="translate(214.003911 7.886129) scale(0.08 -0.08)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-32" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(100 0)"/>
+     <use xlink:href="#Tinos-Bold-35" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-73" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_23">
+    <!-- (a) Prefill -->
+    <g transform="translate(110.854655 8.621437) scale(0.102 -0.102)">
+     <defs>
+      <path id="Tinos-Bold-50" d="M 1634 1644 
+L 1634 313 
+L 2331 228 
+L 2331 0 
+L 150 0 
+L 150 228 
+L 647 313 
+L 647 3881 
+L 109 3963 
+L 109 4191 
+L 1956 4191 
+Q 2847 4191 3287 3892 
+Q 3728 3594 3728 2956 
+Q 3728 1644 2197 1644 
+L 1634 1644 
+z
+M 2722 2950 
+Q 2722 3450 2536 3648 
+Q 2350 3847 1881 3847 
+L 1634 3847 
+L 1634 1988 
+L 1894 1988 
+Q 2328 1988 2525 2206 
+Q 2722 2425 2722 2950 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-72" d="M 1441 2328 
+Q 1778 2703 2045 2867 
+Q 2313 3031 2534 3031 
+L 2703 3031 
+L 2703 1959 
+L 2528 1959 
+L 2344 2353 
+Q 2147 2353 1897 2267 
+Q 1647 2181 1456 2066 
+L 1456 281 
+L 1928 206 
+L 1928 0 
+L 172 0 
+L 172 206 
+L 553 281 
+L 553 2656 
+L 172 2731 
+L 172 2938 
+L 1406 2938 
+L 1441 2328 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-66" d="M 491 2613 
+L 47 2613 
+L 47 2828 
+L 491 2950 
+L 491 3266 
+Q 491 3866 797 4186 
+Q 1103 4506 1675 4506 
+Q 1984 4506 2194 4447 
+L 2194 3747 
+L 1994 3747 
+L 1903 4088 
+Q 1828 4163 1706 4163 
+Q 1394 4163 1394 3366 
+L 1394 2938 
+L 1991 2938 
+L 1991 2613 
+L 1394 2613 
+L 1394 281 
+L 1872 206 
+L 1872 0 
+L 172 0 
+L 172 206 
+L 491 281 
+L 491 2613 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-69" d="M 1363 281 
+L 1684 206 
+L 1684 0 
+L 141 0 
+L 141 206 
+L 459 281 
+L 459 2656 
+L 159 2731 
+L 159 2938 
+L 1363 2938 
+L 1363 281 
+z
+M 428 3963 
+Q 428 4166 570 4303 
+Q 713 4441 909 4441 
+Q 1109 4441 1248 4302 
+Q 1388 4163 1388 3963 
+Q 1388 3766 1250 3623 
+Q 1113 3481 909 3481 
+Q 709 3481 568 3620 
+Q 428 3759 428 3963 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tinos-Bold-28"/>
+     <use xlink:href="#Tinos-Bold-61" transform="translate(33.300781 0)"/>
+     <use xlink:href="#Tinos-Bold-29" transform="translate(83.300781 0)"/>
+     <use xlink:href="#Tinos-Bold-20" transform="translate(116.601562 0)"/>
+     <use xlink:href="#Tinos-Bold-50" transform="translate(141.601562 0)"/>
+     <use xlink:href="#Tinos-Bold-72" transform="translate(202.685547 0)"/>
+     <use xlink:href="#Tinos-Bold-65" transform="translate(247.070312 0)"/>
+     <use xlink:href="#Tinos-Bold-66" transform="translate(291.455078 0)"/>
+     <use xlink:href="#Tinos-Bold-69" transform="translate(324.755859 0)"/>
+     <use xlink:href="#Tinos-Bold-6c" transform="translate(352.539062 0)"/>
+     <use xlink:href="#Tinos-Bold-6c" transform="translate(380.322266 0)"/>
+    </g>
+   </g>
+   <g id="legend_1">
+    <g id="patch_17">
+     <path d="M 33.418813 25.193719 
+L 47.818812 25.193719 
+L 47.818812 18.893719 
+L 33.418813 18.893719 
+z
+" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_24">
+     <!-- Mcast -->
+     <g transform="translate(55.018813 25.193719) scale(0.09 -0.09)">
+      <defs>
+       <path id="Tinos-Bold-4d" d="M 2756 0 
+L 2584 0 
+L 1038 3541 
+L 1038 313 
+L 1600 228 
+L 1600 0 
+L 109 0 
+L 109 228 
+L 647 313 
+L 647 3881 
+L 109 3963 
+L 109 4191 
+L 1756 4191 
+L 2953 1434 
+L 4175 4191 
+L 5856 4191 
+L 5856 3963 
+L 5319 3881 
+L 5319 313 
+L 5856 228 
+L 5856 0 
+L 3772 0 
+L 3772 228 
+L 4334 313 
+L 4334 3541 
+L 2756 0 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#Tinos-Bold-4d"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(94.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(138.769531 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(188.769531 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(227.685547 0)"/>
+     </g>
+    </g>
+    <g id="patch_18">
+     <path d="M 33.418813 37.910437 
+L 47.818812 37.910437 
+L 47.818812 31.610437 
+L 33.418813 31.610437 
+z
+" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_25">
+     <!-- No mcast -->
+     <g transform="translate(55.018813 37.910437) scale(0.09 -0.09)">
+      <defs>
+       <path id="Tinos-Bold-4e" d="M 3609 3881 
+L 3047 3963 
+L 3047 4191 
+L 4538 4191 
+L 4538 3963 
+L 4000 3881 
+L 4000 0 
+L 3634 0 
+L 1050 3369 
+L 1050 313 
+L 1613 228 
+L 1613 0 
+L 122 0 
+L 122 228 
+L 659 313 
+L 659 3881 
+L 122 3963 
+L 122 4191 
+L 1556 4191 
+L 3609 1513 
+L 3609 3881 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-6f" d="M 2956 1484 
+Q 2956 694 2617 315 
+Q 2278 -63 1581 -63 
+Q 906 -63 575 320 
+Q 244 703 244 1484 
+Q 244 2263 580 2639 
+Q 916 3016 1606 3016 
+Q 2303 3016 2629 2627 
+Q 2956 2238 2956 1484 
+z
+M 2041 1484 
+Q 2041 2172 1939 2436 
+Q 1838 2700 1588 2700 
+Q 1347 2700 1253 2447 
+Q 1159 2194 1159 1484 
+Q 1159 763 1254 506 
+Q 1350 250 1588 250 
+Q 1834 250 1937 520 
+Q 2041 791 2041 1484 
+z
+" transform="scale(0.015625)"/>
+       <path id="Tinos-Bold-6d" d="M 1356 2681 
+L 1569 2791 
+Q 2006 3016 2353 3016 
+Q 2878 3016 3053 2634 
+Q 3694 3016 4134 3016 
+Q 4928 3016 4928 2150 
+L 4928 281 
+L 5222 206 
+L 5222 0 
+L 3763 0 
+L 3763 206 
+L 4025 281 
+L 4025 2028 
+Q 4025 2291 3923 2437 
+Q 3822 2584 3616 2584 
+Q 3384 2584 3116 2453 
+Q 3147 2322 3147 2150 
+L 3147 281 
+L 3441 206 
+L 3441 0 
+L 1981 0 
+L 1981 206 
+L 2244 281 
+L 2244 2028 
+Q 2244 2291 2142 2437 
+Q 2041 2584 1834 2584 
+Q 1628 2584 1363 2463 
+L 1363 281 
+L 1631 206 
+L 1631 0 
+L 172 0 
+L 172 206 
+L 459 281 
+L 459 2656 
+L 172 2731 
+L 172 2938 
+L 1313 2938 
+L 1356 2681 
+z
+" transform="scale(0.015625)"/>
+      </defs>
+      <use xlink:href="#Tinos-Bold-4e"/>
+      <use xlink:href="#Tinos-Bold-6f" transform="translate(72.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(122.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-6d" transform="translate(147.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(230.517578 0)"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(274.902344 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(324.902344 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(363.818359 0)"/>
+     </g>
+    </g>
+   </g>
+  </g>
+  <g id="axes_2">
+   <g id="patch_19">
+    <path d="M 276.301565 101.081719 
+L 488.998812 101.081719 
+L 488.998812 10.793719 
+L 276.301565 10.793719 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_3">
+    <g id="xtick_7">
+     <g id="line2d_21">
+      <g>
+       <use xlink:href="#m1cce303830" x="297.544056" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_26">
+      <!-- 1K -->
+      <g transform="translate(291.666118 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_8">
+     <g id="line2d_22">
+      <g>
+       <use xlink:href="#m1cce303830" x="331.586509" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_27">
+      <!-- 2K -->
+      <g transform="translate(325.708571 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-32"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_9">
+     <g id="line2d_23">
+      <g>
+       <use xlink:href="#m1cce303830" x="365.628962" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_28">
+      <!-- 4K -->
+      <g transform="translate(359.751025 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-34"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_10">
+     <g id="line2d_24">
+      <g>
+       <use xlink:href="#m1cce303830" x="399.671415" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_29">
+      <!-- 8K -->
+      <g transform="translate(393.793478 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-38"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(50 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_11">
+     <g id="line2d_25">
+      <g>
+       <use xlink:href="#m1cce303830" x="433.713868" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_30">
+      <!-- 16K -->
+      <g transform="translate(425.535931 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-36" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(100 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="xtick_12">
+     <g id="line2d_26">
+      <g>
+       <use xlink:href="#m1cce303830" x="467.756322" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_31">
+      <!-- 32K -->
+      <g transform="translate(459.578384 113.465656) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-33"/>
+       <use xlink:href="#Tinos-Bold-32" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-4b" transform="translate(100 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_32">
+     <!-- Sequence length -->
+     <g transform="translate(348.065814 126.364031) scale(0.1 -0.1)">
+      <use xlink:href="#Tinos-Bold-53"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(55.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-71" transform="translate(100 0)"/>
+      <use xlink:href="#Tinos-Bold-75" transform="translate(155.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(211.230469 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(255.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(311.230469 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(355.615234 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(400 0)"/>
+      <use xlink:href="#Tinos-Bold-6c" transform="translate(425 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(452.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(497.167969 0)"/>
+      <use xlink:href="#Tinos-Bold-67" transform="translate(552.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(602.783203 0)"/>
+      <use xlink:href="#Tinos-Bold-68" transform="translate(636.083984 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="matplotlib.axis_4">
+    <g id="ytick_8">
+     <g id="line2d_27">
+      <path d="M 276.301565 101.081719 
+L 488.998812 101.081719 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_28">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="101.081719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_33">
+      <!-- 0 -->
+      <g transform="translate(265.701565 104.273687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-30"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_9">
+     <g id="line2d_29">
+      <path d="M 276.301565 83.024119 
+L 488.998812 83.024119 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_30">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="83.024119" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_34">
+      <!-- 0.3 -->
+      <g transform="translate(258.801565 86.216087) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-30"/>
+       <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-33" transform="translate(75 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_10">
+     <g id="line2d_31">
+      <path d="M 276.301565 64.966519 
+L 488.998812 64.966519 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_32">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="64.966519" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_35">
+      <!-- 0.6 -->
+      <g transform="translate(258.801565 68.158487) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-30"/>
+       <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-36" transform="translate(75 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_11">
+     <g id="line2d_33">
+      <path d="M 276.301565 46.908919 
+L 488.998812 46.908919 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_34">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="46.908919" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_36">
+      <!-- 0.9 -->
+      <g transform="translate(258.801565 50.100887) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-30"/>
+       <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-39" transform="translate(75 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_12">
+     <g id="line2d_35">
+      <path d="M 276.301565 28.851319 
+L 488.998812 28.851319 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_36">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="28.851319" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_37">
+      <!-- 1.2 -->
+      <g transform="translate(258.801565 32.043287) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-32" transform="translate(75 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="ytick_13">
+     <g id="line2d_37">
+      <path d="M 276.301565 10.793719 
+L 488.998812 10.793719 
+" clip-path="url(#p52d2a93090)" style="fill: none; stroke: #d0d0d0; stroke-opacity: 0.65; stroke-width: 0.45; stroke-linecap: square"/>
+     </g>
+     <g id="line2d_38">
+      <g>
+       <use xlink:href="#m779c60b9ff" x="276.301565" y="10.793719" style="stroke: #000000; stroke-width: 0.6"/>
+      </g>
+     </g>
+     <g id="text_38">
+      <!-- 1.5 -->
+      <g transform="translate(258.801565 13.985687) scale(0.092 -0.092)">
+       <use xlink:href="#Tinos-Bold-31"/>
+       <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+       <use xlink:href="#Tinos-Bold-35" transform="translate(75 0)"/>
+      </g>
+     </g>
+    </g>
+    <g id="text_39">
+     <!-- Latency (ms) -->
+     <g transform="translate(252.600596 84.406078) rotate(-90) scale(0.102 -0.102)">
+      <use xlink:href="#Tinos-Bold-4c"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(66.699219 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(116.699219 0)"/>
+      <use xlink:href="#Tinos-Bold-65" transform="translate(150 0)"/>
+      <use xlink:href="#Tinos-Bold-6e" transform="translate(194.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(250 0)"/>
+      <use xlink:href="#Tinos-Bold-79" transform="translate(294.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(344.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-28" transform="translate(369.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-6d" transform="translate(402.685547 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(485.986328 0)"/>
+      <use xlink:href="#Tinos-Bold-29" transform="translate(524.902344 0)"/>
+     </g>
+    </g>
+   </g>
+   <g id="patch_20">
+    <path d="M 276.301565 101.081719 
+L 276.301565 10.793719 
+" style="fill: none; stroke: #000000; stroke-width: 0.7; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_21">
+    <path d="M 276.301565 101.081719 
+L 488.998812 101.081719 
+" style="fill: none; stroke: #000000; stroke-width: 0.7; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_22">
+    <path d="M 285.969622 101.081719 
+L 297.544056 101.081719 
+L 297.544056 87.23144 
+L 285.969622 87.23144 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_23">
+    <path d="M 320.012075 101.081719 
+L 331.586509 101.081719 
+L 331.586509 82.77645 
+L 320.012075 82.77645 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_24">
+    <path d="M 354.054528 101.081719 
+L 365.628962 101.081719 
+L 365.628962 81.766827 
+L 354.054528 81.766827 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_25">
+    <path d="M 388.096981 101.081719 
+L 399.671415 101.081719 
+L 399.671415 73.60416 
+L 388.096981 73.60416 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_26">
+    <path d="M 422.139434 101.081719 
+L 433.713868 101.081719 
+L 433.713868 63.669576 
+L 422.139434 63.669576 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_27">
+    <path d="M 456.181888 101.081719 
+L 467.756322 101.081719 
+L 467.756322 48.863482 
+L 456.181888 48.863482 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_28">
+    <path d="M 297.544056 101.081719 
+L 309.11849 101.081719 
+L 309.11849 82.636783 
+L 297.544056 82.636783 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_29">
+    <path d="M 331.586509 101.081719 
+L 343.160943 101.081719 
+L 343.160943 80.048888 
+L 331.586509 80.048888 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_30">
+    <path d="M 365.628962 101.081719 
+L 377.203396 101.081719 
+L 377.203396 77.014309 
+L 365.628962 77.014309 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_31">
+    <path d="M 399.671415 101.081719 
+L 411.245849 101.081719 
+L 411.245849 69.83232 
+L 399.671415 69.83232 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_32">
+    <path d="M 433.713868 101.081719 
+L 445.288303 101.081719 
+L 445.288303 51.848876 
+L 433.713868 51.848876 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="patch_33">
+    <path d="M 467.756322 101.081719 
+L 479.330756 101.081719 
+L 479.330756 20.050827 
+L 467.756322 20.050827 
+z
+" clip-path="url(#p52d2a93090)" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+   </g>
+   <g id="text_40">
+    <!-- 1.33x -->
+    <g style="fill: #2f3a45" transform="translate(288.319056 80.244867) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-33" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-33" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_41">
+    <!-- 1.15x -->
+    <g style="fill: #2f3a45" transform="translate(322.361509 77.566396) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-31" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-35" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_42">
+    <!-- 1.25x -->
+    <g style="fill: #2f3a45" transform="translate(356.403962 74.425606) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-32" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-35" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_43">
+    <!-- 1.14x -->
+    <g style="fill: #2f3a45" transform="translate(390.446415 66.992247) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-31" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-34" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_44">
+    <!-- 1.32x -->
+    <g style="fill: #2f3a45" transform="translate(424.488868 48.379383) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-33" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-32" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_45">
+    <!-- 1.55x -->
+    <g style="fill: #2f3a45" transform="translate(458.531322 15.468402) scale(0.082 -0.082)">
+     <use xlink:href="#Tinos-Bold-31"/>
+     <use xlink:href="#Tinos-Bold-2e" transform="translate(50 0)"/>
+     <use xlink:href="#Tinos-Bold-35" transform="translate(75 0)"/>
+     <use xlink:href="#Tinos-Bold-35" transform="translate(125 0)"/>
+     <use xlink:href="#Tinos-Bold-78" transform="translate(175 0)"/>
+    </g>
+   </g>
+   <g id="text_46">
+    <!-- (b) Decode -->
+    <g transform="translate(359.281829 8.621437) scale(0.102 -0.102)">
+     <defs>
+      <path id="Tinos-Bold-62" d="M 381 4166 
+L 81 4238 
+L 81 4441 
+L 1284 4441 
+L 1284 3363 
+Q 1284 3072 1253 2772 
+Q 1378 2875 1614 2945 
+Q 1850 3016 2075 3016 
+Q 2713 3016 3006 2666 
+Q 3300 2316 3300 1550 
+Q 3300 794 2923 365 
+Q 2547 -63 1863 -63 
+Q 1356 -63 381 150 
+L 381 4166 
+z
+M 2384 1553 
+Q 2384 2131 2242 2400 
+Q 2100 2669 1775 2669 
+Q 1656 2669 1515 2642 
+Q 1375 2616 1284 2563 
+L 1284 316 
+Q 1484 266 1775 266 
+Q 2084 266 2234 567 
+Q 2384 869 2384 1553 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-44" d="M 2103 4191 
+Q 3231 4191 3770 3680 
+Q 4309 3169 4309 2119 
+Q 4309 1041 3793 514 
+Q 3278 -13 2234 -13 
+L 113 0 
+L 113 228 
+L 650 313 
+L 650 3881 
+L 113 3963 
+L 113 4191 
+L 2103 4191 
+z
+M 3272 2094 
+Q 3272 3000 2940 3423 
+Q 2609 3847 1863 3847 
+L 1631 3847 
+L 1631 356 
+Q 1931 331 2175 331 
+Q 2581 331 2817 506 
+Q 3053 681 3162 1054 
+Q 3272 1428 3272 2094 
+z
+" transform="scale(0.015625)"/>
+      <path id="Tinos-Bold-64" d="M 2291 166 
+Q 2116 53 2022 17 
+Q 1928 -19 1809 -41 
+Q 1691 -63 1547 -63 
+Q 897 -63 578 310 
+Q 259 684 259 1459 
+Q 259 2222 601 2619 
+Q 944 3016 1594 3016 
+Q 1934 3016 2281 2931 
+Q 2263 3034 2263 3416 
+L 2263 4159 
+L 1963 4234 
+L 1963 4441 
+L 3166 4441 
+L 3166 281 
+L 3488 206 
+L 3488 0 
+L 2356 0 
+L 2291 166 
+z
+M 1175 1484 
+Q 1175 900 1322 592 
+Q 1469 284 1744 284 
+Q 1994 284 2263 419 
+L 2263 2631 
+Q 2019 2697 1769 2697 
+Q 1488 2697 1331 2389 
+Q 1175 2081 1175 1484 
+z
+" transform="scale(0.015625)"/>
+     </defs>
+     <use xlink:href="#Tinos-Bold-28"/>
+     <use xlink:href="#Tinos-Bold-62" transform="translate(33.300781 0)"/>
+     <use xlink:href="#Tinos-Bold-29" transform="translate(88.916016 0)"/>
+     <use xlink:href="#Tinos-Bold-20" transform="translate(122.216797 0)"/>
+     <use xlink:href="#Tinos-Bold-44" transform="translate(147.216797 0)"/>
+     <use xlink:href="#Tinos-Bold-65" transform="translate(219.433594 0)"/>
+     <use xlink:href="#Tinos-Bold-63" transform="translate(263.818359 0)"/>
+     <use xlink:href="#Tinos-Bold-6f" transform="translate(308.203125 0)"/>
+     <use xlink:href="#Tinos-Bold-64" transform="translate(358.203125 0)"/>
+     <use xlink:href="#Tinos-Bold-65" transform="translate(413.818359 0)"/>
+    </g>
+   </g>
+   <g id="legend_2">
+    <g id="patch_34">
+     <path d="M 284.401565 25.193719 
+L 298.801565 25.193719 
+L 298.801565 18.893719 
+L 284.401565 18.893719 
+z
+" style="fill: url(#h8fd426fef3); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_47">
+     <!-- Mcast -->
+     <g transform="translate(306.001565 25.193719) scale(0.09 -0.09)">
+      <use xlink:href="#Tinos-Bold-4d"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(94.384766 0)"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(138.769531 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(188.769531 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(227.685547 0)"/>
+     </g>
+    </g>
+    <g id="patch_35">
+     <path d="M 284.401565 37.910437 
+L 298.801565 37.910437 
+L 298.801565 31.610437 
+L 284.401565 31.610437 
+z
+" style="fill: url(#hdc17380871); stroke: #000000; stroke-width: 0.45; stroke-linejoin: miter"/>
+    </g>
+    <g id="text_48">
+     <!-- No mcast -->
+     <g transform="translate(306.001565 37.910437) scale(0.09 -0.09)">
+      <use xlink:href="#Tinos-Bold-4e"/>
+      <use xlink:href="#Tinos-Bold-6f" transform="translate(72.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-20" transform="translate(122.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-6d" transform="translate(147.216797 0)"/>
+      <use xlink:href="#Tinos-Bold-63" transform="translate(230.517578 0)"/>
+      <use xlink:href="#Tinos-Bold-61" transform="translate(274.902344 0)"/>
+      <use xlink:href="#Tinos-Bold-73" transform="translate(324.902344 0)"/>
+      <use xlink:href="#Tinos-Bold-74" transform="translate(363.818359 0)"/>
+     </g>
+    </g>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p0bd692800f">
+   <rect x="25.318812" y="10.793719" width="212.697248" height="90.288"/>
+  </clipPath>
+  <clipPath id="p52d2a93090">
+   <rect x="276.301565" y="10.793719" width="212.697248" height="90.288"/>
+  </clipPath>
+ </defs>
+ <defs>
+  <pattern id="h8fd426fef3" patternUnits="userSpaceOnUse" x="0" y="0" width="72" height="72">
+   <rect x="0" y="0" width="73" height="73" fill="#4c78a8"/>
+   <path d="M -36 36 
+L 36 -36 
+M -30 42 
+L 42 -30 
+M -24 48 
+L 48 -24 
+M -18 54 
+L 54 -18 
+M -12 60 
+L 60 -12 
+M -6 66 
+L 66 -6 
+M 0 72 
+L 72 0 
+M 6 78 
+L 78 6 
+M 12 84 
+L 84 12 
+M 18 90 
+L 90 18 
+M 24 96 
+L 96 24 
+M 30 102 
+L 102 30 
+M 36 108 
+L 108 36 
+" style="fill: #000000; stroke: #000000; stroke-width: 0.45; stroke-linecap: butt; stroke-linejoin: miter"/>
+  </pattern>
+  <pattern id="hdc17380871" patternUnits="userSpaceOnUse" x="0" y="0" width="72" height="72">
+   <rect x="0" y="0" width="73" height="73" fill="#f58518"/>
+   <path d="M -36 36 
+L 36 108 
+M -30 30 
+L 42 102 
+M -24 24 
+L 48 96 
+M -18 18 
+L 54 90 
+M -12 12 
+L 60 84 
+M -6 6 
+L 66 78 
+M 0 0 
+L 72 72 
+M 6 -6 
+L 78 66 
+M 12 -12 
+L 84 60 
+M 18 -18 
+L 90 54 
+M 24 -24 
+L 96 48 
+M 30 -30 
+L 102 42 
+M 36 -36 
+L 108 36 
+" style="fill: #000000; stroke: #000000; stroke-width: 0.45; stroke-linecap: butt; stroke-linejoin: miter"/>
+  </pattern>
+ </defs>
+</svg>

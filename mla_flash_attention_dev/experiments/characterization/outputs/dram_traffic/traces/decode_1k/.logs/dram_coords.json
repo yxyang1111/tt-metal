@@ -1,0 +1,96 @@
+{
+  "arch": "Arch.WORMHOLE_B0",
+  "num_dram_channels": 18,
+  "dram_bank_noc0_coords": [
+    {
+      "channel": 0,
+      "x": 0,
+      "y": 0
+    },
+    {
+      "channel": 1,
+      "x": 0,
+      "y": 1
+    },
+    {
+      "channel": 2,
+      "x": 0,
+      "y": 5
+    },
+    {
+      "channel": 3,
+      "x": 0,
+      "y": 6
+    },
+    {
+      "channel": 4,
+      "x": 0,
+      "y": 7
+    },
+    {
+      "channel": 5,
+      "x": 0,
+      "y": 11
+    },
+    {
+      "channel": 6,
+      "x": 5,
+      "y": 0
+    },
+    {
+      "channel": 7,
+      "x": 5,
+      "y": 1
+    },
+    {
+      "channel": 8,
+      "x": 5,
+      "y": 2
+    },
+    {
+      "channel": 9,
+      "x": 5,
+      "y": 3
+    },
+    {
+      "channel": 10,
+      "x": 5,
+      "y": 4
+    },
+    {
+      "channel": 11,
+      "x": 5,
+      "y": 5
+    },
+    {
+      "channel": 12,
+      "x": 5,
+      "y": 6
+    },
+    {
+      "channel": 13,
+      "x": 5,
+      "y": 7
+    },
+    {
+      "channel": 14,
+      "x": 5,
+      "y": 8
+    },
+    {
+      "channel": 15,
+      "x": 5,
+      "y": 9
+    },
+    {
+      "channel": 16,
+      "x": 5,
+      "y": 10
+    },
+    {
+      "channel": 17,
+      "x": 5,
+      "y": 11
+    }
+  ]
+}

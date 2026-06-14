@@ -31,7 +31,17 @@ DEFAULT_DECODE_CASES = [
     "decode_32k",
 ]
 MINIMAL_CASES = ["decode_1k", "decode_4k", "decode_32k", "prefill_4k"]
-SUPPORTED_CASES = DEFAULT_DECODE_CASES + ["prefill_256", "prefill_512", "prefill_1k", "prefill_2k", "prefill_4k"]
+SUPPORTED_PREFILL_CASES = [
+    "prefill_256",
+    "prefill_512",
+    "prefill_1k",
+    "prefill_2k",
+    "prefill_4k",
+    "prefill_8k",
+    "prefill_16k",
+    "prefill_32k",
+]
+SUPPORTED_CASES = DEFAULT_DECODE_CASES + SUPPORTED_PREFILL_CASES
 SEQ_LEN_TO_CASE = {
     "256": "decode_256",
     "512": "decode_512",

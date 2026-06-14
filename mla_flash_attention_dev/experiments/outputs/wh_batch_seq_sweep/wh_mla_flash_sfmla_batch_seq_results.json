@@ -1,0 +1,140 @@
+{
+  "metadata": {
+    "seq_lens": [
+      2048
+    ],
+    "batches": [
+      4
+    ],
+    "methods": [
+      "mla",
+      "flash_mla",
+      "sfmla"
+    ],
+    "modes": [
+      "decode",
+      "prefill"
+    ],
+    "warmup": 1,
+    "iters": 3,
+    "device_id": 0,
+    "child_timeout_sec": 900,
+    "device_memory_budget_bytes": 10565619548,
+    "mla_memory_budget_bytes": 8589934592,
+    "prefill_safe_budget_bytes": 6442450944,
+    "prefill_safe_max_seq_len": 4096,
+    "prefill_safe_max_tokens": 16384,
+    "notes": [
+      "L40S/3 is intentionally excluded; run it on the GPU machine and merge later.",
+      "mla is the unfused TT-NN matmul/softmax/matmul baseline.",
+      "flash_mla is the TT-NN production FlashMLA path.",
+      "sfmla decode uses flash_multi_latent_attention_decode; sfmla prefill uses chunked_flash_mla_prefill with q_chunk_size=128.",
+      "Cases estimated to exceed the single-chip memory budget are recorded as skipped.",
+      "Long prefill cases may use fewer iterations than the command-line default to keep the sweep tractable.",
+      "Conservative prefill safety caps are enabled to avoid server instability after prior crash."
+    ]
+  },
+  "results": [
+    {
+      "method": "flash_mla",
+      "mode": "decode",
+      "seq_len": 2048,
+      "batch": 4,
+      "status": "ok",
+      "mean_ms": 0.303779,
+      "min_ms": 0.267389,
+      "max_ms": 0.363469,
+      "std_ms": 0.042544,
+      "latencies_ms": [
+        0.363469,
+        0.28048,
+        0.267389
+      ]
+    },
+    {
+      "method": "mla",
+      "mode": "decode",
+      "seq_len": 2048,
+      "batch": 4,
+      "status": "ok",
+      "mean_ms": 9.479917,
+      "min_ms": 9.409647,
+      "max_ms": 9.552605,
+      "std_ms": 0.058387,
+      "latencies_ms": [
+        9.552605,
+        9.409647,
+        9.477498
+      ]
+    },
+    {
+      "method": "sfmla",
+      "mode": "decode",
+      "batch": 4,
+      "seq_len": 2048,
+      "status": "ok",
+      "latencies_ms": [
+        0.348844,
+        0.247471,
+        0.23098
+      ],
+      "num_samples": 3,
+      "mean_ms": 0.275765,
+      "min_ms": 0.23098,
+      "max_ms": 0.348844,
+      "std_ms": 0.052111,
+      "program": "flash_multi_latent_attention_decode",
+      "q_chunk_size": 0,
+      "k_chunk_size": 128
+    },
+    {
+      "method": "flash_mla",
+      "mode": "prefill",
+      "seq_len": 2048,
+      "batch": 4,
+      "status": "ok",
+      "mean_ms": 51.412635,
+      "min_ms": 51.39438,
+      "max_ms": 51.43089,
+      "std_ms": 0.018255,
+      "latencies_ms": [
+        51.43089,
+        51.39438
+      ]
+    },
+    {
+      "method": "mla",
+      "mode": "prefill",
+      "seq_len": 2048,
+      "batch": 4,
+      "status": "ok",
+      "mean_ms": 97.682796,
+      "min_ms": 97.577992,
+      "max_ms": 97.787601,
+      "std_ms": 0.104805,
+      "latencies_ms": [
+        97.787601,
+        97.577992
+      ]
+    },
+    {
+      "method": "sfmla",
+      "mode": "prefill",
+      "batch": 4,
+      "seq_len": 2048,
+      "status": "ok",
+      "latencies_ms": [
+        24.003116,
+        24.457615
+      ],
+      "num_samples": 2,
+      "mean_ms": 24.230365,
+      "min_ms": 24.003116,
+      "max_ms": 24.457615,
+      "std_ms": 0.227249,
+      "program": "chunked_flash_mla_prefill",
+      "q_chunk_size": 128,
+      "k_chunk_size": 128
+    }
+  ]
+}

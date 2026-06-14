@@ -30,7 +30,7 @@ $$
 
 mask $M$ 由枚举 `mask_type`（`none`, `causal`, `sliding_window(w)`, `padding`, `sink`）配合位置信息在片上就地生成，不作为张量输入。**这是算子的语义定义**，下文所有实现都须在"不改变该输出"的前提下展开。
 
-Tenstorrent device 的相关结构可以用五个量概括：一张由若干 Tensix cores 构成的二维网格，每核含约 $1.5\,$MB 私有 L1 SRAM 和五颗可编程 RISC（NCRISC 负责 DRAM 访存、BRISC 负责 NoC 与 mask 生成、三颗 TRISC 负责矩阵乘与 softmax）；两张互为镜像的 torus 网上片（NOC0 与 NOC1）；片外 GDDR 被划分为若干独立寻址的 DRAM bank（Wormhole 12 bank、Blackhole 8 bank）；所有 matmul 与片上搬运以 $32\times 32$ 的 tile 为粒度。
+Tenstorrent device 的相关结构可以用五个量概括：一张由若干 Tensix cores 构成的二维网格，每核含约 $1.5\,$MB 私有 L1 SRAM 和五颗可编程 RISC（NCRISC 负责 DRAM 访存、BRISC 负责 NoC 与 mask 生成、三颗 TRISC 负责矩阵乘与 softmax）；两张互为镜像的 torus 网上片（NOC0 与 NOC1）；片外 GDDR 被划分为若干独立寻址的 DRAM bank（Wormhole 12 bank、Blackhole 8 bank）；所有 matmul 与片上搬运以 $32\times 32$ 的 tile 为粒度。这里的 `DRAM bank` 采用 TT 运行时 / NoC 视角：它指一个软件可独立寻址的片外 DRAM endpoint，带有自己的 NoC 坐标与 offset 空间，而不是教科书里更底层的 DRAM die 内部 bank / subarray 概念。本文后文提到的 bank 对齐、bank 亲和性与 bank 并行，均以这一软件可见粒度为准。
 
 ### English
 
@@ -42,7 +42,7 @@ $$
 
 for every $(b, h)$. The mask $M$ is generated on-chip from the categorical `mask_type` (`none`, `causal`, `sliding_window(w)`, `padding`, `sink`) combined with position metadata; it is never a tensor argument. This is the operator's semantic definition, and every implementation we describe below must reproduce this output exactly.
 
-The Tenstorrent device is summarised by five features: a two-dimensional grid of Tensix cores, each holding roughly $1.5\,$MB of private L1 SRAM and five programmable RISCs (NCRISC for DRAM, BRISC for NoC and on-the-fly mask generation, three TRISCs for matmul and softmax); two mirrored torus Networks-on-Chip (NOC0 and NOC1); a set of independently addressable off-chip DRAM banks (twelve on Wormhole, eight on Blackhole); and a hardware-enforced $32\times 32$ tile as the quantum of matmul and on-chip transfer.
+The Tenstorrent device is summarised by five features: a two-dimensional grid of Tensix cores, each holding roughly $1.5\,$MB of private L1 SRAM and five programmable RISCs (NCRISC for DRAM, BRISC for NoC and on-the-fly mask generation, three TRISCs for matmul and softmax); two mirrored torus Networks-on-Chip (NOC0 and NOC1); a set of independently addressable off-chip DRAM banks (twelve on Wormhole, eight on Blackhole); and a hardware-enforced $32\times 32$ tile as the quantum of matmul and on-chip transfer. Here, `DRAM bank` is used in the Tenstorrent runtime / NoC sense: a software-visible, independently addressable off-chip DRAM endpoint with its own NoC coordinates and offset space, rather than the lower-level bank / subarray term in commodity DRAM device organisation. All later references to bank alignment, bank affinity, and bank parallelism use this software-visible granularity.
 
 ---
 

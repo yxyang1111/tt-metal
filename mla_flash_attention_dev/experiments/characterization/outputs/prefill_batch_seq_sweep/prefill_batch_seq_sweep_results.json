@@ -1,0 +1,582 @@
+{
+  "results": [
+    {
+      "case": "prefill_b1_L1k",
+      "batch": 1,
+      "seq_len": 1024,
+      "kernel_us": 4035.61,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 36.543,
+      "overall_tflops": 9.0551,
+      "overall_vs_peak_pct": 13.82,
+      "total_dram_traffic_MB": 1247.81,
+      "actual_bw_gbs": 309.2,
+      "actual_bw_vs_peak_pct": 107.4,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b1_L1k",
+          "batch": 1,
+          "seq_len": 1024,
+          "kernel_us": 4035.61,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 36.543,
+          "overall_tflops": 9.0551,
+          "overall_vs_peak_pct": 13.82,
+          "total_dram_traffic_MB": 1247.81,
+          "actual_bw_gbs": 309.2,
+          "actual_bw_vs_peak_pct": 107.4
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b1_L4k",
+      "batch": 1,
+      "seq_len": 4096,
+      "kernel_us": 55872.57,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 584.258,
+      "overall_tflops": 10.457,
+      "overall_vs_peak_pct": 15.96,
+      "total_dram_traffic_MB": 18681.43,
+      "actual_bw_gbs": 334.36,
+      "actual_bw_vs_peak_pct": 116.1,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b1_L4k",
+          "batch": 1,
+          "seq_len": 4096,
+          "kernel_us": 55872.57,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 584.258,
+          "overall_tflops": 10.457,
+          "overall_vs_peak_pct": 15.96,
+          "total_dram_traffic_MB": 18681.43,
+          "actual_bw_gbs": 334.36,
+          "actual_bw_vs_peak_pct": 116.1
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b1_L8k",
+      "batch": 1,
+      "seq_len": 8192,
+      "kernel_us": 218256.16,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 2336.747,
+      "overall_tflops": 10.7064,
+      "overall_vs_peak_pct": 16.35,
+      "total_dram_traffic_MB": 73870.08,
+      "actual_bw_gbs": 338.46,
+      "actual_bw_vs_peak_pct": 117.5,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b1_L8k",
+          "batch": 1,
+          "seq_len": 8192,
+          "kernel_us": 218256.16,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 2336.747,
+          "overall_tflops": 10.7064,
+          "overall_vs_peak_pct": 16.35,
+          "total_dram_traffic_MB": 73870.08,
+          "actual_bw_gbs": 338.46,
+          "actual_bw_vs_peak_pct": 117.5
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b1_L16k",
+      "batch": 1,
+      "seq_len": 16384,
+      "kernel_us": 862321.06,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 9346.419,
+      "overall_tflops": 10.8387,
+      "overall_vs_peak_pct": 16.55,
+      "total_dram_traffic_MB": 293769.05,
+      "actual_bw_gbs": 340.67,
+      "actual_bw_vs_peak_pct": 118.3,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b1_L16k",
+          "batch": 1,
+          "seq_len": 16384,
+          "kernel_us": 862321.06,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 9346.419,
+          "overall_tflops": 10.8387,
+          "overall_vs_peak_pct": 16.55,
+          "total_dram_traffic_MB": 293769.05,
+          "actual_bw_gbs": 340.67,
+          "actual_bw_vs_peak_pct": 118.3
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b1_L32k",
+      "batch": 1,
+      "seq_len": 32768,
+      "kernel_us": 3429862.81,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 37384.536,
+      "overall_tflops": 10.8997,
+      "overall_vs_peak_pct": 16.64,
+      "total_dram_traffic_MB": 1171653.66,
+      "actual_bw_gbs": 341.6,
+      "actual_bw_vs_peak_pct": 118.6,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b1_L32k",
+          "batch": 1,
+          "seq_len": 32768,
+          "kernel_us": 3429862.81,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 37384.536,
+          "overall_tflops": 10.8997,
+          "overall_vs_peak_pct": 16.64,
+          "total_dram_traffic_MB": 1171653.66,
+          "actual_bw_gbs": 341.6,
+          "actual_bw_vs_peak_pct": 118.6
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b2_L1k",
+      "batch": 2,
+      "seq_len": 1024,
+      "kernel_us": 8013.55,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 73.086,
+      "overall_tflops": 9.1203,
+      "overall_vs_peak_pct": 13.92,
+      "total_dram_traffic_MB": 2495.61,
+      "actual_bw_gbs": 311.42,
+      "actual_bw_vs_peak_pct": 108.1,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b2_L1k",
+          "batch": 2,
+          "seq_len": 1024,
+          "kernel_us": 8013.55,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 73.086,
+          "overall_tflops": 9.1203,
+          "overall_vs_peak_pct": 13.92,
+          "total_dram_traffic_MB": 2495.61,
+          "actual_bw_gbs": 311.42,
+          "actual_bw_vs_peak_pct": 108.1
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b2_L4k",
+      "batch": 2,
+      "seq_len": 4096,
+      "kernel_us": 111461.64,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 1168.516,
+      "overall_tflops": 10.4836,
+      "overall_vs_peak_pct": 16.01,
+      "total_dram_traffic_MB": 37362.86,
+      "actual_bw_gbs": 335.21,
+      "actual_bw_vs_peak_pct": 116.4,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b2_L4k",
+          "batch": 2,
+          "seq_len": 4096,
+          "kernel_us": 111461.64,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 1168.516,
+          "overall_tflops": 10.4836,
+          "overall_vs_peak_pct": 16.01,
+          "total_dram_traffic_MB": 37362.86,
+          "actual_bw_gbs": 335.21,
+          "actual_bw_vs_peak_pct": 116.4
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b2_L8k",
+      "batch": 2,
+      "seq_len": 8192,
+      "kernel_us": 435215.47,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 4673.495,
+      "overall_tflops": 10.7383,
+      "overall_vs_peak_pct": 16.39,
+      "total_dram_traffic_MB": 147740.16,
+      "actual_bw_gbs": 339.46,
+      "actual_bw_vs_peak_pct": 117.9,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b2_L8k",
+          "batch": 2,
+          "seq_len": 8192,
+          "kernel_us": 435215.47,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 4673.495,
+          "overall_tflops": 10.7383,
+          "overall_vs_peak_pct": 16.39,
+          "total_dram_traffic_MB": 147740.16,
+          "actual_bw_gbs": 339.46,
+          "actual_bw_vs_peak_pct": 117.9
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b2_L16k",
+      "batch": 2,
+      "seq_len": 16384,
+      "kernel_us": 1720063.64,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 18692.839,
+      "overall_tflops": 10.8675,
+      "overall_vs_peak_pct": 16.59,
+      "total_dram_traffic_MB": 587538.1,
+      "actual_bw_gbs": 341.58,
+      "actual_bw_vs_peak_pct": 118.6,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b2_L16k",
+          "batch": 2,
+          "seq_len": 16384,
+          "kernel_us": 1720063.64,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 18692.839,
+          "overall_tflops": 10.8675,
+          "overall_vs_peak_pct": 16.59,
+          "total_dram_traffic_MB": 587538.1,
+          "actual_bw_gbs": 341.58,
+          "actual_bw_vs_peak_pct": 118.6
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b2_L32k",
+      "batch": 2,
+      "seq_len": 32768,
+      "kernel_us": 6839313.55,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 74769.072,
+      "overall_tflops": 10.9322,
+      "overall_vs_peak_pct": 16.69,
+      "total_dram_traffic_MB": 2343307.31,
+      "actual_bw_gbs": 342.62,
+      "actual_bw_vs_peak_pct": 119.0,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b2_L32k",
+          "batch": 2,
+          "seq_len": 32768,
+          "kernel_us": 6839313.55,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 74769.072,
+          "overall_tflops": 10.9322,
+          "overall_vs_peak_pct": 16.69,
+          "total_dram_traffic_MB": 2343307.31,
+          "actual_bw_gbs": 342.62,
+          "actual_bw_vs_peak_pct": 119.0
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b4_L1k",
+      "batch": 4,
+      "seq_len": 1024,
+      "kernel_us": 14198.64,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 146.171,
+      "overall_tflops": 10.2948,
+      "overall_vs_peak_pct": 15.72,
+      "total_dram_traffic_MB": 4991.22,
+      "actual_bw_gbs": 351.53,
+      "actual_bw_vs_peak_pct": 122.1,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b4_L1k",
+          "batch": 4,
+          "seq_len": 1024,
+          "kernel_us": 14198.64,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 146.171,
+          "overall_tflops": 10.2948,
+          "overall_vs_peak_pct": 15.72,
+          "total_dram_traffic_MB": 4991.22,
+          "actual_bw_gbs": 351.53,
+          "actual_bw_vs_peak_pct": 122.1
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b4_L4k",
+      "batch": 4,
+      "seq_len": 4096,
+      "kernel_us": 194668.29,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 2337.033,
+      "overall_tflops": 12.0052,
+      "overall_vs_peak_pct": 18.33,
+      "total_dram_traffic_MB": 74725.72,
+      "actual_bw_gbs": 383.86,
+      "actual_bw_vs_peak_pct": 133.3,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b4_L4k",
+          "batch": 4,
+          "seq_len": 4096,
+          "kernel_us": 194668.29,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 2337.033,
+          "overall_tflops": 12.0052,
+          "overall_vs_peak_pct": 18.33,
+          "total_dram_traffic_MB": 74725.72,
+          "actual_bw_gbs": 383.86,
+          "actual_bw_vs_peak_pct": 133.3
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b4_L8k",
+      "batch": 4,
+      "seq_len": 8192,
+      "kernel_us": 757804.58,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 9346.99,
+      "overall_tflops": 12.3343,
+      "overall_vs_peak_pct": 18.83,
+      "total_dram_traffic_MB": 295480.33,
+      "actual_bw_gbs": 389.92,
+      "actual_bw_vs_peak_pct": 135.4,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b4_L8k",
+          "batch": 4,
+          "seq_len": 8192,
+          "kernel_us": 757804.58,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 9346.99,
+          "overall_tflops": 12.3343,
+          "overall_vs_peak_pct": 18.83,
+          "total_dram_traffic_MB": 295480.33,
+          "actual_bw_gbs": 389.92,
+          "actual_bw_vs_peak_pct": 135.4
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b4_L16k",
+      "batch": 4,
+      "seq_len": 16384,
+      "kernel_us": 2990472.13,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 37385.677,
+      "overall_tflops": 12.5016,
+      "overall_vs_peak_pct": 19.09,
+      "total_dram_traffic_MB": 1175076.21,
+      "actual_bw_gbs": 392.94,
+      "actual_bw_vs_peak_pct": 136.4,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b4_L16k",
+          "batch": 4,
+          "seq_len": 16384,
+          "kernel_us": 2990472.13,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 37385.677,
+          "overall_tflops": 12.5016,
+          "overall_vs_peak_pct": 19.09,
+          "total_dram_traffic_MB": 1175076.21,
+          "actual_bw_gbs": 392.94,
+          "actual_bw_vs_peak_pct": 136.4
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b4_L32k",
+      "batch": 4,
+      "seq_len": 32768,
+      "kernel_us": 11879816.59,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 149538.145,
+      "overall_tflops": 12.5876,
+      "overall_vs_peak_pct": 19.22,
+      "total_dram_traffic_MB": 4686614.63,
+      "actual_bw_gbs": 394.5,
+      "actual_bw_vs_peak_pct": 137.0,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b4_L32k",
+          "batch": 4,
+          "seq_len": 32768,
+          "kernel_us": 11879816.59,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 149538.145,
+          "overall_tflops": 12.5876,
+          "overall_vs_peak_pct": 19.22,
+          "total_dram_traffic_MB": 4686614.63,
+          "actual_bw_gbs": 394.5,
+          "actual_bw_vs_peak_pct": 137.0
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b6_L1k",
+      "batch": 6,
+      "seq_len": 1024,
+      "kernel_us": 20795.25,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 219.257,
+      "overall_tflops": 10.5436,
+      "overall_vs_peak_pct": 16.1,
+      "total_dram_traffic_MB": 7486.83,
+      "actual_bw_gbs": 360.03,
+      "actual_bw_vs_peak_pct": 125.0,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b6_L1k",
+          "batch": 6,
+          "seq_len": 1024,
+          "kernel_us": 20795.25,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 219.257,
+          "overall_tflops": 10.5436,
+          "overall_vs_peak_pct": 16.1,
+          "total_dram_traffic_MB": 7486.83,
+          "actual_bw_gbs": 360.03,
+          "actual_bw_vs_peak_pct": 125.0
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b6_L4k",
+      "batch": 6,
+      "seq_len": 4096,
+      "kernel_us": 284326.36,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 3505.549,
+      "overall_tflops": 12.3293,
+      "overall_vs_peak_pct": 18.82,
+      "total_dram_traffic_MB": 112088.58,
+      "actual_bw_gbs": 394.23,
+      "actual_bw_vs_peak_pct": 136.9,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b6_L4k",
+          "batch": 6,
+          "seq_len": 4096,
+          "kernel_us": 284326.36,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 3505.549,
+          "overall_tflops": 12.3293,
+          "overall_vs_peak_pct": 18.82,
+          "total_dram_traffic_MB": 112088.58,
+          "actual_bw_gbs": 394.23,
+          "actual_bw_vs_peak_pct": 136.9
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b6_L8k",
+      "batch": 6,
+      "seq_len": 8192,
+      "kernel_us": 1105616.66,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 14020.485,
+      "overall_tflops": 12.6811,
+      "overall_vs_peak_pct": 19.36,
+      "total_dram_traffic_MB": 443220.49,
+      "actual_bw_gbs": 400.88,
+      "actual_bw_vs_peak_pct": 139.2,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b6_L8k",
+          "batch": 6,
+          "seq_len": 8192,
+          "kernel_us": 1105616.66,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 14020.485,
+          "overall_tflops": 12.6811,
+          "overall_vs_peak_pct": 19.36,
+          "total_dram_traffic_MB": 443220.49,
+          "actual_bw_gbs": 400.88,
+          "actual_bw_vs_peak_pct": 139.2
+        }
+      ],
+      "repeat_std": {}
+    },
+    {
+      "case": "prefill_b6_L16k",
+      "batch": 6,
+      "seq_len": 16384,
+      "kernel_us": 4362095.46,
+      "pm_fpu_util_pct": null,
+      "total_flops_G": 56078.516,
+      "overall_tflops": 12.8559,
+      "overall_vs_peak_pct": 19.63,
+      "total_dram_traffic_MB": 1762614.31,
+      "actual_bw_gbs": 404.08,
+      "actual_bw_vs_peak_pct": 140.3,
+      "num_repeats": 1,
+      "repeat_results": [
+        {
+          "case": "prefill_b6_L16k",
+          "batch": 6,
+          "seq_len": 16384,
+          "kernel_us": 4362095.46,
+          "pm_fpu_util_pct": null,
+          "total_flops_G": 56078.516,
+          "overall_tflops": 12.8559,
+          "overall_vs_peak_pct": 19.63,
+          "total_dram_traffic_MB": 1762614.31,
+          "actual_bw_gbs": 404.08,
+          "actual_bw_vs_peak_pct": 140.3
+        }
+      ],
+      "repeat_std": {}
+    }
+  ],
+  "failed": [
+    {
+      "case": "prefill_b6_L32k",
+      "batch": 6,
+      "seq_len": 32768,
+      "error": "Tracy profiling failed for prefill_b6_L32k"
+    }
+  ]
+}

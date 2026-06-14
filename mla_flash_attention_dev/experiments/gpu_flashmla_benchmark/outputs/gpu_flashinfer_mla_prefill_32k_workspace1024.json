@@ -1,0 +1,31 @@
+{
+  "gpu": {
+    "name": "NVIDIA L40S",
+    "mem_gb": 44.39,
+    "sm": "sm89",
+    "sm_count": 142,
+    "pytorch": "2.12.0+cu130",
+    "cuda": "13.0",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 0,
+  "iters": 20,
+  "prefill_iters": 1,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 32768,
+      "status": "error",
+      "error": "CUDA error: operation not supported on global/shared address space\nSearch for `cudaErrorInvalidAddressSpace' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace "
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "gpu": {
+    "name": "NVIDIA L40S",
+    "capability": [
+      8,
+      9
+    ],
+    "torch": "2.12.0+cu130",
+    "cuda": "13.0"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "seq_len": 32768,
+    "chunk_size": 4096,
+    "dtype": "bf16",
+    "backend": "auto"
+  },
+  "chunks": [
+    {
+      "chunk_start": 0,
+      "q_len": 4096,
+      "kv_len": 4096,
+      "latency_ms": 43.9759
+    },
+    {
+      "chunk_start": 4096,
+      "q_len": 4096,
+      "kv_len": 8192,
+      "latency_ms": 106.6924
+    },
+    {
+      "chunk_start": 8192,
+      "q_len": 4096,
+      "kv_len": 12288,
+      "latency_ms": 175.1546
+    },
+    {
+      "chunk_start": 12288,
+      "q_len": 4096,
+      "kv_len": 16384,
+      "latency_ms": 242.5609
+    },
+    {
+      "chunk_start": 16384,
+      "q_len": 4096,
+      "kv_len": 20480,
+      "latency_ms": 321.11
+    },
+    {
+      "chunk_start": 20480,
+      "q_len": 4096,
+      "kv_len": 24576,
+      "latency_ms": 396.8039
+    },
+    {
+      "chunk_start": 24576,
+      "q_len": 4096,
+      "kv_len": 28672,
+      "latency_ms": 502.8559
+    },
+    {
+      "chunk_start": 28672,
+      "q_len": 4096,
+      "kv_len": 32768,
+      "latency_ms": 577.2656
+    }
+  ],
+  "total_latency_ms": 2366.4192
+}

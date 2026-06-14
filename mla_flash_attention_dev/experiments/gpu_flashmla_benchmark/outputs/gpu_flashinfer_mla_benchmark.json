@@ -1,0 +1,38 @@
+{
+  "gpu": {
+    "name": "NVIDIA L40S",
+    "mem_gb": 44.39,
+    "sm": "sm89",
+    "sm_count": 142,
+    "pytorch": "2.12.0+cu130",
+    "cuda": "13.0",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 1,
+  "iters": 20,
+  "prefill_iters": 1,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 16384,
+      "mean_ms": 491.3092,
+      "min_ms": 491.3092,
+      "max_ms": 491.3092,
+      "std_ms": 0.0,
+      "samples": 1,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 3334471680,
+      "estimated_bw_gbs": 6.79
+    }
+  ]
+}

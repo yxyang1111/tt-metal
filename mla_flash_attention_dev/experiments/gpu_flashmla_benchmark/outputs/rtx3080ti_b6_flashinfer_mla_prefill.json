@@ -1,0 +1,122 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3080 Ti",
+    "mem_gb": 11.66,
+    "sm": "sm86",
+    "sm_count": 80,
+    "pytorch": "2.7.0+cu128",
+    "cuda": "12.8",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 2,
+  "iters": 20,
+  "prefill_iters": 3,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 256,
+      "mean_ms": 0.5791,
+      "min_ms": 0.5747,
+      "max_ms": 0.5857,
+      "std_ms": 0.0048,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 52101120,
+      "estimated_bw_gbs": 89.97
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 512,
+      "mean_ms": 1.7857,
+      "min_ms": 1.7807,
+      "max_ms": 1.7925,
+      "std_ms": 0.005,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 104202240,
+      "estimated_bw_gbs": 58.35
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 1024,
+      "mean_ms": 6.4965,
+      "min_ms": 6.4953,
+      "max_ms": 6.4979,
+      "std_ms": 0.0011,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 208404480,
+      "estimated_bw_gbs": 32.08
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 2048,
+      "mean_ms": 23.2568,
+      "min_ms": 22.0936,
+      "max_ms": 24.8221,
+      "std_ms": 1.1496,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 416808960,
+      "estimated_bw_gbs": 17.92
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 4096,
+      "mean_ms": 86.5086,
+      "min_ms": 86.4327,
+      "max_ms": 86.5565,
+      "std_ms": 0.0543,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 833617920,
+      "estimated_bw_gbs": 9.64
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 8192,
+      "mean_ms": 345.566,
+      "min_ms": 344.2282,
+      "max_ms": 347.1131,
+      "std_ms": 1.187,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 1667235840,
+      "estimated_bw_gbs": 4.82
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 16384,
+      "mean_ms": 1343.2521,
+      "min_ms": 1342.6658,
+      "max_ms": 1343.6484,
+      "std_ms": 0.4231,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 3334471680,
+      "estimated_bw_gbs": 2.48
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 32768,
+      "status": "OOM",
+      "error": "CUDA out of memory. Tried to allocate 6.00 GiB. GPU 0 has a total capacity of 11.66 GiB of which 3.35 GiB is free. Including non-PyTorch memory, this process has 8.30 GiB memory in use. Of the allocat"
+    }
+  ]
+}

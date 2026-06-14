@@ -4,7 +4,7 @@
 
 | metric | first-order | second-order fit | second-order LOO |
 |---|---:|---:|---:|
-| MAPE | 38.62% | 19.58% | 24.65% |
-| MAE | 4.822 ms | 0.030 ms | 0.069 ms |
-| RMSE | 13.592 ms | 0.043 ms | 0.109 ms |
-| max abs error | 47.607 ms | 0.131 ms | 0.321 ms |
+| MAPE | 38.62% | 5.00% | 10.50% |
+| MAE | 4.822 ms | 0.277 ms | 0.436 ms |
+| RMSE | 13.592 ms | 0.839 ms | 1.306 ms |
+| max abs error | 47.607 ms | 3.010 ms | 4.690 ms |

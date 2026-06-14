@@ -1,0 +1,122 @@
+{
+  "gpu": {
+    "name": "NVIDIA L40S",
+    "mem_gb": 44.39,
+    "sm": "sm89",
+    "sm_count": 142,
+    "pytorch": "2.12.0+cu130",
+    "cuda": "13.0",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 2,
+  "iters": 20,
+  "prefill_iters": 3,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 256,
+      "mean_ms": 0.4198,
+      "min_ms": 0.4172,
+      "max_ms": 0.4233,
+      "std_ms": 0.0026,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 52101120,
+      "estimated_bw_gbs": 124.11
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 512,
+      "mean_ms": 0.8395,
+      "min_ms": 0.7982,
+      "max_ms": 0.9165,
+      "std_ms": 0.0545,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 104202240,
+      "estimated_bw_gbs": 124.12
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 1024,
+      "mean_ms": 3.0474,
+      "min_ms": 2.2774,
+      "max_ms": 4.398,
+      "std_ms": 0.9582,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 208404480,
+      "estimated_bw_gbs": 68.39
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 2048,
+      "mean_ms": 9.4036,
+      "min_ms": 8.4559,
+      "max_ms": 11.2586,
+      "std_ms": 1.3118,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 416808960,
+      "estimated_bw_gbs": 44.32
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 4096,
+      "mean_ms": 35.7563,
+      "min_ms": 34.695,
+      "max_ms": 36.46,
+      "std_ms": 0.7636,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 833617920,
+      "estimated_bw_gbs": 23.31
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 8192,
+      "mean_ms": 134.3856,
+      "min_ms": 127.9226,
+      "max_ms": 140.8045,
+      "std_ms": 5.2591,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 1667235840,
+      "estimated_bw_gbs": 12.41
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 16384,
+      "mean_ms": 470.002,
+      "min_ms": 466.1254,
+      "max_ms": 475.2702,
+      "std_ms": 3.8608,
+      "samples": 3,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 3334471680,
+      "estimated_bw_gbs": 7.09
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 32768,
+      "status": "error",
+      "error": "CUDA error: an illegal memory access was encountered\nSearch for `cudaErrorIllegalAddress' in https://docs.nvidia.com/cuda/cuda-runtime-api/group__CUDART__TYPES.html for more information.\nCUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be inco"
+    }
+  ]
+}

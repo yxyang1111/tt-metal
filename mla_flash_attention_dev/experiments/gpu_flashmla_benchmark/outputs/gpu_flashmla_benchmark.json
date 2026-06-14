@@ -1,0 +1,21 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 4070",
+    "mem_gb": 11.99,
+    "sm": "sm89",
+    "sm_count": 46,
+    "pytorch": "2.1.2+cu121",
+    "cuda": "12.1"
+  },
+  "config": {
+    "batch": 1,
+    "h_q": 32,
+    "h_kv": 1,
+    "d_qk": 576,
+    "d_v": 512,
+    "block_size": 64
+  },
+  "warmup": 1,
+  "iters": 3,
+  "results": []
+}

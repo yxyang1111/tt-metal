@@ -111,6 +111,8 @@ decode 与 prefill 的主要差别在于 `Q` 的长度，而不在于数据流�
 
 Flash MLA = Flash（把长 K 切成 chunk，用 online softmax 流式累加，不一次算完整 softmax）+ MLA（V 不是独立张量，V 就是 K 的前若干列）。所以整个算子**只流动 Q 和 K**；用到 V 时直接在 K 的缓冲里按偏移取，V 从不单独搬、不单独存。
 
+本文里的 `DRAM bank` 采用 TT 运行时 / NoC 视角：它指一个软件可独立寻址的片外 DRAM endpoint，带有自己的 NoC 坐标与 offset 空间，而不是教科书里更底层的 DRAM die 内部 bank / subarray 概念。后文提到的 bank 对齐、bank 亲和性与 bank 并行，都以这一软件可见粒度为准。
+
 ## B.2 硬件设置
 
 上机前只需要搞清楚两件事：用到哪些 core，数据放在哪几个 DRAM bank。

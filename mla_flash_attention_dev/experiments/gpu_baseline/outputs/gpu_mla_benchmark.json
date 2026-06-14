@@ -1,0 +1,440 @@
+{
+  "metadata": {
+    "gpu": "NVIDIA GeForce RTX 3080 Ti",
+    "gpu_mem_gb": 11.66,
+    "pytorch_version": "2.3.0+cu121",
+    "cuda_version": "12.1",
+    "config": {
+      "num_q_heads": 32,
+      "num_kv_heads": 1,
+      "d_c": 512,
+      "d_r": 64,
+      "batch": 6,
+      "dtype_str": "bfloat16"
+    },
+    "warmup": 10,
+    "iters": 50
+  },
+  "results": [
+    {
+      "mode": "decode",
+      "seq_len": 256,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.06,
+      "min_ms": 0.0574,
+      "max_ms": 0.1365,
+      "std_ms": 0.011,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 512,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.0982,
+      "min_ms": 0.0975,
+      "max_ms": 0.1003,
+      "std_ms": 0.0005,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 1024,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.1752,
+      "min_ms": 0.1744,
+      "max_ms": 0.1787,
+      "std_ms": 0.0007,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 2048,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.3293,
+      "min_ms": 0.3281,
+      "max_ms": 0.3326,
+      "std_ms": 0.001,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 4096,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.6373,
+      "min_ms": 0.6361,
+      "max_ms": 0.6403,
+      "std_ms": 0.0009,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 8192,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 1.2535,
+      "min_ms": 1.2514,
+      "max_ms": 1.26,
+      "std_ms": 0.0016,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 16384,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 2.4158,
+      "min_ms": 2.1472,
+      "max_ms": 2.6339,
+      "std_ms": 0.1419,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 32768,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 4.251,
+      "min_ms": 4.2281,
+      "max_ms": 4.2819,
+      "std_ms": 0.0191,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 65536,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 8.4486,
+      "min_ms": 8.4358,
+      "max_ms": 8.471,
+      "std_ms": 0.0101,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "decode",
+      "seq_len": 131072,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 16.8805,
+      "min_ms": 16.8521,
+      "max_ms": 17.156,
+      "std_ms": 0.045,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 256,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0.4872,
+      "min_ms": 0.4828,
+      "max_ms": 0.496,
+      "std_ms": 0.0049,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 512,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 1.8055,
+      "min_ms": 1.6955,
+      "max_ms": 1.8225,
+      "std_ms": 0.0375,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 1024,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 6.8387,
+      "min_ms": 6.7881,
+      "max_ms": 7.3814,
+      "std_ms": 0.0824,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 2048,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 27.385,
+      "min_ms": 26.8777,
+      "max_ms": 28.111,
+      "std_ms": 0.45,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 4096,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 114.7511,
+      "min_ms": 112.6367,
+      "max_ms": 116.7821,
+      "std_ms": 1.2038,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 8192,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 1655.6869,
+      "min_ms": 499.3692,
+      "max_ms": 3259.6803,
+      "std_ms": 980.6168,
+      "status": "ok",
+      "error": "",
+      "sdpa_backend": "flash_sdp+mem_efficient_sdp",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 16384,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "std_ms": 0,
+      "status": "OOM",
+      "error": "CUDA out of memory. Tried to allocate 6.00 GiB. GPU ",
+      "sdpa_backend": "",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66094970703125
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 32768,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "std_ms": 0,
+      "status": "OOM",
+      "error": "CUDA out of memory. Tried to allocate 6.00 GiB. GPU ",
+      "sdpa_backend": "",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66094970703125
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 65536,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "std_ms": 0,
+      "status": "OOM_skip",
+      "error": "Estimated tensor size 15.35 GB exceeds 85% of GPU memory",
+      "sdpa_backend": "",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66094970703125
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 131072,
+      "config": {
+        "num_q_heads": 32,
+        "num_kv_heads": 1,
+        "d_c": 512,
+        "d_r": 64,
+        "batch": 6,
+        "dtype_str": "bfloat16"
+      },
+      "mean_ms": 0,
+      "min_ms": 0,
+      "max_ms": 0,
+      "std_ms": 0,
+      "status": "OOM_skip",
+      "error": "Estimated tensor size 30.70 GB exceeds 85% of GPU memory",
+      "sdpa_backend": "",
+      "gpu_name": "NVIDIA GeForce RTX 3080 Ti",
+      "gpu_mem_gb": 11.66094970703125
+    }
+  ]
+}

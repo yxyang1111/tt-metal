@@ -36,6 +36,7 @@ from .basic_autotuner import (
 
 FeatureMode = Literal["scalar", "breakdown", "extended"]
 CalibrationFeatureMode = Literal["auto", "scalar", "breakdown", "extended"]
+LossMode = Literal["mse", "relative"]
 
 
 def _gaussian_elimination_solve(a: list[list[float]], b: list[float]) -> list[float]:
@@ -76,7 +77,15 @@ def _ols_fit(
     targets: list[float],
     *,
     ridge: float,
+    sample_weights: list[float] | None = None,
 ) -> list[float]:
+    """Weighted ridge regression.  Minimises  Σ wᵢ(ŷᵢ − yᵢ)².
+
+    When *sample_weights* is ``None`` every sample has unit weight (standard
+    OLS).  For MAPE-targeting loss, pass ``wᵢ = 1/yᵢ²`` so the objective
+    becomes ``Σ (ŷᵢ/yᵢ − 1)²`` — directly minimising mean squared relative
+    error regardless of absolute scale.
+    """
     if not rows or len(rows) != len(targets):
         raise ValueError("rows and targets must be non-empty and equal length")
     p = len(rows[0])
@@ -87,11 +96,12 @@ def _ols_fit(
             raise ValueError("inconsistent feature row width")
     xtx = [[0.0] * p for _ in range(p)]
     xty = [0.0] * p
-    for row, y in zip(rows, targets):
+    for k, (row, y) in enumerate(zip(rows, targets)):
+        w = sample_weights[k] if sample_weights is not None else 1.0
         for i in range(p):
-            xty[i] += row[i] * y
+            xty[i] += w * row[i] * y
             for j in range(p):
-                xtx[i][j] += row[i] * row[j]
+                xtx[i][j] += w * row[i] * row[j]
     return _ridge_normal_solve(xtx, xty, ridge)
 
 
@@ -204,6 +214,7 @@ class CalibrationReport:
     mean_measured_ms: float
     mean_predicted_ms: float
     r_squared: float
+    loss_mode: LossMode = "mse"
     matched_keys: tuple[str, ...] = ()
     skipped_keys: tuple[str, ...] = ()
 
@@ -212,6 +223,7 @@ class CalibrationReport:
             "sample_count": self.sample_count,
             "feature_mode": self.feature_mode,
             "ridge": self.ridge,
+            "loss_mode": self.loss_mode,
             "weights": list(self.weights),
             "feature_labels": list(self.feature_labels),
             "rmse_ms": self.rmse_ms,
@@ -233,6 +245,7 @@ class CalibratedCostModel:
     feature_mode: FeatureMode
     weights: tuple[float, ...]
     ridge: float = 1e-6
+    loss_mode: LossMode = "mse"
     hardware_name: str | None = None
     calibration_report: CalibrationReport | None = None
 
@@ -252,6 +265,7 @@ class CalibratedCostModel:
             "feature_mode": self.feature_mode,
             "weights": list(self.weights),
             "ridge": self.ridge,
+            "loss_mode": self.loss_mode,
             "hardware_name": self.hardware_name,
             "calibration_report": self.calibration_report.to_dict() if self.calibration_report else None,
         }
@@ -268,11 +282,13 @@ class CalibratedCostModel:
             rp["weights"] = tuple(float(w) for w in rp["weights"])
             rp["matched_keys"] = tuple(rp.get("matched_keys", []))
             rp["skipped_keys"] = tuple(rp.get("skipped_keys", []))
+            rp.setdefault("loss_mode", "mse")
             report = CalibrationReport(**rp)
         return cls(
             feature_mode=payload["feature_mode"],
             weights=tuple(float(w) for w in payload["weights"]),
             ridge=float(payload.get("ridge", 1e-6)),
+            loss_mode=payload.get("loss_mode", "mse"),
             hardware_name=payload.get("hardware_name"),
             calibration_report=report,
         )
@@ -347,6 +363,7 @@ def fit_calibrated_cost_model(
     feature_mode: CalibrationFeatureMode = "auto",
     ridge: float = 1e-4,
     hardware_name: str | None = None,
+    loss_mode: LossMode = "mse",
 ) -> tuple[CalibratedCostModel, CalibrationReport]:
     """Fit weights so calibrated latency matches measured kernel time.
 
@@ -360,6 +377,16 @@ def fit_calibrated_cost_model(
     ridge
         Tikhonov regularization on the normal equations (helps when features
         are correlated or sample count is small).
+    loss_mode
+        ``mse``: standard least squares (minimises absolute error, biased
+        toward large-valued samples).
+        ``relative``: inverse-variance weighted least squares with
+        ``wᵢ = 1/yᵢ²``, so the objective becomes
+        ``Σ (ŷᵢ/yᵢ − 1)²`` — directly targeting mean squared *relative*
+        error.  This equalises each sample's contribution regardless of
+        its absolute magnitude, which is critical when decode latencies
+        (~0.04 ms) and prefill latencies (~55 ms) span three orders of
+        magnitude.
     """
     metrics_list: list[PlanMetrics] = []
     targets: list[float] = []
@@ -373,7 +400,11 @@ def fit_calibrated_cost_model(
     resolved_feature_mode = resolve_calibration_feature_mode(len(metrics_list), feature_mode)
     rows = [extract_feature_vector(metrics, resolved_feature_mode) for metrics in metrics_list]
 
-    weights_list = _ols_fit(rows, targets, ridge=ridge)
+    sample_weights: list[float] | None = None
+    if loss_mode == "relative":
+        sample_weights = [1.0 / max(t, 1e-9) ** 2 for t in targets]
+
+    weights_list = _ols_fit(rows, targets, ridge=ridge, sample_weights=sample_weights)
     weights = tuple(weights_list)
     y_hat = [_dot(weights, row) for row in rows]
     rmse, mae, mape, max_abs, mean_y, mean_hat, r2 = _metrics_for_calibration_report(targets, y_hat)
@@ -394,11 +425,13 @@ def fit_calibrated_cost_model(
         mean_measured_ms=mean_y,
         mean_predicted_ms=mean_hat,
         r_squared=r2,
+        loss_mode=loss_mode,
     )
     model = CalibratedCostModel(
         feature_mode=resolved_feature_mode,
         weights=weights,
         ridge=ridge,
+        loss_mode=loss_mode,
         hardware_name=hardware_name,
         calibration_report=report,
     )
@@ -412,6 +445,7 @@ def fit_calibrated_cost_model_from_measurement_db(
     feature_mode: CalibrationFeatureMode = "auto",
     ridge: float = 1e-4,
     hardware_name: str | None = None,
+    loss_mode: LossMode = "mse",
 ) -> tuple[CalibratedCostModel, CalibrationReport]:
     """Fit using a :class:`MeasurementDB` and a pre-built candidate map."""
     samples: list[tuple[PlanMetrics, float]] = []
@@ -435,6 +469,7 @@ def fit_calibrated_cost_model_from_measurement_db(
         feature_mode=feature_mode,
         ridge=ridge,
         hardware_name=hardware_name,
+        loss_mode=loss_mode,
     )
     report = replace(report, matched_keys=tuple(matched), skipped_keys=tuple(skipped))
     model = replace(model, calibration_report=report)
@@ -450,6 +485,7 @@ def fit_calibrated_cost_model_from_wh_profile(
     feature_mode: CalibrationFeatureMode = "auto",
     ridge: float = 1e-4,
     hardware_name: str | None = "wormhole_b0",
+    loss_mode: LossMode = "mse",
 ) -> tuple[CalibratedCostModel, CalibrationReport]:
     from .profile_measurement_bridge import map_wh_profile_measurements
 
@@ -469,6 +505,7 @@ def fit_calibrated_cost_model_from_wh_profile(
         feature_mode=feature_mode,
         ridge=ridge,
         hardware_name=hardware_name,
+        loss_mode=loss_mode,
     )
     report = replace(report, matched_keys=matched_keys)
     model = replace(model, calibration_report=report)
@@ -493,6 +530,7 @@ def fit_calibrated_cost_model_for_workload(
     autotuner: BasicMLAAutotuner | None = None,
     feature_mode: CalibrationFeatureMode = "auto",
     ridge: float = 1e-4,
+    loss_mode: LossMode = "mse",
 ) -> tuple[CalibratedCostModel, CalibrationReport]:
     """Convenience: enumerate candidates for ``(workload, hardware)`` then fit."""
     tuner = autotuner or BasicMLAAutotuner()
@@ -503,4 +541,131 @@ def fit_calibrated_cost_model_for_workload(
         feature_mode=feature_mode,
         ridge=ridge,
         hardware_name=getattr(hardware, "name", None),
+        loss_mode=loss_mode,
     )
+
+
+# ---------------------------------------------------------------------------
+# Mode-stratified calibration
+# ---------------------------------------------------------------------------
+
+Mode = Literal["decode", "prefill"]
+
+
+@dataclass
+class StratifiedCalibratedCostModel:
+    """Separate calibration models for decode and prefill.
+
+    MLA decode (memory-bound, Q_len=1) and prefill (compute-bound, Q_len=L)
+    have fundamentally different bottleneck structures, so a single linear
+    model struggles to fit both regimes simultaneously.  This wrapper holds
+    independent sub-models and dispatches ``predict`` based on the workload
+    mode.
+    """
+
+    decode_model: CalibratedCostModel
+    prefill_model: CalibratedCostModel
+
+    def predict(self, metrics: PlanMetrics, *, mode: Mode | None = None) -> float:
+        """Return calibrated latency, dispatching to the per-mode sub-model.
+
+        If *mode* is ``None``, infer from ``metrics.q_num_chunks``: a single
+        Q chunk (``q_num_chunks <= 1``) implies decode.
+        """
+        if mode is None:
+            mode = "decode" if metrics.q_num_chunks <= 1 else "prefill"
+        if mode == "decode":
+            return self.decode_model.predict(metrics)
+        return self.prefill_model.predict(metrics)
+
+    def save(self, path: str | Path) -> None:
+        payload = {
+            "stratified": True,
+            "decode": {
+                "feature_mode": self.decode_model.feature_mode,
+                "weights": list(self.decode_model.weights),
+                "ridge": self.decode_model.ridge,
+                "loss_mode": self.decode_model.loss_mode,
+                "hardware_name": self.decode_model.hardware_name,
+                "calibration_report": (
+                    self.decode_model.calibration_report.to_dict()
+                    if self.decode_model.calibration_report
+                    else None
+                ),
+            },
+            "prefill": {
+                "feature_mode": self.prefill_model.feature_mode,
+                "weights": list(self.prefill_model.weights),
+                "ridge": self.prefill_model.ridge,
+                "loss_mode": self.prefill_model.loss_mode,
+                "hardware_name": self.prefill_model.hardware_name,
+                "calibration_report": (
+                    self.prefill_model.calibration_report.to_dict()
+                    if self.prefill_model.calibration_report
+                    else None
+                ),
+            },
+        }
+        Path(path).parent.mkdir(parents=True, exist_ok=True)
+        Path(path).write_text(json.dumps(payload, indent=2, sort_keys=True))
+
+    @classmethod
+    def load(cls, path: str | Path) -> "StratifiedCalibratedCostModel":
+        payload = json.loads(Path(path).read_text())
+        if not payload.get("stratified"):
+            raise ValueError("JSON is not a stratified calibration model")
+
+        def _load_sub(sub: dict[str, Any]) -> CalibratedCostModel:
+            report_payload = sub.get("calibration_report")
+            report: CalibrationReport | None = None
+            if report_payload:
+                rp = dict(report_payload)
+                rp["weights"] = tuple(float(w) for w in rp["weights"])
+                rp["matched_keys"] = tuple(rp.get("matched_keys", []))
+                rp["skipped_keys"] = tuple(rp.get("skipped_keys", []))
+                rp.setdefault("loss_mode", "mse")
+                report = CalibrationReport(**rp)
+            return CalibratedCostModel(
+                feature_mode=sub["feature_mode"],
+                weights=tuple(float(w) for w in sub["weights"]),
+                ridge=float(sub.get("ridge", 1e-6)),
+                loss_mode=sub.get("loss_mode", "mse"),
+                hardware_name=sub.get("hardware_name"),
+                calibration_report=report,
+            )
+
+        return cls(
+            decode_model=_load_sub(payload["decode"]),
+            prefill_model=_load_sub(payload["prefill"]),
+        )
+
+
+def fit_stratified_cost_model(
+    decode_samples: Iterable[tuple[PlanMetrics, float]],
+    prefill_samples: Iterable[tuple[PlanMetrics, float]],
+    *,
+    feature_mode: CalibrationFeatureMode = "auto",
+    ridge: float = 1e-4,
+    hardware_name: str | None = None,
+    loss_mode: LossMode = "mse",
+) -> tuple[StratifiedCalibratedCostModel, CalibrationReport, CalibrationReport]:
+    """Fit independent calibration models for decode and prefill."""
+    decode_model, decode_report = fit_calibrated_cost_model(
+        decode_samples,
+        feature_mode=feature_mode,
+        ridge=ridge,
+        hardware_name=hardware_name,
+        loss_mode=loss_mode,
+    )
+    prefill_model, prefill_report = fit_calibrated_cost_model(
+        prefill_samples,
+        feature_mode=feature_mode,
+        ridge=ridge,
+        hardware_name=hardware_name,
+        loss_mode=loss_mode,
+    )
+    model = StratifiedCalibratedCostModel(
+        decode_model=decode_model,
+        prefill_model=prefill_model,
+    )
+    return model, decode_report, prefill_report

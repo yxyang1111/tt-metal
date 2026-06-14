@@ -32,6 +32,7 @@ from .profile_measurement_bridge import (
 from .cost_model import (
     CalibratedCostModel,
     CalibrationReport,
+    StratifiedCalibratedCostModel,
     apply_calibration_to_candidate,
     build_candidate_map,
     extract_feature_vector,
@@ -39,6 +40,7 @@ from .cost_model import (
     fit_calibrated_cost_model_from_wh_profile,
     fit_calibrated_cost_model_for_workload,
     fit_calibrated_cost_model_from_measurement_db,
+    fit_stratified_cost_model,
 )
 
 __all__ = [
@@ -69,6 +71,7 @@ __all__ = [
     "map_wh_profile_measurements",
     "CalibratedCostModel",
     "CalibrationReport",
+    "StratifiedCalibratedCostModel",
     "apply_calibration_to_candidate",
     "build_candidate_map",
     "extract_feature_vector",
@@ -76,4 +79,5 @@ __all__ = [
     "fit_calibrated_cost_model_from_wh_profile",
     "fit_calibrated_cost_model_for_workload",
     "fit_calibrated_cost_model_from_measurement_db",
+    "fit_stratified_cost_model",
 ]

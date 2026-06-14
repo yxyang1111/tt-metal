@@ -1,0 +1,129 @@
+{
+  "gpu": {
+    "name": "NVIDIA L40S",
+    "mem_gb": 44.39,
+    "sm": "sm89",
+    "sm_count": 142,
+    "pytorch": "2.12.0+cu130",
+    "cuda": "13.0",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 10,
+  "iters": 50,
+  "prefill_iters": 5,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 256,
+      "mean_ms": 0.2852,
+      "min_ms": 0.1495,
+      "max_ms": 2.3568,
+      "std_ms": 0.31,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 1966080,
+      "estimated_bw_gbs": 6.89
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 512,
+      "mean_ms": 0.2665,
+      "min_ms": 0.1549,
+      "max_ms": 1.9222,
+      "std_ms": 0.25,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 3735552,
+      "estimated_bw_gbs": 14.02
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 1024,
+      "mean_ms": 0.277,
+      "min_ms": 0.1666,
+      "max_ms": 1.8717,
+      "std_ms": 0.2351,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 7274496,
+      "estimated_bw_gbs": 26.26
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 2048,
+      "mean_ms": 0.4324,
+      "min_ms": 0.0541,
+      "max_ms": 2.5575,
+      "std_ms": 0.5944,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 14352384,
+      "estimated_bw_gbs": 33.19
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 4096,
+      "mean_ms": 0.3146,
+      "min_ms": 0.1752,
+      "max_ms": 2.3913,
+      "std_ms": 0.3136,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 28508160,
+      "estimated_bw_gbs": 90.62
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 8192,
+      "mean_ms": 0.3856,
+      "min_ms": 0.0945,
+      "max_ms": 2.4456,
+      "std_ms": 0.4041,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 56819712,
+      "estimated_bw_gbs": 147.35
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 16384,
+      "mean_ms": 0.4952,
+      "min_ms": 0.3075,
+      "max_ms": 2.5097,
+      "std_ms": 0.3871,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 113442816,
+      "estimated_bw_gbs": 229.08
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 32768,
+      "mean_ms": 0.7435,
+      "min_ms": 0.4653,
+      "max_ms": 2.7736,
+      "std_ms": 0.5316,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 226689024,
+      "estimated_bw_gbs": 304.89
+    }
+  ]
+}

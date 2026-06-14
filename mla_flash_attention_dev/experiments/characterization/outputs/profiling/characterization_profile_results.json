@@ -1,0 +1,1400 @@
+{
+  "profiles": [
+    {
+      "case": "decode_1k",
+      "workload": {
+        "name": "decode_1k",
+        "batch": 2,
+        "seq_len": 1024,
+        "iterations": 6,
+        "warmup_iterations": 2
+      },
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144,
+        7168,
+        8192
+      ],
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 75830.16666666667,
+          "min_ns": 75085.0,
+          "max_ns": 76813.0,
+          "std_ns": 593.7986237400315
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 74904.83333333333,
+          "min_ns": 74143.0,
+          "max_ns": 75877.0,
+          "std_ns": 598.8832431191316
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1081.1666666666667,
+          "min_ns": 1058.0,
+          "max_ns": 1095.0,
+          "std_ns": 11.823939933691966
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 62850.166666666664,
+          "min_ns": 62096.0,
+          "max_ns": 63831.0,
+          "std_ns": 587.8297419793894
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 30149.333333333332,
+          "min_ns": 29512.0,
+          "max_ns": 30468.0,
+          "std_ns": 315.4587488440006
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 73885.16666666667,
+          "min_ns": 73128.0,
+          "max_ns": 74839.0,
+          "std_ns": 590.1280699042276
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 74644.66666666667,
+          "min_ns": 73884.0,
+          "max_ns": 75612.0,
+          "std_ns": 596.5022119731736
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 74092.5,
+          "min_ns": 73339.0,
+          "max_ns": 75061.0,
+          "std_ns": 595.0775159590555
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 782471.5,
+          "min_ns": 176753.0,
+          "max_ns": 3654833.0,
+          "std_ns": 1285143.9630482064
+        }
+      },
+      "reader_breakdown": {
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 393.4375,
+            "min_cycles": 315.0,
+            "max_cycles": 756.0,
+            "std_cycles": 78.65799023038494
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 9814.916666666666,
+            "min_cycles": 9773.0,
+            "max_cycles": 9865.0,
+            "std_cycles": 37.43151153180373
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 191.91666666666666,
+            "min_cycles": 188.0,
+            "max_cycles": 196.0,
+            "std_cycles": 2.523500654954453
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 124.16666666666667,
+            "min_cycles": 121.0,
+            "max_cycles": 130.0,
+            "std_cycles": 1.9825628755617197
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 1578.3125,
+            "min_cycles": 1450.0,
+            "max_cycles": 1806.0,
+            "std_cycles": 88.88409031101497
+          }
+        },
+        "avg_profiled_cycles_per_core": 12102.75,
+        "max_profiled_cycles_per_run": 12270.833333333334,
+        "avg_stage_sum_cycles": 12102.749999999998,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.0325081076614819,
+          "SDPA-PAGED-RESERVE-SUM": 0.010259376312546049,
+          "SDPA-PAGED-ISSUE-SUM": 0.8109658273257456,
+          "SDPA-PAGED-WAIT-SUM": 0.13040941108425774,
+          "SDPA-PAGED-PUSH-SUM": 0.015857277615968824
+        }
+      },
+      "reader_source_breakdown": {
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 7222.541666666667,
+            "min_cycles": 7213.0,
+            "max_cycles": 7240.0,
+            "std_cycles": 7.311401864363785
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 88.5625,
+            "min_cycles": 87.0,
+            "max_cycles": 91.0,
+            "std_cycles": 1.6944302139657448
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 37.291666666666664,
+            "min_cycles": 36.0,
+            "max_cycles": 41.0,
+            "std_cycles": 1.4571423708371427
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 1515.5,
+            "min_cycles": 1388.0,
+            "max_cycles": 1738.0,
+            "std_cycles": 88.58658664455547
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 2592.375,
+            "min_cycles": 2560.0,
+            "max_cycles": 2631.0,
+            "std_cycles": 31.060844187926808
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 103.35416666666667,
+            "min_cycles": 101.0,
+            "max_cycles": 106.0,
+            "std_cycles": 1.6644516531144893
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 86.875,
+            "min_cycles": 85.0,
+            "max_cycles": 89.0,
+            "std_cycles": 1.5761900266148114
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 62.8125,
+            "min_cycles": 52.0,
+            "max_cycles": 76.0,
+            "std_cycles": 6.263838845574919
+          }
+        },
+        "avg_profiled_cycles_per_core": 11709.3125,
+        "max_profiled_cycles_per_run": 11828.666666666666,
+        "avg_stage_sum_cycles": 11709.3125,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.0031847870373829944,
+          "SDPA-K-ISSUE-SUM": 0.6168203015050343,
+          "SDPA-K-WAIT-SUM": 0.12942689846222824,
+          "SDPA-K-PUSH-SUM": 0.00756342441112576,
+          "SDPA-V-RESERVE-SUM": 0.0074193083496575905,
+          "SDPA-V-ISSUE-SUM": 0.221394296206545,
+          "SDPA-V-WAIT-SUM": 0.005364320065759625,
+          "SDPA-V-PUSH-SUM": 0.008826663962266501
+        }
+      },
+      "writer_breakdown": {
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 705.7708333333334,
+            "min_cycles": 20.0,
+            "max_cycles": 1682.0,
+            "std_cycles": 468.0011235556017
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 23822.0625,
+            "min_cycles": 0.0,
+            "max_cycles": 43969.0,
+            "std_cycles": 19435.668746969503
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 779.75,
+            "min_cycles": 0.0,
+            "max_cycles": 2267.0,
+            "std_cycles": 561.5133754714426
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.770833333333336,
+            "min_cycles": 0.0,
+            "max_cycles": 74.0,
+            "std_cycles": 30.479665067695365
+          }
+        },
+        "avg_profiled_cycles_per_core": 25360.354166666668,
+        "max_profiled_cycles_per_run": 46075.5,
+        "avg_stage_sum_cycles": 25360.354166666664,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9393426583652141,
+          "SDPA-WRITER-ISSUE-SUM": 0.030746810351130416,
+          "SDPA-WRITER-BARRIER-SUM": 0.027829691521461076,
+          "SDPA-WRITER-POP-SUM": 0.002080839762194436
+        }
+      }
+    },
+    {
+      "case": "decode_4k",
+      "workload": {
+        "name": "decode_4k",
+        "batch": 2,
+        "seq_len": 4096,
+        "iterations": 6,
+        "warmup_iterations": 2
+      },
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144,
+        7168,
+        8192
+      ],
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 173729.33333333334,
+          "min_ns": 172481.0,
+          "max_ns": 174695.0,
+          "std_ns": 729.2742206391838
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 172806.83333333334,
+          "min_ns": 171547.0,
+          "max_ns": 173787.0,
+          "std_ns": 738.8501013211153
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1079.0,
+          "min_ns": 1059.0,
+          "max_ns": 1100.0,
+          "std_ns": 13.466006584482772
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 160746.5,
+          "min_ns": 159528.0,
+          "max_ns": 161702.0,
+          "std_ns": 723.8710175162423
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 108915.5,
+          "min_ns": 108624.0,
+          "max_ns": 109245.0,
+          "std_ns": 254.57137178664323
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 171797.5,
+          "min_ns": 170552.0,
+          "max_ns": 172791.0,
+          "std_ns": 734.7078217450345
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 172543.66666666666,
+          "min_ns": 171285.0,
+          "max_ns": 173528.0,
+          "std_ns": 739.0328514724873
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 172003.83333333334,
+          "min_ns": 170746.0,
+          "max_ns": 172979.0,
+          "std_ns": 735.9201534284967
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 355005.1666666667,
+          "min_ns": 142136.0,
+          "max_ns": 1256284.0,
+          "std_ns": 405348.05407345784
+        }
+      },
+      "reader_breakdown": {
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 425.125,
+            "min_cycles": 319.0,
+            "max_cycles": 1196.0,
+            "std_cycles": 134.01315622604622
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 39341.770833333336,
+            "min_cycles": 39167.0,
+            "max_cycles": 39540.0,
+            "std_cycles": 159.66204406800077
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 769.9791666666666,
+            "min_cycles": 758.0,
+            "max_cycles": 784.0,
+            "std_cycles": 5.56210984898916
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 17558.541666666668,
+            "min_cycles": 16939.0,
+            "max_cycles": 18017.0,
+            "std_cycles": 255.00130378207004
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 6348.8125,
+            "min_cycles": 5986.0,
+            "max_cycles": 6665.0,
+            "std_cycles": 154.07339380010856
+          }
+        },
+        "avg_profiled_cycles_per_core": 64444.229166666664,
+        "max_profiled_cycles_per_run": 64842.833333333336,
+        "avg_stage_sum_cycles": 64444.229166666664,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.006596789278067632,
+          "SDPA-PAGED-RESERVE-SUM": 0.2724610394711448,
+          "SDPA-PAGED-ISSUE-SUM": 0.61047779362194,
+          "SDPA-PAGED-WAIT-SUM": 0.09851638513016585,
+          "SDPA-PAGED-PUSH-SUM": 0.011947992498681838
+        }
+      },
+      "reader_source_breakdown": {
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 28896.479166666668,
+            "min_cycles": 28870.0,
+            "max_cycles": 28944.0,
+            "std_cycles": 22.29442155874175
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 356.75,
+            "min_cycles": 350.0,
+            "max_cycles": 365.0,
+            "std_cycles": 3.6713984619851145
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 17204.041666666668,
+            "min_cycles": 16581.0,
+            "max_cycles": 17668.0,
+            "std_cycles": 255.6076875419743
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 6016.125,
+            "min_cycles": 5668.0,
+            "max_cycles": 6368.0,
+            "std_cycles": 151.4624025129669
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 10445.291666666666,
+            "min_cycles": 10292.0,
+            "max_cycles": 10611.0,
+            "std_cycles": 139.28731671341157
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 413.2291666666667,
+            "min_cycles": 407.0,
+            "max_cycles": 421.0,
+            "std_cycles": 3.248330233451574
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 354.5,
+            "min_cycles": 346.0,
+            "max_cycles": 361.0,
+            "std_cycles": 4.0259574430603875
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 332.6875,
+            "min_cycles": 291.0,
+            "max_cycles": 377.0,
+            "std_cycles": 19.711625429764368
+          }
+        },
+        "avg_profiled_cycles_per_core": 64019.104166666664,
+        "max_profiled_cycles_per_run": 64221.0,
+        "avg_stage_sum_cycles": 64019.104166666664,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.26873293356117334,
+          "SDPA-K-ISSUE-SUM": 0.4513727510375321,
+          "SDPA-K-WAIT-SUM": 0.09397390167062762,
+          "SDPA-K-PUSH-SUM": 0.005572555327722812,
+          "SDPA-V-RESERVE-SUM": 0.005537409568823369,
+          "SDPA-V-ISSUE-SUM": 0.1631589789115684,
+          "SDPA-V-WAIT-SUM": 0.005196690961714879,
+          "SDPA-V-PUSH-SUM": 0.006454778960837537
+        }
+      },
+      "writer_breakdown": {
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 657.1666666666666,
+            "min_cycles": 20.0,
+            "max_cycles": 1394.0,
+            "std_cycles": 415.286363716519
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 72834.72916666667,
+            "min_cycles": 0.0,
+            "max_cycles": 142056.0,
+            "std_cycles": 68243.37537011059
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 790.2708333333334,
+            "min_cycles": 0.0,
+            "max_cycles": 1853.0,
+            "std_cycles": 571.1138145320122
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.6875,
+            "min_cycles": 0.0,
+            "max_cycles": 73.0,
+            "std_cycles": 30.428301142467134
+          }
+        },
+        "avg_profiled_cycles_per_core": 74334.85416666667,
+        "max_profiled_cycles_per_run": 144000.66666666666,
+        "avg_stage_sum_cycles": 74334.85416666667,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9798193590770145,
+          "SDPA-WRITER-ISSUE-SUM": 0.010631228677215965,
+          "SDPA-WRITER-BARRIER-SUM": 0.008840626298845342,
+          "SDPA-WRITER-POP-SUM": 0.0007087859469242921
+        }
+      }
+    },
+    {
+      "case": "decode_8k",
+      "workload": {
+        "name": "decode_8k",
+        "batch": 2,
+        "seq_len": 8192,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 305251.0,
+          "min_ns": 304925.0,
+          "max_ns": 305616.0,
+          "std_ns": 249.4203279606536
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 304319.0,
+          "min_ns": 303980.0,
+          "max_ns": 304686.0,
+          "std_ns": 253.1175616191022
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1076.0,
+          "min_ns": 1061.0,
+          "max_ns": 1087.0,
+          "std_ns": 10.63014581273465
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 292280.25,
+          "min_ns": 291938.0,
+          "max_ns": 292641.0,
+          "std_ns": 250.9306428079281
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 240411.5,
+          "min_ns": 240096.0,
+          "max_ns": 240663.0,
+          "std_ns": 221.26963189737538
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 303307.0,
+          "min_ns": 302963.0,
+          "max_ns": 303672.0,
+          "std_ns": 254.3924134088908
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 304056.25,
+          "min_ns": 303722.0,
+          "max_ns": 304424.0,
+          "std_ns": 251.7264139894739
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 303511.0,
+          "min_ns": 303179.0,
+          "max_ns": 303869.0,
+          "std_ns": 248.20052377059966
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 530090.0,
+          "min_ns": 158846.0,
+          "max_ns": 1582856.0,
+          "std_ns": 607956.1623188797
+        }
+      },
+      "reader_breakdown": {
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 512.53125,
+            "min_cycles": 332.0,
+            "max_cycles": 1498.0,
+            "std_cycles": 259.79980085334455
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 78744.84375,
+            "min_cycles": 78394.0,
+            "max_cycles": 79136.0,
+            "std_cycles": 332.47350546462724
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 1541.375,
+            "min_cycles": 1525.0,
+            "max_cycles": 1553.0,
+            "std_cycles": 6.632071697441154
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 66442.4375,
+            "min_cycles": 65470.0,
+            "max_cycles": 67391.0,
+            "std_cycles": 566.0597327965928
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 12783.46875,
+            "min_cycles": 12203.0,
+            "max_cycles": 13503.0,
+            "std_cycles": 280.5046773646342
+          }
+        },
+        "avg_profiled_cycles_per_core": 160024.65625,
+        "max_profiled_cycles_per_run": 160748.5,
+        "avg_stage_sum_cycles": 160024.65625,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.0032028267518931165,
+          "SDPA-PAGED-RESERVE-SUM": 0.41520125121343604,
+          "SDPA-PAGED-ISSUE-SUM": 0.49207944322642466,
+          "SDPA-PAGED-WAIT-SUM": 0.07988436938135901,
+          "SDPA-PAGED-PUSH-SUM": 0.009632109426887145
+        }
+      },
+      "reader_source_breakdown": {
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 57796.28125,
+            "min_cycles": 57748.0,
+            "max_cycles": 57862.0,
+            "std_cycles": 40.53951342132142
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 714.75,
+            "min_cycles": 702.0,
+            "max_cycles": 725.0,
+            "std_cycles": 5.4715171570598224
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 65728.03125,
+            "min_cycles": 64748.0,
+            "max_cycles": 66682.0,
+            "std_cycles": 567.4925376367847
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 12042.3125,
+            "min_cycles": 11469.0,
+            "max_cycles": 12774.0,
+            "std_cycles": 278.41116598252665
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 20948.5625,
+            "min_cycles": 20634.0,
+            "max_cycles": 21293.0,
+            "std_cycles": 293.2438125412879
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 826.625,
+            "min_cycles": 818.0,
+            "max_cycles": 833.0,
+            "std_cycles": 3.731202889149825
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 714.40625,
+            "min_cycles": 699.0,
+            "max_cycles": 727.0,
+            "std_cycles": 5.325993891988611
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 741.15625,
+            "min_cycles": 686.0,
+            "max_cycles": 803.0,
+            "std_cycles": 28.4715970036368
+          }
+        },
+        "avg_profiled_cycles_per_core": 159512.125,
+        "max_profiled_cycles_per_run": 159895.0,
+        "avg_stage_sum_cycles": 159512.125,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.4120566461640455,
+          "SDPA-K-ISSUE-SUM": 0.36233158607848776,
+          "SDPA-K-WAIT-SUM": 0.07549465283595212,
+          "SDPA-K-PUSH-SUM": 0.004480850593646095,
+          "SDPA-V-RESERVE-SUM": 0.004478695585053487,
+          "SDPA-V-ISSUE-SUM": 0.13132896637167865,
+          "SDPA-V-WAIT-SUM": 0.004646394435532722,
+          "SDPA-V-PUSH-SUM": 0.005182207935603642
+        }
+      },
+      "writer_breakdown": {
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 661.125,
+            "min_cycles": 20.0,
+            "max_cycles": 1386.0,
+            "std_cycles": 414.24470047907676
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 138540.3125,
+            "min_cycles": 0.0,
+            "max_cycles": 273452.0,
+            "std_cycles": 133905.4341934163
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 768.0625,
+            "min_cycles": 0.0,
+            "max_cycles": 1883.0,
+            "std_cycles": 553.2812879483184
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.71875,
+            "min_cycles": 0.0,
+            "max_cycles": 72.0,
+            "std_cycles": 30.4458888593764
+          }
+        },
+        "avg_profiled_cycles_per_core": 140022.21875,
+        "max_profiled_cycles_per_run": 275111.25,
+        "avg_stage_sum_cycles": 140022.21875,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9894166349938659,
+          "SDPA-WRITER-ISSUE-SUM": 0.005485290169350355,
+          "SDPA-WRITER-BARRIER-SUM": 0.004721572089786644,
+          "SDPA-WRITER-POP-SUM": 0.00037650274699707256
+        }
+      }
+    },
+    {
+      "case": "decode_16k",
+      "workload": {
+        "name": "decode_16k",
+        "batch": 1,
+        "seq_len": 16384,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 562469.5,
+          "min_ns": 561793.0,
+          "max_ns": 562822.0,
+          "std_ns": 398.3770199195732
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 561548.75,
+          "min_ns": 560858.0,
+          "max_ns": 561908.0,
+          "std_ns": 406.62106130892926
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1081.75,
+          "min_ns": 1066.0,
+          "max_ns": 1099.0,
+          "std_ns": 11.776565713313877
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 549536.25,
+          "min_ns": 548856.0,
+          "max_ns": 549902.0,
+          "std_ns": 401.9579424516948
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 499153.5,
+          "min_ns": 498336.0,
+          "max_ns": 499639.0,
+          "std_ns": 495.21939582370965
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 560531.0,
+          "min_ns": 559830.0,
+          "max_ns": 560882.0,
+          "std_ns": 411.13866274044335
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 561284.0,
+          "min_ns": 560595.0,
+          "max_ns": 561641.0,
+          "std_ns": 405.42631882994476
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 560744.75,
+          "min_ns": 560051.0,
+          "max_ns": 561107.0,
+          "std_ns": 408.5354176812581
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 456401.75,
+          "min_ns": 148427.0,
+          "max_ns": 1339869.0,
+          "std_ns": 510248.48937031406
+        }
+      },
+      "reader_breakdown": {
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 484.125,
+            "min_cycles": 447.0,
+            "max_cycles": 614.0,
+            "std_cycles": 47.11273049824219
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 157529.25,
+            "min_cycles": 156800.0,
+            "max_cycles": 158312.0,
+            "std_cycles": 701.143663951975
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 3085.0,
+            "min_cycles": 3065.0,
+            "max_cycles": 3100.0,
+            "std_cycles": 10.653637876331258
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 177045.875,
+            "min_cycles": 175186.0,
+            "max_cycles": 179064.0,
+            "std_cycles": 1711.9382244622614
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 12997.3125,
+            "min_cycles": 12684.0,
+            "max_cycles": 13396.0,
+            "std_cycles": 229.4669689601316
+          }
+        },
+        "avg_profiled_cycles_per_core": 351141.5625,
+        "max_profiled_cycles_per_run": 352121.0,
+        "avg_stage_sum_cycles": 351141.5625,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.001378717451028031,
+          "SDPA-PAGED-RESERVE-SUM": 0.504200852042401,
+          "SDPA-PAGED-ISSUE-SUM": 0.4486203480967879,
+          "SDPA-PAGED-WAIT-SUM": 0.03701445197049267,
+          "SDPA-PAGED-PUSH-SUM": 0.008785630439290421
+        }
+      },
+      "reader_source_breakdown": {
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 115494.25,
+            "min_cycles": 115400.0,
+            "max_cycles": 115614.0,
+            "std_cycles": 85.0760689030705
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 1433.375,
+            "min_cycles": 1419.0,
+            "max_cycles": 1444.0,
+            "std_cycles": 8.528445051707843
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 171168.375,
+            "min_cycles": 169707.0,
+            "max_cycles": 172622.0,
+            "std_cycles": 1355.8826864352977
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 11943.4375,
+            "min_cycles": 11621.0,
+            "max_cycles": 12387.0,
+            "std_cycles": 213.99473379910543
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 42035.0,
+            "min_cycles": 41398.0,
+            "max_cycles": 42698.0,
+            "std_cycles": 616.7807552120931
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 1651.625,
+            "min_cycles": 1643.0,
+            "max_cycles": 1659.0,
+            "std_cycles": 4.121210380458634
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 5877.5,
+            "min_cycles": 5426.0,
+            "max_cycles": 6442.0,
+            "std_cycles": 389.72714814341583
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 1053.875,
+            "min_cycles": 961.0,
+            "max_cycles": 1159.0,
+            "std_cycles": 62.94131691504397
+          }
+        },
+        "avg_profiled_cycles_per_core": 350657.4375,
+        "max_profiled_cycles_per_run": 351653.75,
+        "avg_stage_sum_cycles": 350657.4375,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.48813558959518716,
+          "SDPA-K-ISSUE-SUM": 0.3293648947628553,
+          "SDPA-K-WAIT-SUM": 0.034060128840130474,
+          "SDPA-K-PUSH-SUM": 0.0040876788760540695,
+          "SDPA-V-RESERVE-SUM": 0.016761372700101362,
+          "SDPA-V-ISSUE-SUM": 0.11987482797937232,
+          "SDPA-V-WAIT-SUM": 0.0030054260577319137,
+          "SDPA-V-PUSH-SUM": 0.0047100811885674035
+        }
+      },
+      "writer_breakdown": {
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 543.8125,
+            "min_cycles": 20.0,
+            "max_cycles": 722.0,
+            "std_cycles": 302.44239508334476
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 267783.375,
+            "min_cycles": 0.0,
+            "max_cycles": 531359.0,
+            "std_cycles": 263138.2811004214
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 590.75,
+            "min_cycles": 0.0,
+            "max_cycles": 818.0,
+            "std_cycles": 341.1701371749878
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.4375,
+            "min_cycles": 0.0,
+            "max_cycles": 71.0,
+            "std_cycles": 30.277815207673093
+          }
+        },
+        "avg_profiled_cycles_per_core": 268970.375,
+        "max_profiled_cycles_per_run": 532798.75,
+        "avg_stage_sum_cycles": 268970.375,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9955868745768005,
+          "SDPA-WRITER-ISSUE-SUM": 0.002196338537283149,
+          "SDPA-WRITER-BARRIER-SUM": 0.0020218304711067158,
+          "SDPA-WRITER-POP-SUM": 0.00019495641480962356
+        }
+      }
+    },
+    {
+      "case": "decode_32k",
+      "workload": {
+        "name": "decode_32k",
+        "batch": 1,
+        "seq_len": 32768,
+        "iterations": 4,
+        "warmup_iterations": 2
+      },
+      "measured_run_ids": [
+        3072,
+        4096,
+        5120,
+        6144
+      ],
+      "column_stats": {
+        "DEVICE FW DURATION [ns]": {
+          "avg_ns": 1086288.0,
+          "min_ns": 1085817.0,
+          "max_ns": 1086460.0,
+          "std_ns": 272.1699836499242
+        },
+        "DEVICE KERNEL DURATION [ns]": {
+          "avg_ns": 1085356.75,
+          "min_ns": 1084889.0,
+          "max_ns": 1085519.0,
+          "std_ns": 270.08551886393315
+        },
+        "DEVICE KERNEL FIRST TO LAST START [ns]": {
+          "avg_ns": 1070.0,
+          "min_ns": 1059.0,
+          "max_ns": 1083.0,
+          "std_ns": 9.539392014169456
+        },
+        "DEVICE BRISC KERNEL DURATION [ns]": {
+          "avg_ns": 1073339.25,
+          "min_ns": 1072858.0,
+          "max_ns": 1073525.0,
+          "std_ns": 278.32658424951074
+        },
+        "DEVICE NCRISC KERNEL DURATION [ns]": {
+          "avg_ns": 1024411.25,
+          "min_ns": 1024204.0,
+          "max_ns": 1024608.0,
+          "std_ns": 170.90256727153047
+        },
+        "DEVICE TRISC0 KERNEL DURATION [ns]": {
+          "avg_ns": 1084349.0,
+          "min_ns": 1083856.0,
+          "max_ns": 1084523.0,
+          "std_ns": 284.83240686410664
+        },
+        "DEVICE TRISC1 KERNEL DURATION [ns]": {
+          "avg_ns": 1085091.75,
+          "min_ns": 1084628.0,
+          "max_ns": 1085257.0,
+          "std_ns": 267.8491879771152
+        },
+        "DEVICE TRISC2 KERNEL DURATION [ns]": {
+          "avg_ns": 1084548.5,
+          "min_ns": 1084069.0,
+          "max_ns": 1084725.0,
+          "std_ns": 277.0500857245852
+        },
+        "OP TO OP LATENCY [ns]": {
+          "avg_ns": 1965812.75,
+          "min_ns": 173447.0,
+          "max_ns": 5691438.0,
+          "std_ns": 2245304.297869932
+        }
+      },
+      "reader_breakdown": {
+        "stage_stats": {
+          "SDPA-PAGE-TABLE-SUM": {
+            "avg_cycles": 528.0625,
+            "min_cycles": 502.0,
+            "max_cycles": 719.0,
+            "std_cycles": 54.81613442910764
+          },
+          "SDPA-PAGED-ISSUE-SUM": {
+            "avg_cycles": 315106.0,
+            "min_cycles": 313672.0,
+            "max_cycles": 316552.0,
+            "std_cycles": 1378.1141099342972
+          },
+          "SDPA-PAGED-PUSH-SUM": {
+            "avg_cycles": 6175.9375,
+            "min_cycles": 6136.0,
+            "max_cycles": 6211.0,
+            "std_cycles": 19.495091529664588
+          },
+          "SDPA-PAGED-RESERVE-SUM": {
+            "avg_cycles": 386080.5,
+            "min_cycles": 381798.0,
+            "max_cycles": 389791.0,
+            "std_cycles": 3523.5583576833237
+          },
+          "SDPA-PAGED-WAIT-SUM": {
+            "avg_cycles": 26075.8125,
+            "min_cycles": 25674.0,
+            "max_cycles": 27002.0,
+            "std_cycles": 313.1140404768684
+          }
+        },
+        "avg_profiled_cycles_per_core": 733966.3125,
+        "max_profiled_cycles_per_run": 735996.5,
+        "avg_stage_sum_cycles": 733966.3125,
+        "stage_shares": {
+          "SDPA-PAGE-TABLE-SUM": 0.0007194642192791376,
+          "SDPA-PAGED-RESERVE-SUM": 0.5260193736752734,
+          "SDPA-PAGED-ISSUE-SUM": 0.4293194314691384,
+          "SDPA-PAGED-WAIT-SUM": 0.035527260660209115,
+          "SDPA-PAGED-PUSH-SUM": 0.008414469976099891
+        }
+      },
+      "reader_source_breakdown": {
+        "stage_stats": {
+          "SDPA-K-ISSUE-SUM": {
+            "avg_cycles": 230991.8125,
+            "min_cycles": 230803.0,
+            "max_cycles": 231197.0,
+            "std_cycles": 166.69291329792637
+          },
+          "SDPA-K-PUSH-SUM": {
+            "avg_cycles": 2870.125,
+            "min_cycles": 2844.0,
+            "max_cycles": 2897.0,
+            "std_cycles": 17.028927593950243
+          },
+          "SDPA-K-RESERVE-SUM": {
+            "avg_cycles": 373733.5,
+            "min_cycles": 370892.0,
+            "max_cycles": 376488.0,
+            "std_cycles": 2670.5563792962694
+          },
+          "SDPA-K-WAIT-SUM": {
+            "avg_cycles": 23956.5,
+            "min_cycles": 23610.0,
+            "max_cycles": 24753.0,
+            "std_cycles": 283.2044314625038
+          },
+          "SDPA-V-ISSUE-SUM": {
+            "avg_cycles": 84114.1875,
+            "min_cycles": 82869.0,
+            "max_cycles": 85403.0,
+            "std_cycles": 1213.4055494119639
+          },
+          "SDPA-V-PUSH-SUM": {
+            "avg_cycles": 3305.8125,
+            "min_cycles": 3288.0,
+            "max_cycles": 3319.0,
+            "std_cycles": 9.881920043695962
+          },
+          "SDPA-V-RESERVE-SUM": {
+            "avg_cycles": 12347.0,
+            "min_cycles": 10834.0,
+            "max_cycles": 13506.0,
+            "std_cycles": 885.902223724492
+          },
+          "SDPA-V-WAIT-SUM": {
+            "avg_cycles": 2119.3125,
+            "min_cycles": 1985.0,
+            "max_cycles": 2286.0,
+            "std_cycles": 106.19717436801226
+          }
+        },
+        "avg_profiled_cycles_per_core": 733438.25,
+        "max_profiled_cycles_per_run": 735470.75,
+        "avg_stage_sum_cycles": 733438.25,
+        "stage_shares": {
+          "SDPA-K-RESERVE-SUM": 0.5095636885586483,
+          "SDPA-K-ISSUE-SUM": 0.3149437767937519,
+          "SDPA-K-WAIT-SUM": 0.03266328146916254,
+          "SDPA-K-PUSH-SUM": 0.003913246957054667,
+          "SDPA-V-RESERVE-SUM": 0.0168344097134285,
+          "SDPA-V-ISSUE-SUM": 0.11468475703305629,
+          "SDPA-V-WAIT-SUM": 0.0028895581870730085,
+          "SDPA-V-PUSH-SUM": 0.004507281287824844
+        }
+      },
+      "writer_breakdown": {
+        "stage_stats": {
+          "SDPA-WRITER-BARRIER-SUM": {
+            "avg_cycles": 547.0,
+            "min_cycles": 20.0,
+            "max_cycles": 770.0,
+            "std_cycles": 304.65061956280346
+          },
+          "SDPA-WRITER-CB-WAIT-SUM": {
+            "avg_cycles": 529615.8125,
+            "min_cycles": 0.0,
+            "max_cycles": 1055019.0,
+            "std_cycles": 524951.9391930344
+          },
+          "SDPA-WRITER-ISSUE-SUM": {
+            "avg_cycles": 610.375,
+            "min_cycles": 0.0,
+            "max_cycles": 860.0,
+            "std_cycles": 353.0493724325254
+          },
+          "SDPA-WRITER-POP-SUM": {
+            "avg_cycles": 52.8125,
+            "min_cycles": 0.0,
+            "max_cycles": 72.0,
+            "std_cycles": 30.500448254902746
+          }
+        },
+        "avg_profiled_cycles_per_core": 530826.0,
+        "max_profiled_cycles_per_run": 1056545.25,
+        "avg_stage_sum_cycles": 530826.0,
+        "stage_shares": {
+          "SDPA-WRITER-CB-WAIT-SUM": 0.9977201804357737,
+          "SDPA-WRITER-ISSUE-SUM": 0.0011498588991496273,
+          "SDPA-WRITER-BARRIER-SUM": 0.0010304694947120148,
+          "SDPA-WRITER-POP-SUM": 9.949117036467694e-05
+        }
+      }
+    }
+  ],
+  "analyzed": [
+    {
+      "case": "decode_1k",
+      "seq_len": 1024,
+      "batch": 2,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "total_worker_cores": 32,
+      "kernel_us": 74.9,
+      "kernel_ms": 0.0749,
+      "ncrisc_us": 30.1,
+      "brisc_us": 62.9,
+      "trisc0_us": 73.9,
+      "trisc1_us": 74.6,
+      "trisc2_us": 74.1,
+      "compute_us": 74.6,
+      "wait_front_us": 0,
+      "reserve_back_us": 0,
+      "ncrisc_share_pct": 40.3,
+      "brisc_share_pct": 83.9,
+      "compute_share_pct": 99.7,
+      "reader_ptable_us": 0.4,
+      "reader_reserve_us": 0.1,
+      "reader_issue_us": 9.8,
+      "reader_wait_us": 1.6,
+      "reader_push_us": 0.2,
+      "k_reserve_us": 0.0,
+      "k_issue_us": 7.2,
+      "k_wait_us": 1.5,
+      "k_push_us": 0.1,
+      "v_reserve_us": 0.1,
+      "v_issue_us": 2.6,
+      "v_wait_us": 0.1,
+      "v_push_us": 0.1,
+      "writer_cbwait_us": 23.8,
+      "writer_issue_us": 0.8,
+      "writer_barrier_us": 0.7,
+      "writer_pop_us": 0.1,
+      "fpu_active_us": 0,
+      "pm_fpu_util_pct": null,
+      "pm_dram_bw_util_pct": null,
+      "pm_noc_util_pct": null,
+      "pm_mcast_noc_util_pct": null,
+      "pm_ideal_us": 0,
+      "pm_compute_us": 0,
+      "pm_bw_us": 0,
+      "total_dram_read_MB": 17.83,
+      "ideal_dram_read_MB": 4.46,
+      "dram_waste_pct": 75.0,
+      "dram_floor_ideal_ms": 0.0223,
+      "kernel_vs_ideal_gap": 3.4,
+      "total_flops_G": 0.143,
+      "achieved_tflops": 1.9038,
+      "peak_util_pct": 2.57,
+      "eff_k_bw_gbs": 39.13,
+      "eff_k_bw_vs_peak_pct": 19.6,
+      "k_stall_us": 0.0,
+      "v_stall_us": 0.1,
+      "k_issue_us_for_table": 7.2,
+      "v_issue_us_for_table": 2.6
+    },
+    {
+      "case": "decode_4k",
+      "seq_len": 4096,
+      "batch": 2,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "total_worker_cores": 32,
+      "kernel_us": 172.8,
+      "kernel_ms": 0.1728,
+      "ncrisc_us": 108.9,
+      "brisc_us": 160.7,
+      "trisc0_us": 171.8,
+      "trisc1_us": 172.5,
+      "trisc2_us": 172.0,
+      "compute_us": 172.5,
+      "wait_front_us": 0,
+      "reserve_back_us": 0,
+      "ncrisc_share_pct": 63.0,
+      "brisc_share_pct": 93.0,
+      "compute_share_pct": 99.8,
+      "reader_ptable_us": 0.4,
+      "reader_reserve_us": 17.6,
+      "reader_issue_us": 39.3,
+      "reader_wait_us": 6.3,
+      "reader_push_us": 0.8,
+      "k_reserve_us": 17.2,
+      "k_issue_us": 28.9,
+      "k_wait_us": 6.0,
+      "k_push_us": 0.4,
+      "v_reserve_us": 0.4,
+      "v_issue_us": 10.4,
+      "v_wait_us": 0.3,
+      "v_push_us": 0.4,
+      "writer_cbwait_us": 72.8,
+      "writer_issue_us": 0.8,
+      "writer_barrier_us": 0.7,
+      "writer_pop_us": 0.1,
+      "fpu_active_us": 0,
+      "pm_fpu_util_pct": null,
+      "pm_dram_bw_util_pct": null,
+      "pm_noc_util_pct": null,
+      "pm_mcast_noc_util_pct": null,
+      "pm_ideal_us": 0,
+      "pm_compute_us": 0,
+      "pm_bw_us": 0,
+      "total_dram_read_MB": 71.3,
+      "ideal_dram_read_MB": 17.83,
+      "dram_waste_pct": 75.0,
+      "dram_floor_ideal_ms": 0.0891,
+      "kernel_vs_ideal_gap": 1.9,
+      "total_flops_G": 0.57,
+      "achieved_tflops": 3.3009,
+      "peak_util_pct": 4.46,
+      "eff_k_bw_gbs": 43.32,
+      "eff_k_bw_vs_peak_pct": 21.7,
+      "k_stall_us": 17.2,
+      "v_stall_us": 0.4,
+      "k_issue_us_for_table": 28.9,
+      "v_issue_us_for_table": 10.4
+    },
+    {
+      "case": "decode_8k",
+      "seq_len": 8192,
+      "batch": 2,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "total_worker_cores": 32,
+      "kernel_us": 304.3,
+      "kernel_ms": 0.3043,
+      "ncrisc_us": 240.4,
+      "brisc_us": 292.3,
+      "trisc0_us": 303.3,
+      "trisc1_us": 304.1,
+      "trisc2_us": 303.5,
+      "compute_us": 304.1,
+      "wait_front_us": 0,
+      "reserve_back_us": 0,
+      "ncrisc_share_pct": 79.0,
+      "brisc_share_pct": 96.0,
+      "compute_share_pct": 99.9,
+      "reader_ptable_us": 0.5,
+      "reader_reserve_us": 66.4,
+      "reader_issue_us": 78.7,
+      "reader_wait_us": 12.8,
+      "reader_push_us": 1.5,
+      "k_reserve_us": 65.7,
+      "k_issue_us": 57.8,
+      "k_wait_us": 12.0,
+      "k_push_us": 0.7,
+      "v_reserve_us": 0.7,
+      "v_issue_us": 20.9,
+      "v_wait_us": 0.7,
+      "v_push_us": 0.8,
+      "writer_cbwait_us": 138.5,
+      "writer_issue_us": 0.8,
+      "writer_barrier_us": 0.7,
+      "writer_pop_us": 0.1,
+      "fpu_active_us": 0,
+      "pm_fpu_util_pct": null,
+      "pm_dram_bw_util_pct": null,
+      "pm_noc_util_pct": null,
+      "pm_mcast_noc_util_pct": null,
+      "pm_ideal_us": 0,
+      "pm_compute_us": 0,
+      "pm_bw_us": 0,
+      "total_dram_read_MB": 142.61,
+      "ideal_dram_read_MB": 35.65,
+      "dram_waste_pct": 75.0,
+      "dram_floor_ideal_ms": 0.1783,
+      "kernel_vs_ideal_gap": 1.7,
+      "total_flops_G": 1.141,
+      "achieved_tflops": 3.7489,
+      "peak_util_pct": 5.07,
+      "eff_k_bw_gbs": 39.25,
+      "eff_k_bw_vs_peak_pct": 19.6,
+      "k_stall_us": 65.7,
+      "v_stall_us": 0.7,
+      "k_issue_us_for_table": 57.8,
+      "v_issue_us_for_table": 20.9
+    },
+    {
+      "case": "decode_16k",
+      "seq_len": 16384,
+      "batch": 1,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "total_worker_cores": 16,
+      "kernel_us": 561.5,
+      "kernel_ms": 0.5615,
+      "ncrisc_us": 499.2,
+      "brisc_us": 549.5,
+      "trisc0_us": 560.5,
+      "trisc1_us": 561.3,
+      "trisc2_us": 560.7,
+      "compute_us": 561.3,
+      "wait_front_us": 0,
+      "reserve_back_us": 0,
+      "ncrisc_share_pct": 88.9,
+      "brisc_share_pct": 97.9,
+      "compute_share_pct": 100.0,
+      "reader_ptable_us": 0.5,
+      "reader_reserve_us": 177.0,
+      "reader_issue_us": 157.5,
+      "reader_wait_us": 13.0,
+      "reader_push_us": 3.1,
+      "k_reserve_us": 171.2,
+      "k_issue_us": 115.5,
+      "k_wait_us": 11.9,
+      "k_push_us": 1.4,
+      "v_reserve_us": 5.9,
+      "v_issue_us": 42.0,
+      "v_wait_us": 1.1,
+      "v_push_us": 1.7,
+      "writer_cbwait_us": 267.8,
+      "writer_issue_us": 0.6,
+      "writer_barrier_us": 0.5,
+      "writer_pop_us": 0.1,
+      "fpu_active_us": 0,
+      "pm_fpu_util_pct": null,
+      "pm_dram_bw_util_pct": null,
+      "pm_noc_util_pct": null,
+      "pm_mcast_noc_util_pct": null,
+      "pm_ideal_us": 0,
+      "pm_compute_us": 0,
+      "pm_bw_us": 0,
+      "total_dram_read_MB": 142.61,
+      "ideal_dram_read_MB": 35.65,
+      "dram_waste_pct": 75.0,
+      "dram_floor_ideal_ms": 0.1783,
+      "kernel_vs_ideal_gap": 3.2,
+      "total_flops_G": 1.141,
+      "achieved_tflops": 2.0316,
+      "peak_util_pct": 2.75,
+      "eff_k_bw_gbs": 18.91,
+      "eff_k_bw_vs_peak_pct": 9.5,
+      "k_stall_us": 171.2,
+      "v_stall_us": 5.9,
+      "k_issue_us_for_table": 115.5,
+      "v_issue_us_for_table": 42.0
+    },
+    {
+      "case": "decode_32k",
+      "seq_len": 32768,
+      "batch": 1,
+      "n_head_batches": 4,
+      "n_seq_cores": 4,
+      "total_worker_cores": 16,
+      "kernel_us": 1085.4,
+      "kernel_ms": 1.0854,
+      "ncrisc_us": 1024.4,
+      "brisc_us": 1073.3,
+      "trisc0_us": 1084.3,
+      "trisc1_us": 1085.1,
+      "trisc2_us": 1084.5,
+      "compute_us": 1085.1,
+      "wait_front_us": 0,
+      "reserve_back_us": 0,
+      "ncrisc_share_pct": 94.4,
+      "brisc_share_pct": 98.9,
+      "compute_share_pct": 100.0,
+      "reader_ptable_us": 0.5,
+      "reader_reserve_us": 386.1,
+      "reader_issue_us": 315.1,
+      "reader_wait_us": 26.1,
+      "reader_push_us": 6.2,
+      "k_reserve_us": 373.7,
+      "k_issue_us": 231.0,
+      "k_wait_us": 24.0,
+      "k_push_us": 2.9,
+      "v_reserve_us": 12.3,
+      "v_issue_us": 84.1,
+      "v_wait_us": 2.1,
+      "v_push_us": 3.3,
+      "writer_cbwait_us": 529.6,
+      "writer_issue_us": 0.6,
+      "writer_barrier_us": 0.5,
+      "writer_pop_us": 0.1,
+      "fpu_active_us": 0,
+      "pm_fpu_util_pct": null,
+      "pm_dram_bw_util_pct": null,
+      "pm_noc_util_pct": null,
+      "pm_mcast_noc_util_pct": null,
+      "pm_ideal_us": 0,
+      "pm_compute_us": 0,
+      "pm_bw_us": 0,
+      "total_dram_read_MB": 285.21,
+      "ideal_dram_read_MB": 71.3,
+      "dram_waste_pct": 75.0,
+      "dram_floor_ideal_ms": 0.3565,
+      "kernel_vs_ideal_gap": 3.0,
+      "total_flops_G": 2.282,
+      "achieved_tflops": 2.1023,
+      "peak_util_pct": 2.84,
+      "eff_k_bw_gbs": 18.42,
+      "eff_k_bw_vs_peak_pct": 9.2,
+      "k_stall_us": 373.7,
+      "v_stall_us": 12.3,
+      "k_issue_us_for_table": 231.0,
+      "v_issue_us_for_table": 84.1
+    }
+  ]
+}

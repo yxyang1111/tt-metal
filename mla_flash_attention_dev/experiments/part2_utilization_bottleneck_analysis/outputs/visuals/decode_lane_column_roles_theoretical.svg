@@ -1,0 +1,232 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1180" viewBox="0 0 1600 1180">
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#88c0ff"/>
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" rx="20" fill="#111722"/>
+  <text x="250.00" y="38.00" text-anchor="start" dominant-baseline="middle" font-size="24" font-weight="700" fill="#f5f7fb">理想化 Decode 稳态流水（最小空泡 / 最小同步）</text>
+  <text x="250.00" y="60.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="400" fill="#9fb0c3">Q preparation once; read K_(t+1) || multicast K_t || compute K_t; tail reduction kept compact.</text>
+  <text x="250.00" y="82.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="400" fill="#9fb0c3">`Q source / Column sender / Lane root` are logical roles; they may share physical cores with ordinary workers.</text>
+  <text x="250.00" y="100.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="700" fill="#f5f7fb">Legend</text>
+  <rect x="308.00" y="100.00" width="14.00" height="14.00" rx="4" fill="#2ec4b6" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="328.00" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">Q local / pull</text>
+  <rect x="430.40" y="100.00" width="14.00" height="14.00" rx="4" fill="#1982c4" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="450.40" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">K read</text>
+  <rect x="508.00" y="100.00" width="14.00" height="14.00" rx="4" fill="#ffca3a" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="528.00" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">K wait</text>
+  <rect x="585.60" y="100.00" width="14.00" height="14.00" rx="4" fill="#ff595e" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="605.60" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">reserve / backpressure</text>
+  <rect x="752.80" y="100.00" width="14.00" height="14.00" rx="4" fill="#3d5a80" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="772.80" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">multicast</text>
+  <rect x="847.20" y="100.00" width="14.00" height="14.00" rx="4" fill="#9b5de5" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="867.20" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">tree / sender wait</text>
+  <rect x="992.00" y="100.00" width="14.00" height="14.00" rx="4" fill="#00bbf9" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="1012.00" y="110.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">output write / gather</text>
+  <text x="250.00" y="132.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">TRISC cycle</text>
+  <rect x="320.00" y="124.00" width="30.00" height="14.00" rx="4" fill="#1b998b" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <rect x="350.00" y="124.00" width="24.00" height="14.00" rx="4" fill="#ff9f1c" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <rect x="374.00" y="124.00" width="28.00" height="14.00" rx="4" fill="#5c7cfa" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="412.00" y="132.00" text-anchor="start" dominant-baseline="middle" font-size="10" font-weight="400" fill="#9fb0c3">QK^T / softmax / P@V</text>
+  <rect x="250.00" y="150.00" width="157.20" height="30.00" rx="10" fill="#182131" stroke="#223046" stroke-width="1" opacity="0.950"/>
+  <text x="328.60" y="165.00" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#f5f7fb">Q Preparation</text>
+  <line x1="250.00" y1="180.00" x2="250.00" y2="1082.00" stroke="#223046" stroke-width="1"/>
+  <rect x="407.20" y="150.00" width="812.20" height="30.00" rx="10" fill="#131c28" stroke="#223046" stroke-width="1" opacity="0.950"/>
+  <text x="813.30" y="165.00" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#f5f7fb">K-Chunk Steady-State Loop</text>
+  <line x1="407.20" y1="180.00" x2="407.20" y2="1082.00" stroke="#223046" stroke-width="1"/>
+  <rect x="1219.40" y="150.00" width="340.60" height="30.00" rx="10" fill="#182131" stroke="#223046" stroke-width="1" opacity="0.950"/>
+  <text x="1389.70" y="165.00" text-anchor="middle" dominant-baseline="middle" font-size="11" font-weight="700" fill="#f5f7fb">Tree Reduction + Final Output</text>
+  <line x1="1219.40" y1="180.00" x2="1219.40" y2="1082.00" stroke="#223046" stroke-width="1"/>
+  <line x1="1560.00" y1="180.00" x2="1560.00" y2="1082.00" stroke="#223046" stroke-width="1"/>
+  <rect x="250.00" y="198.00" width="1310.00" height="122.00" rx="14" fill="#0f141d" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="26.00" y="259.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#f5f7fb">Q source（兼 worker）</text>
+  <text x="240.00" y="224.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">NCRISC</text>
+  <rect x="281.44" y="212.00" width="102.18" height="24.00" rx="6" fill="#2ec4b6" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="332.53" y="224.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">Q local / ready</text>
+  <rect x="1219.40" y="212.00" width="340.60" height="24.00" rx="6" fill="#2a3340" stroke="#1c2433" stroke-width="1" opacity="0.240"/>
+  <rect x="520.91" y="212.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="537.15" y="206.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="634.62" y="212.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="650.86" y="206.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="813.30" y="212.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="829.54" y="206.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <text x="240.00" y="254.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">TRISC</text>
+  <rect x="553.40" y="242.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="584.10" y="236.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K0</text>
+  <text x="584.10" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="614.80" y="242.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="633.80" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="652.81" y="242.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="676.20" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="699.59" y="242.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="730.29" y="236.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K1</text>
+  <text x="730.29" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="760.99" y="242.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="780.00" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="799.01" y="242.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="822.40" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="845.79" y="242.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="876.49" y="236.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K2</text>
+  <text x="876.49" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="907.19" y="242.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="926.20" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="945.20" y="242.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="968.59" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <line x1="504.66" y1="242.00" x2="504.66" y2="266.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="732.08" y1="242.00" x2="732.08" y2="266.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="959.50" y1="242.00" x2="959.50" y2="266.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="1105.69" y1="242.00" x2="1105.69" y2="266.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <text x="1199.75" y="254.00" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#9fb0c3">...</text>
+  <text x="240.00" y="284.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">BRISC</text>
+  <rect x="289.30" y="272.00" width="110.04" height="24.00" rx="6" fill="#2ec4b6" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="344.32" y="284.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">serve Q pulls</text>
+  <rect x="1246.65" y="272.00" width="68.12" height="24.00" rx="6" fill="#00bbf9" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1280.71" y="266.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">send local (m,l,O)</text>
+  <rect x="250.00" y="338.00" width="1310.00" height="122.00" rx="14" fill="#0f141d" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="26.00" y="399.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#f5f7fb">Column sender（兼 worker）</text>
+  <text x="240.00" y="364.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">NCRISC</text>
+  <rect x="407.20" y="352.00" width="113.71" height="24.00" rx="6" fill="#1982c4" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="464.05" y="364.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">read K0</text>
+  <rect x="520.91" y="352.00" width="113.71" height="24.00" rx="6" fill="#1982c4" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="577.76" y="364.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">read K1</text>
+  <rect x="699.59" y="352.00" width="113.71" height="24.00" rx="6" fill="#1982c4" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="756.45" y="364.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">read K2</text>
+  <text x="240.00" y="394.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">TRISC</text>
+  <rect x="520.91" y="382.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="551.61" y="376.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K0</text>
+  <text x="551.61" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="582.31" y="382.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="601.32" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="620.32" y="382.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="643.71" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="667.10" y="382.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="697.81" y="376.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K1</text>
+  <text x="697.81" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="728.51" y="382.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="747.51" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="766.52" y="382.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="789.91" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="813.30" y="382.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="844.00" y="376.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K2</text>
+  <text x="844.00" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="874.70" y="382.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="893.71" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="912.71" y="382.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="936.10" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <line x1="504.66" y1="382.00" x2="504.66" y2="406.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="732.08" y1="382.00" x2="732.08" y2="406.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="959.50" y1="382.00" x2="959.50" y2="406.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="1105.69" y1="382.00" x2="1105.69" y2="406.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <text x="1199.75" y="394.00" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#9fb0c3">...</text>
+  <text x="240.00" y="424.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">BRISC</text>
+  <rect x="297.16" y="412.00" width="78.60" height="24.00" rx="6" fill="#2ec4b6" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="336.46" y="424.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">pull Q once</text>
+  <rect x="520.91" y="412.00" width="32.49" height="24.00" rx="6" fill="#3d5a80" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="537.15" y="406.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast K0</text>
+  <rect x="634.62" y="412.00" width="32.49" height="24.00" rx="6" fill="#3d5a80" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="650.86" y="406.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast K1</text>
+  <rect x="813.30" y="412.00" width="32.49" height="24.00" rx="6" fill="#3d5a80" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="829.54" y="406.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast K2</text>
+  <rect x="1246.65" y="412.00" width="68.12" height="24.00" rx="6" fill="#00bbf9" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1280.71" y="406.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">send local (m,l,O)</text>
+  <rect x="250.00" y="478.00" width="1310.00" height="122.00" rx="14" fill="#0f141d" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="26.00" y="539.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#f5f7fb">Ordinary worker</text>
+  <text x="240.00" y="504.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">NCRISC</text>
+  <rect x="520.91" y="492.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="537.15" y="486.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="634.62" y="492.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="650.86" y="486.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="813.30" y="492.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="829.54" y="486.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <text x="240.00" y="534.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">TRISC</text>
+  <rect x="553.40" y="522.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="584.10" y="516.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K0</text>
+  <text x="584.10" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="614.80" y="522.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="633.80" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="652.81" y="522.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="676.20" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="699.59" y="522.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="730.29" y="516.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K1</text>
+  <text x="730.29" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="760.99" y="522.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="780.00" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="799.01" y="522.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="822.40" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="845.79" y="522.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="876.49" y="516.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K2</text>
+  <text x="876.49" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="907.19" y="522.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="926.20" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="945.20" y="522.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="968.59" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <line x1="504.66" y1="522.00" x2="504.66" y2="546.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="732.08" y1="522.00" x2="732.08" y2="546.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="959.50" y1="522.00" x2="959.50" y2="546.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="1105.69" y1="522.00" x2="1105.69" y2="546.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <text x="1199.75" y="534.00" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#9fb0c3">...</text>
+  <text x="240.00" y="564.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">BRISC</text>
+  <rect x="289.30" y="552.00" width="86.46" height="24.00" rx="6" fill="#2ec4b6" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="332.53" y="564.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">pull Q once</text>
+  <rect x="1253.46" y="552.00" width="88.56" height="24.00" rx="6" fill="#00bbf9" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1297.74" y="546.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">send local (m,l,O)</text>
+  <rect x="250.00" y="618.00" width="1310.00" height="122.00" rx="14" fill="#0f141d" stroke="#223046" stroke-width="1" opacity="1.000"/>
+  <text x="26.00" y="679.00" text-anchor="start" dominant-baseline="middle" font-size="12" font-weight="700" fill="#f5f7fb">Lane root（兼 worker）</text>
+  <text x="240.00" y="644.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">NCRISC</text>
+  <rect x="520.91" y="632.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="537.15" y="626.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="634.62" y="632.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="650.86" y="626.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="813.30" y="632.00" width="32.49" height="24.00" rx="6" fill="#ffca3a" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="829.54" y="626.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">mcast-ready</text>
+  <rect x="1219.40" y="632.00" width="340.60" height="24.00" rx="6" fill="#2a3340" stroke="#1c2433" stroke-width="1" opacity="0.240"/>
+  <text x="240.00" y="674.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">TRISC</text>
+  <rect x="553.40" y="662.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="584.10" y="656.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K0</text>
+  <text x="584.10" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="614.80" y="662.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="633.80" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="652.81" y="662.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="676.20" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="699.59" y="662.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="730.29" y="656.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K1</text>
+  <text x="730.29" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="760.99" y="662.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="780.00" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="799.01" y="662.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="822.40" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="845.79" y="662.00" width="61.40" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="876.49" y="656.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">K2</text>
+  <text x="876.49" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">QK^T</text>
+  <rect x="907.19" y="662.00" width="38.01" height="24.00" rx="6" fill="#ff9f1c" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="926.20" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">softmax</text>
+  <rect x="945.20" y="662.00" width="46.78" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="968.59" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="7" font-weight="600" fill="#f5f7fb">P@V</text>
+  <rect x="1321.58" y="662.00" width="54.50" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1348.83" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="600" fill="#f5f7fb">merge r0</text>
+  <rect x="1396.51" y="662.00" width="54.50" height="24.00" rx="6" fill="#1b998b" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1423.76" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="600" fill="#f5f7fb">merge r1</text>
+  <rect x="1457.82" y="662.00" width="40.87" height="24.00" rx="6" fill="#5c7cfa" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1478.26" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="600" fill="#f5f7fb">tail merge</text>
+  <line x1="504.66" y1="662.00" x2="504.66" y2="686.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="732.08" y1="662.00" x2="732.08" y2="686.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="959.50" y1="662.00" x2="959.50" y2="686.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <line x1="1105.69" y1="662.00" x2="1105.69" y2="686.00" stroke="#f5f7fb18" stroke-width="1"/>
+  <text x="1199.75" y="674.00" text-anchor="middle" dominant-baseline="middle" font-size="14" font-weight="700" fill="#9fb0c3">...</text>
+  <text x="240.00" y="704.00" text-anchor="end" dominant-baseline="middle" font-size="10" font-weight="400" fill="#8fa3b8">BRISC</text>
+  <rect x="289.30" y="692.00" width="78.60" height="24.00" rx="6" fill="#2ec4b6" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="328.60" y="704.00" text-anchor="middle" dominant-baseline="middle" font-size="9" font-weight="600" fill="#f5f7fb">pull Q once</text>
+  <rect x="1253.46" y="692.00" width="61.31" height="24.00" rx="6" fill="#9b5de5" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1284.11" y="686.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">wait child-ready r0</text>
+  <rect x="1335.20" y="692.00" width="61.31" height="24.00" rx="6" fill="#9b5de5" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1365.86" y="686.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="700" fill="#9fb0c3">wait child-ready r1</text>
+  <rect x="1498.69" y="692.00" width="44.28" height="24.00" rx="6" fill="#00bbf9" stroke="#1c2433" stroke-width="1" opacity="1.000"/>
+  <text x="1520.83" y="704.00" text-anchor="middle" dominant-baseline="middle" font-size="8" font-weight="600" fill="#f5f7fb">final output</text>
+  <text x="957.40" y="338.00" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#9fb0c3">ping-pong CB_K: compute K0 overlaps read K1; read K2 waits until K0 slot is freed</text>
+  <text x="931.20" y="478.00" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#9fb0c3">after Q distribution, Q source / workers / lane root all wait the same mcast-ready semaphore</text>
+  <text x="1402.80" y="678.00" text-anchor="middle" dominant-baseline="middle" font-size="10" font-weight="600" fill="#9fb0c3">wait child-ready = wait reducer semaphore that child local (m,l,O) has arrived</text>
+  <text x="250.00" y="1100.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="400" fill="#9fb0c3">Case=decode_32k; seq_len=32768; visible chunks = K0/K1/K2 + ellipsis; total logical K chunks C=256.</text>
+  <text x="250.00" y="1116.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="400" fill="#9fb0c3">Receiver-side payload is directly written by sender BRISC multicast; the reserve/push bookkeeping for CB_K is omitted from the theoretical lanes for readability, and the drawn mcast-ready marker is aligned with mcast as one logical handoff window in the abstract timeline.</text>
+  <text x="250.00" y="1132.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="400" fill="#9fb0c3">Because CB_K is double-buffered, the theoretical overlap is current-chunk compute + next-chunk read; the sender does not read K2 before the K0 slot is freed.</text>
+  <text x="250.00" y="1148.00" text-anchor="start" dominant-baseline="middle" font-size="11" font-weight="400" fill="#9fb0c3">Theoretical view keeps only the current dataflow and minimizes exposed bubbles; it is not a different algorithm.</text>
+</svg>

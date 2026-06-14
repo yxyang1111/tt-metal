@@ -31,11 +31,11 @@
 
 | 参数 | 值 | 来源 |
 |---|---|---|
-| 计算网格 | 8 × 7 = **56 核** (harvested) | 运行时检测 |
+| 计算网格 | 8 × 8 = **64 核** (harvested, 56 核可用于用户计算) | 运行时检测 |
 | 每核 FPU 吞吐 | 4096 FMA/cycle @ LoFi | `tech_reports/matrix_engine/` |
 | 时钟频率 | **1.0 GHz** | WH spec |
-| 每核 bf16 峰值 (HiFi4) | **1 TFLOPS** (4096/4=1024 FMA/cycle) | `GEMM_FLOPS.md` |
-| 全芯片 bf16 峰值 (HiFi4) | 56 × 1 = **56 TFLOPS** | 计算 |
+| 每核 bf16 峰值 (HiFi4) | **~1.024 TFLOPS** (4096/4=1024 FMA/cycle) | `GEMM_FLOPS.md` |
+| 全芯片 bf16 峰值 (HiFi4) | 64 × 1.024 = **65.5 TFLOPS** | 计算 |
 | DRAM 总带宽 | **258 GB/s** (6×2×21.5) | `ttnn/core/operation.cpp` |
 | DRAM 容量 | 6 × 2GB = **12 GB** | SoC descriptor |
 | 每核 L1 SRAM | **1.43 MiB** (1,499,136 B) | SoC descriptor |
@@ -44,10 +44,10 @@
 **Roofline 拐点 (Ridge Point)**：
 
 $$
-\text{Ridge Point} = \frac{\text{Peak FLOPS}}{\text{DRAM BW}} = \frac{56 \times 10^{12}}{258 \times 10^9} \approx 217 \text{ FLOP/Byte}
+\text{Ridge Point} = \frac{\text{Peak FLOPS}}{\text{DRAM BW}} = \frac{65.5 \times 10^{12}}{258 \times 10^9} \approx 254 \text{ FLOP/Byte}
 $$
 
-当算术强度 (AI) > 217 时为计算瓶颈，AI < 217 时为带宽瓶颈。
+当算术强度 (AI) > 254 时为计算瓶颈，AI < 254 时为带宽瓶颈。
 
 ---
 

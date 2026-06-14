@@ -1,0 +1,77 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3080 Ti",
+    "capability": [
+      8,
+      6
+    ],
+    "torch": "2.7.0+cu128",
+    "cuda": "12.8"
+  },
+  "config": {
+    "seq_len": 32768,
+    "chunk_size": 4096,
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "backend": "auto",
+    "workspace_mb": 256,
+    "warmup": 0,
+    "iters": 1,
+    "output": "outputs/rtx3080ti_b6_flashinfer_mla_chunked_prefill_32k.json",
+    "dtype": "bf16"
+  },
+  "chunks": [
+    {
+      "chunk_start": 0,
+      "q_len": 4096,
+      "kv_len": 4096,
+      "latency_ms": 98.5976
+    },
+    {
+      "chunk_start": 4096,
+      "q_len": 4096,
+      "kv_len": 8192,
+      "latency_ms": 275.9512
+    },
+    {
+      "chunk_start": 8192,
+      "q_len": 4096,
+      "kv_len": 12288,
+      "latency_ms": 439.0795
+    },
+    {
+      "chunk_start": 12288,
+      "q_len": 4096,
+      "kv_len": 16384,
+      "latency_ms": 619.0161
+    },
+    {
+      "chunk_start": 16384,
+      "q_len": 4096,
+      "kv_len": 20480,
+      "latency_ms": 793.1186
+    },
+    {
+      "chunk_start": 20480,
+      "q_len": 4096,
+      "kv_len": 24576,
+      "latency_ms": 971.4784
+    },
+    {
+      "chunk_start": 24576,
+      "q_len": 4096,
+      "kv_len": 28672,
+      "latency_ms": 1152.5986
+    },
+    {
+      "chunk_start": 28672,
+      "q_len": 4096,
+      "kv_len": 32768,
+      "latency_ms": 1337.392
+    }
+  ],
+  "total_latency_ms": 5687.232
+}

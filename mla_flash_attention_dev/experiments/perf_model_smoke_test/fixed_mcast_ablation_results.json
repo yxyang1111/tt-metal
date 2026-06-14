@@ -1,0 +1,1005 @@
+{
+  "metadata": {
+    "title": "Same-parameter multicast ablation",
+    "hardware": "wormhole_b0",
+    "model": "BasicMLAAutotuner analytical cost model",
+    "note": "This is a what-if model estimate, not an on-device kernel measurement.  Parallelism and compile-time knobs are fixed to the selected baseline candidate; only topology-dependent K reuse is toggled."
+  },
+  "results": [
+    {
+      "mode": "decode",
+      "seq_len": 1024,
+      "seq_label": "1K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.0,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 8,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 64,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 8,
+        "pipeline_depth": 3,
+        "trid_window": 8,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 6144,
+        "k_num_pages": 6,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 0.044962,
+        "dram_ms": 0.022094,
+        "noc_ms": 0.004885,
+        "reader_ms": 0.023814,
+        "compute_ms": 0.000358,
+        "reduction_ms": 0.004787,
+        "reader_backpressure_ms": 0.005834,
+        "writer_backpressure_ms": 0.002926,
+        "sender_hotspot_ms": 0.000855,
+        "overlap_residual_ms": 9.3e-05,
+        "dram_bytes": 4788224,
+        "noc_bytes": 103219,
+        "dram_mb": 4.788,
+        "noc_mb": 0.103,
+        "active_cores": 64,
+        "k_reuse_groups": 8,
+        "l1_usage_ratio": 0.2258,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 16
+      },
+      "no_mcast": {
+        "latency_ms": 0.044962,
+        "dram_ms": 0.022094,
+        "noc_ms": 0.004885,
+        "reader_ms": 0.023814,
+        "compute_ms": 0.000358,
+        "reduction_ms": 0.004787,
+        "reader_backpressure_ms": 0.005834,
+        "writer_backpressure_ms": 0.002926,
+        "sender_hotspot_ms": 0.000855,
+        "overlap_residual_ms": 9.3e-05,
+        "dram_bytes": 4788224,
+        "noc_bytes": 103219,
+        "dram_mb": 4.788,
+        "noc_mb": 0.103,
+        "active_cores": 64,
+        "k_reuse_groups": 8,
+        "l1_usage_ratio": 0.2258,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 16
+      }
+    },
+    {
+      "mode": "decode",
+      "seq_len": 2048,
+      "seq_label": "2K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.2072,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 6,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "tree",
+        "sblock_topology_name": "wh_sblock_6x4",
+        "lane_group_capacity": 4,
+        "pipeline_depth": 3,
+        "trid_window": 8,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": true,
+        "math_fidelity": "LoFi",
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ]
+      },
+      "mcast": {
+        "latency_ms": 0.039582,
+        "dram_ms": 0.005482,
+        "noc_ms": 0.016363,
+        "reader_ms": 0.017625,
+        "compute_ms": 0.002001,
+        "reduction_ms": 0.003571,
+        "reader_backpressure_ms": 0.005364,
+        "writer_backpressure_ms": 0.001564,
+        "sender_hotspot_ms": 0.003528,
+        "overlap_residual_ms": 0.000487,
+        "dram_bytes": 1249280,
+        "noc_bytes": 661893,
+        "dram_mb": 1.249,
+        "noc_mb": 0.662,
+        "active_cores": 24,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 16
+      },
+      "no_mcast": {
+        "latency_ms": 0.047782,
+        "dram_ms": 0.022271,
+        "noc_ms": 0.004528,
+        "reader_ms": 0.02594,
+        "compute_ms": 0.002001,
+        "reduction_ms": 0.004438,
+        "reader_backpressure_ms": 0.006857,
+        "writer_backpressure_ms": 0.001906,
+        "sender_hotspot_ms": 0.000792,
+        "overlap_residual_ms": 0.000521,
+        "dram_bytes": 4788224,
+        "noc_bytes": 103219,
+        "dram_mb": 4.788,
+        "noc_mb": 0.103,
+        "active_cores": 24,
+        "k_reuse_groups": 4,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 16
+      }
+    },
+    {
+      "mode": "decode",
+      "seq_len": 4096,
+      "seq_label": "4K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.208,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 6,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 64,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "tree",
+        "sblock_topology_name": "wh_sblock_6x4",
+        "lane_group_capacity": 4,
+        "pipeline_depth": 3,
+        "trid_window": 8,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 6144,
+        "k_num_pages": 6,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": true,
+        "math_fidelity": "LoFi",
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ]
+      },
+      "mcast": {
+        "latency_ms": 0.07057,
+        "dram_ms": 0.010578,
+        "noc_ms": 0.029441,
+        "reader_ms": 0.03702,
+        "compute_ms": 0.003986,
+        "reduction_ms": 0.003888,
+        "reader_backpressure_ms": 0.013327,
+        "writer_backpressure_ms": 0.002353,
+        "sender_hotspot_ms": 0.005879,
+        "overlap_residual_ms": 0.000954,
+        "dram_bytes": 2428928,
+        "noc_bytes": 1188311,
+        "dram_mb": 2.429,
+        "noc_mb": 1.188,
+        "active_cores": 24,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.2343,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 64
+      },
+      "no_mcast": {
+        "latency_ms": 0.085247,
+        "dram_ms": 0.043867,
+        "noc_ms": 0.004489,
+        "reader_ms": 0.052533,
+        "compute_ms": 0.003986,
+        "reduction_ms": 0.0044,
+        "reader_backpressure_ms": 0.016811,
+        "writer_backpressure_ms": 0.002772,
+        "sender_hotspot_ms": 0.000704,
+        "overlap_residual_ms": 0.00102,
+        "dram_bytes": 9506816,
+        "noc_bytes": 103219,
+        "dram_mb": 9.507,
+        "noc_mb": 0.103,
+        "active_cores": 24,
+        "k_reuse_groups": 4,
+        "l1_usage_ratio": 0.2343,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 64
+      }
+    },
+    {
+      "mode": "decode",
+      "seq_len": 8192,
+      "seq_label": "8K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.2126,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 6,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "tree",
+        "sblock_topology_name": "wh_sblock_6x4",
+        "lane_group_capacity": 4,
+        "pipeline_depth": 3,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": true,
+        "math_fidelity": "LoFi",
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ]
+      },
+      "mcast": {
+        "latency_ms": 0.130543,
+        "dram_ms": 0.020853,
+        "noc_ms": 0.055959,
+        "reader_ms": 0.06903,
+        "compute_ms": 0.007973,
+        "reduction_ms": 0.004538,
+        "reader_backpressure_ms": 0.029291,
+        "writer_backpressure_ms": 0.00376,
+        "sender_hotspot_ms": 0.014099,
+        "overlap_residual_ms": 0.001911,
+        "dram_bytes": 4788224,
+        "noc_bytes": 2241147,
+        "dram_mb": 4.788,
+        "noc_mb": 2.241,
+        "active_cores": 24,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 64
+      },
+      "no_mcast": {
+        "latency_ms": 0.158292,
+        "dram_ms": 0.087412,
+        "noc_ms": 0.004499,
+        "reader_ms": 0.100303,
+        "compute_ms": 0.007973,
+        "reduction_ms": 0.00441,
+        "reader_backpressure_ms": 0.038549,
+        "writer_backpressure_ms": 0.004449,
+        "sender_hotspot_ms": 0.000787,
+        "overlap_residual_ms": 0.00204,
+        "dram_bytes": 18944000,
+        "noc_bytes": 103219,
+        "dram_mb": 18.944,
+        "noc_mb": 0.103,
+        "active_cores": 24,
+        "k_reuse_groups": 4,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 64
+      }
+    },
+    {
+      "mode": "decode",
+      "seq_len": 16384,
+      "seq_label": "16K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.245,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 6,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "tree",
+        "sblock_topology_name": "wh_sblock_6x4",
+        "lane_group_capacity": 4,
+        "pipeline_depth": 3,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": true,
+        "math_fidelity": "LoFi",
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ]
+      },
+      "mcast": {
+        "latency_ms": 0.253025,
+        "dram_ms": 0.041402,
+        "noc_ms": 0.108979,
+        "reader_ms": 0.138264,
+        "compute_ms": 0.015945,
+        "reduction_ms": 0.00581,
+        "reader_backpressure_ms": 0.062219,
+        "writer_backpressure_ms": 0.00671,
+        "sender_hotspot_ms": 0.028269,
+        "overlap_residual_ms": 0.003826,
+        "dram_bytes": 9506816,
+        "noc_bytes": 4346819,
+        "dram_mb": 9.507,
+        "noc_mb": 4.347,
+        "active_cores": 24,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 128
+      },
+      "no_mcast": {
+        "latency_ms": 0.315024,
+        "dram_ms": 0.174503,
+        "noc_ms": 0.004504,
+        "reader_ms": 0.200076,
+        "compute_ms": 0.015945,
+        "reduction_ms": 0.004415,
+        "reader_backpressure_ms": 0.090034,
+        "writer_backpressure_ms": 0.007875,
+        "sender_hotspot_ms": 0.000788,
+        "overlap_residual_ms": 0.004081,
+        "dram_bytes": 37818368,
+        "noc_bytes": 103219,
+        "dram_mb": 37.818,
+        "noc_mb": 0.103,
+        "active_cores": 24,
+        "k_reuse_groups": 4,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 128
+      }
+    },
+    {
+      "mode": "decode",
+      "seq_len": 32768,
+      "seq_label": "32K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 1.246,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 4,
+        "q_parallel_factor": 1,
+        "kv_parallel_factor": 6,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "tree",
+        "sblock_topology_name": "wh_sblock_6x4",
+        "lane_group_capacity": 4,
+        "pipeline_depth": 3,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 3,
+        "dual_noc_policy": true,
+        "math_fidelity": "LoFi",
+        "bank_map": [
+          1,
+          2,
+          0,
+          4,
+          9,
+          8
+        ],
+        "tree_order": [
+          [
+            [
+              0,
+              1
+            ],
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              5
+            ]
+          ],
+          [
+            [
+              0,
+              2
+            ]
+          ],
+          [
+            [
+              0,
+              4
+            ]
+          ]
+        ]
+      },
+      "mcast": {
+        "latency_ms": 0.492444,
+        "dram_ms": 0.082502,
+        "noc_ms": 0.215011,
+        "reader_ms": 0.275418,
+        "compute_ms": 0.03186,
+        "reduction_ms": 0.00834,
+        "reader_backpressure_ms": 0.123938,
+        "writer_backpressure_ms": 0.012555,
+        "sender_hotspot_ms": 0.056613,
+        "overlap_residual_ms": 0.007648,
+        "dram_bytes": 18944000,
+        "noc_bytes": 8558162,
+        "dram_mb": 18.944,
+        "noc_mb": 8.558,
+        "active_cores": 24,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 256
+      },
+      "no_mcast": {
+        "latency_ms": 0.613582,
+        "dram_ms": 0.348685,
+        "noc_ms": 0.004507,
+        "reader_ms": 0.398469,
+        "compute_ms": 0.03186,
+        "reduction_ms": 0.004417,
+        "reader_backpressure_ms": 0.179311,
+        "writer_backpressure_ms": 0.014684,
+        "sender_hotspot_ms": 0.000789,
+        "overlap_residual_ms": 0.008155,
+        "dram_bytes": 75567104,
+        "noc_bytes": 103219,
+        "dram_mb": 75.567,
+        "noc_mb": 0.103,
+        "active_cores": 24,
+        "k_reuse_groups": 4,
+        "l1_usage_ratio": 0.4433,
+        "q_num_chunks": 1,
+        "kv_num_chunks": 256
+      }
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 1024,
+      "seq_label": "1K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 0.5584,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 4,
+        "kv_parallel_factor": 1,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 32,
+        "pipeline_depth": 3,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 2,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 1.082643,
+        "dram_ms": 0.313096,
+        "noc_ms": 0.769182,
+        "reader_ms": 0.800367,
+        "compute_ms": 0.364089,
+        "reduction_ms": 0.018314,
+        "reader_backpressure_ms": 0.160073,
+        "writer_backpressure_ms": 0.005919,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 0.094663,
+        "dram_bytes": 71892992,
+        "noc_bytes": 19198771,
+        "dram_mb": 71.893,
+        "noc_mb": 19.199,
+        "active_cores": 32,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4426,
+        "q_num_chunks": 32,
+        "kv_num_chunks": 8
+      },
+      "no_mcast": {
+        "latency_ms": 0.604561,
+        "dram_ms": 0.416102,
+        "noc_ms": 0.0,
+        "reader_ms": 0.422013,
+        "compute_ms": 0.364089,
+        "reduction_ms": 0.0,
+        "reader_backpressure_ms": 0.084403,
+        "writer_backpressure_ms": 0.000176,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 0.094663,
+        "dram_bytes": 90177536,
+        "noc_bytes": 0,
+        "dram_mb": 90.178,
+        "noc_mb": 0.0,
+        "active_cores": 32,
+        "k_reuse_groups": 32,
+        "l1_usage_ratio": 0.4426,
+        "q_num_chunks": 32,
+        "kv_num_chunks": 8
+      }
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 2048,
+      "seq_label": "2K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 0.7092,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 4,
+        "kv_parallel_factor": 1,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 64,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 32,
+        "pipeline_depth": 3,
+        "trid_window": 8,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 6144,
+        "k_num_pages": 6,
+        "k_cb_depth": 3,
+        "v_cb_depth": 2,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 2.368113,
+        "dram_ms": 0.626191,
+        "noc_ms": 1.538363,
+        "reader_ms": 1.615868,
+        "compute_ms": 1.456356,
+        "reduction_ms": 0.036628,
+        "reader_backpressure_ms": 0.323174,
+        "writer_backpressure_ms": 0.01116,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 0.378652,
+        "dram_bytes": 143785984,
+        "noc_bytes": 38397542,
+        "dram_mb": 143.786,
+        "noc_mb": 38.398,
+        "active_cores": 32,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.2773,
+        "q_num_chunks": 64,
+        "kv_num_chunks": 32
+      },
+      "no_mcast": {
+        "latency_ms": 1.679441,
+        "dram_ms": 0.832203,
+        "noc_ms": 0.0,
+        "reader_ms": 0.847903,
+        "compute_ms": 1.456356,
+        "reduction_ms": 0.0,
+        "reader_backpressure_ms": 0.169581,
+        "writer_backpressure_ms": 0.0,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 0.220455,
+        "dram_bytes": 180355072,
+        "noc_bytes": 0,
+        "dram_mb": 180.355,
+        "noc_mb": 0.0,
+        "active_cores": 32,
+        "k_reuse_groups": 32,
+        "l1_usage_ratio": 0.2773,
+        "q_num_chunks": 64,
+        "kv_num_chunks": 32
+      }
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 4096,
+      "seq_label": "4K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 0.9077,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 4,
+        "kv_parallel_factor": 1,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 32,
+        "pipeline_depth": 2,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 2,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 6.830346,
+        "dram_ms": 1.326929,
+        "noc_ms": 3.428352,
+        "reader_ms": 3.596134,
+        "compute_ms": 5.677004,
+        "reduction_ms": 0.081627,
+        "reader_backpressure_ms": 0.719227,
+        "writer_backpressure_ms": 0.026466,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 1.042879,
+        "dram_bytes": 287571968,
+        "noc_bytes": 76795085,
+        "dram_mb": 287.572,
+        "noc_mb": 76.795,
+        "active_cores": 32,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 128,
+        "kv_num_chunks": 32
+      },
+      "no_mcast": {
+        "latency_ms": 6.200204,
+        "dram_ms": 1.769749,
+        "noc_ms": 0.0,
+        "reader_ms": 1.793539,
+        "compute_ms": 5.677004,
+        "reduction_ms": 0.0,
+        "reader_backpressure_ms": 0.358708,
+        "writer_backpressure_ms": 0.000703,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 0.520126,
+        "dram_bytes": 360710144,
+        "noc_bytes": 0,
+        "dram_mb": 360.71,
+        "noc_mb": 0.0,
+        "active_cores": 32,
+        "k_reuse_groups": 32,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 128,
+        "kv_num_chunks": 32
+      }
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 8192,
+      "seq_label": "8K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 0.9496,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 4,
+        "kv_parallel_factor": 1,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 32,
+        "pipeline_depth": 2,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 2,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 25.01233,
+        "dram_ms": 2.653857,
+        "noc_ms": 6.856704,
+        "reader_ms": 7.192268,
+        "compute_ms": 22.708015,
+        "reduction_ms": 0.163255,
+        "reader_backpressure_ms": 1.438454,
+        "writer_backpressure_ms": 0.052932,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 2.085758,
+        "dram_bytes": 575143936,
+        "noc_bytes": 153590170,
+        "dram_mb": 575.144,
+        "noc_mb": 153.59,
+        "active_cores": 32,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 256,
+        "kv_num_chunks": 64
+      },
+      "no_mcast": {
+        "latency_ms": 23.752045,
+        "dram_ms": 3.539497,
+        "noc_ms": 0.0,
+        "reader_ms": 3.587078,
+        "compute_ms": 22.708015,
+        "reduction_ms": 0.0,
+        "reader_backpressure_ms": 0.717416,
+        "writer_backpressure_ms": 0.001407,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 1.040252,
+        "dram_bytes": 721420288,
+        "noc_bytes": 0,
+        "dram_mb": 721.42,
+        "noc_mb": 0.0,
+        "active_cores": 32,
+        "k_reuse_groups": 32,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 256,
+        "kv_num_chunks": 64
+      }
+    },
+    {
+      "mode": "prefill",
+      "seq_len": 16384,
+      "seq_label": "16K",
+      "source": "analytical_fixed_config_what_if",
+      "speedup_no_mcast_over_mcast": 0.9736,
+      "fixed_parallelism": {
+        "batch_parallel_factor": 1,
+        "head_parallel_factor": 8,
+        "q_parallel_factor": 4,
+        "kv_parallel_factor": 1,
+        "device_parallel_factor": 1
+      },
+      "fixed_compile_time_config": {
+        "q_chunk_size": 32,
+        "k_chunk_size": 128,
+        "layout_policy": "bandwidth_balanced",
+        "topology_mode": "independent",
+        "sblock_topology_name": null,
+        "lane_group_capacity": 32,
+        "pipeline_depth": 2,
+        "trid_window": 14,
+        "page_size_strategy": "auto_max_divisor",
+        "k_page_size_bytes": 8192,
+        "k_num_pages": 9,
+        "k_cb_depth": 3,
+        "v_cb_depth": 2,
+        "dual_noc_policy": false,
+        "math_fidelity": "LoFi",
+        "bank_map": [],
+        "tree_order": []
+      },
+      "mcast": {
+        "latency_ms": 95.43832,
+        "dram_ms": 5.307714,
+        "noc_ms": 13.713408,
+        "reader_ms": 14.384537,
+        "compute_ms": 90.832061,
+        "reduction_ms": 0.32651,
+        "reader_backpressure_ms": 2.876907,
+        "writer_backpressure_ms": 0.105863,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 4.171516,
+        "dram_bytes": 1150287872,
+        "noc_bytes": 307180339,
+        "dram_mb": 1150.288,
+        "noc_mb": 307.18,
+        "active_cores": 32,
+        "k_reuse_groups": 1,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 512,
+        "kv_num_chunks": 128
+      },
+      "no_mcast": {
+        "latency_ms": 92.91775,
+        "dram_ms": 7.078994,
+        "noc_ms": 0.0,
+        "reader_ms": 7.174155,
+        "compute_ms": 90.832061,
+        "reduction_ms": 0.0,
+        "reader_backpressure_ms": 1.434831,
+        "writer_backpressure_ms": 0.002814,
+        "sender_hotspot_ms": 0.0,
+        "overlap_residual_ms": 2.080505,
+        "dram_bytes": 1442840576,
+        "noc_bytes": 0,
+        "dram_mb": 1442.841,
+        "noc_mb": 0.0,
+        "active_cores": 32,
+        "k_reuse_groups": 32,
+        "l1_usage_ratio": 0.4372,
+        "q_num_chunks": 512,
+        "kv_num_chunks": 128
+      }
+    }
+  ]
+}

@@ -1,0 +1,129 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3080 Ti",
+    "mem_gb": 11.66,
+    "sm": "sm86",
+    "sm_count": 80,
+    "pytorch": "2.7.0+cu128",
+    "cuda": "12.8",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 10,
+  "iters": 50,
+  "prefill_iters": 5,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 256,
+      "mean_ms": 0.1437,
+      "min_ms": 0.1403,
+      "max_ms": 0.164,
+      "std_ms": 0.0044,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 1966080,
+      "estimated_bw_gbs": 13.68
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 512,
+      "mean_ms": 0.1293,
+      "min_ms": 0.1278,
+      "max_ms": 0.1329,
+      "std_ms": 0.0009,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 3735552,
+      "estimated_bw_gbs": 28.89
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 1024,
+      "mean_ms": 0.1319,
+      "min_ms": 0.131,
+      "max_ms": 0.1351,
+      "std_ms": 0.0007,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 7274496,
+      "estimated_bw_gbs": 55.15
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 2048,
+      "mean_ms": 0.1272,
+      "min_ms": 0.1251,
+      "max_ms": 0.1442,
+      "std_ms": 0.0037,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 14352384,
+      "estimated_bw_gbs": 112.83
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 4096,
+      "mean_ms": 0.2065,
+      "min_ms": 0.2055,
+      "max_ms": 0.2104,
+      "std_ms": 0.0009,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 28508160,
+      "estimated_bw_gbs": 138.05
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 8192,
+      "mean_ms": 0.2889,
+      "min_ms": 0.2879,
+      "max_ms": 0.2932,
+      "std_ms": 0.0009,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 56819712,
+      "estimated_bw_gbs": 196.68
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 16384,
+      "mean_ms": 0.4513,
+      "min_ms": 0.4498,
+      "max_ms": 0.4639,
+      "std_ms": 0.0021,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 113442816,
+      "estimated_bw_gbs": 251.37
+    },
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 32768,
+      "mean_ms": 0.8563,
+      "min_ms": 0.8531,
+      "max_ms": 0.8625,
+      "std_ms": 0.0033,
+      "samples": 50,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 226689024,
+      "estimated_bw_gbs": 264.73
+    }
+  ]
+}

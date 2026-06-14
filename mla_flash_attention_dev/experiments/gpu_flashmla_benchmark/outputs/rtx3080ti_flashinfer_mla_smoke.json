@@ -1,0 +1,51 @@
+{
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3080 Ti",
+    "mem_gb": 11.66,
+    "sm": "sm86",
+    "sm_count": 80,
+    "pytorch": "2.7.0+cu128",
+    "cuda": "12.8",
+    "flashinfer": "0.6.11.post3"
+  },
+  "config": {
+    "batch": 6,
+    "h_q": 32,
+    "d_c": 512,
+    "d_r": 64,
+    "page_size": 64,
+    "dtype": "bf16"
+  },
+  "backend": "auto",
+  "warmup": 1,
+  "iters": 2,
+  "prefill_iters": 1,
+  "results": [
+    {
+      "kernel": "flashinfer_mla_decode",
+      "seq_len": 256,
+      "mean_ms": 0.1117,
+      "min_ms": 0.0889,
+      "max_ms": 0.1344,
+      "std_ms": 0.0227,
+      "samples": 2,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 1966080,
+      "estimated_bw_gbs": 17.6
+    },
+    {
+      "kernel": "flashinfer_mla_prefill",
+      "seq_len": 256,
+      "mean_ms": 0.5788,
+      "min_ms": 0.5788,
+      "max_ms": 0.5788,
+      "std_ms": 0.0,
+      "samples": 1,
+      "status": "ok",
+      "backend": "auto",
+      "estimated_bytes": 52101120,
+      "estimated_bw_gbs": 90.02
+    }
+  ]
+}
