@@ -122,7 +122,7 @@
 
 ### 3.2 Profiling / Simulation 文档
 
-已更新 `mla_flash_attention_dev/experiments/flash_mla_wh_profile_and_bh_simulation.md`，补充了：
+已更新 `mla_flash_attention_dev/experiments/docs/flash_mla_wh_profile_and_bh_simulation.md`，补充了：
 
 - WH profile 结论如何进入 autotuner
 - WH profile JSON 如何桥接成 measurement DB

@@ -64,7 +64,7 @@ Byte-count conventions:
 Suggested raw sweep command before rerunning this report:
 
 ```bash
-python mla_flash_attention_dev/experiments/run_wh_mla_batch_seq_sweep.py \
+python mla_flash_attention_dev/experiments/sweeps/run_wh_mla_batch_seq_sweep.py \
   --methods flash_mla sfmla --modes decode \
   --batches 1 2 4 8 16 32 \
   --seq-lens 256 512 1024 2048 4096 8192 16384 32768 65536 \

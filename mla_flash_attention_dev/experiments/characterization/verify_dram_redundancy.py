@@ -19,11 +19,11 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 EXPERIMENTS = SCRIPT_DIR.parents[0]
 
 PART1_DETAILED = (
-    EXPERIMENTS / "part1_three_baselines" / "outputs" / "flashmla_detailed"
+    EXPERIMENTS / "part1_baselines" / "outputs" / "flashmla_detailed"
     / "flash_mla_wh_detailed_profile_results.json"
 )
 PART1_HEAD_SWEEP = (
-    EXPERIMENTS / "part1_three_baselines" / "outputs" / "multidim" / "tables"
+    EXPERIMENTS / "part1_baselines" / "outputs" / "multidim" / "tables"
     / "decode_head_sweep.md"
 )
 CHAR_JSON = SCRIPT_DIR / "outputs" / "raw" / "characterization.json"

@@ -23,17 +23,17 @@ EXPERIMENTS = SCRIPT_DIR.parents[0]
 
 PART1_DETAILED = (
     EXPERIMENTS
-    / "part1_three_baselines"
+    / "part1_baselines"
     / "outputs"
     / "flashmla_detailed"
     / "flash_mla_wh_detailed_profile_results.json"
 )
 PART2_JSON = (
     EXPERIMENTS
-    / "part2_utilization_bottleneck_analysis"
+    / "part2_utilization"
     / "outputs"
     / "raw"
-    / "part2_utilization_bottleneck_analysis.json"
+    / "part2_utilization.json"
 )
 
 OUTPUT_DIR = SCRIPT_DIR / "outputs"
