@@ -103,12 +103,92 @@ def estimate_prefill_device_bytes(batch: int, seq_len: int, *, d_qk: int, d_v: i
     return q_bytes + k_bytes + out_bytes + page_table_bytes
 
 
-def should_skip_case(method: str, mode: str, batch: int, seq_len: int) -> tuple[bool, str]:
+def _parse_int_list(value: str | None) -> tuple[int, ...] | None:
+    if not value:
+        return None
+    return tuple(int(v) for v in value.split(","))
+
+
+def build_sfmla_workload_config(
+    *,
+    batch: int,
+    seq_len: int,
+    baseline: Any,
+    cores_per_block: int,
+    num_q_heads_per_core: int,
+    k_chunk_size: int,
+    num_s_blocks_active: int | None,
+    num_s_blocks: int | None = None,
+    lane_cols: int | None = None,
+    lane_rows: int | None = None,
+    custom_dram_banks: tuple[int, ...] | None = None,
+    grid_layout_json: str | None = None,
+):
+    from mla_flash_attention_dev.sfmla import SFMLAWorkloadConfig
+
+    effective_cs = (lane_cols * lane_rows) if lane_cols is not None and lane_rows is not None else cores_per_block
+    return SFMLAWorkloadConfig(
+        batch=batch,
+        seq_len=seq_len,
+        num_heads=baseline.NUM_HEADS,
+        num_kv_heads=baseline.NUM_KV_HEADS,
+        kv_lora_rank=baseline.KV_LORA_RANK,
+        qk_rope_head_dim=baseline.D_ROPE,
+        num_q_heads_per_core=num_q_heads_per_core,
+        cores_per_block=effective_cs,
+        k_chunk_size=k_chunk_size,
+        num_s_blocks_active=num_s_blocks_active,
+        num_s_blocks=num_s_blocks,
+        lane_cols=lane_cols,
+        lane_rows=lane_rows,
+        custom_dram_banks=custom_dram_banks,
+        grid_layout_json=grid_layout_json,
+    )
+
+
+def should_skip_case(
+    method: str,
+    mode: str,
+    batch: int,
+    seq_len: int,
+    *,
+    sfmla_cores_per_block: int = 4,
+    sfmla_num_q_heads_per_core: int = 8,
+    sfmla_k_chunk_size: int = 128,
+    sfmla_num_s_blocks_active: int | None = None,
+    sfmla_num_s_blocks: int | None = None,
+    sfmla_lane_cols: int | None = None,
+    sfmla_lane_rows: int | None = None,
+    sfmla_dram_banks: tuple[int, ...] | None = None,
+    sfmla_grid_layout_json: str | None = None,
+) -> tuple[bool, str]:
     baseline = import_baseline_module()
     if mode == "decode" and method in {"flash_mla", "sfmla"} and batch > 56:
         return True, "current WH SDPA decode program requires available cores (56) >= batch size"
     if mode == "decode" and method in {"flash_mla", "sfmla"} and batch * seq_len > 2_097_152:
         return True, "current host BF8 cache construction becomes unreliable beyond 2M batch-tokens"
+
+    if mode == "decode" and method == "sfmla":
+        from mla_flash_attention_dev.sfmla import validate_config
+
+        baseline = import_baseline_module()
+        config = build_sfmla_workload_config(
+            batch=batch,
+            seq_len=seq_len,
+            baseline=baseline,
+            cores_per_block=sfmla_cores_per_block,
+            num_q_heads_per_core=sfmla_num_q_heads_per_core,
+            k_chunk_size=sfmla_k_chunk_size,
+            num_s_blocks_active=sfmla_num_s_blocks_active,
+            num_s_blocks=sfmla_num_s_blocks,
+            lane_cols=sfmla_lane_cols,
+            lane_rows=sfmla_lane_rows,
+            custom_dram_banks=sfmla_dram_banks,
+            grid_layout_json=sfmla_grid_layout_json,
+        )
+        errors = validate_config(config)
+        if errors:
+            return True, "; ".join(errors)
 
     if method == "mla":
         est = baseline.estimate_naive_dram_bytes(batch, seq_len, mode)
@@ -142,8 +222,24 @@ def should_skip_case(method: str, mode: str, batch: int, seq_len: int) -> tuple[
     return False, ""
 
 
-def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: int) -> dict[str, Any]:
-    from mla_flash_attention_dev.sfmla import SFMLAWorkloadConfig, build_decode_inputs, run_decode
+def run_sfmla_decode(
+    device: Any,
+    batch: int,
+    seq_len: int,
+    warmup: int,
+    iters: int,
+    *,
+    cores_per_block: int,
+    num_q_heads_per_core: int,
+    k_chunk_size: int,
+    num_s_blocks_active: int | None,
+    num_s_blocks: int | None = None,
+    lane_cols: int | None = None,
+    lane_rows: int | None = None,
+    custom_dram_banks: tuple[int, ...] | None = None,
+    grid_layout_json: str | None = None,
+) -> dict[str, Any]:
+    from mla_flash_attention_dev.sfmla import build_decode_inputs, run_decode
     from mla_flash_attention_dev.sfmla.dataflow import derive_mapping, get_sfmla_grid
     from mla_flash_attention_dev.sfmla.runtime.decode import deallocate_decode_inputs
 
@@ -151,17 +247,19 @@ def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: 
     q = torch.randn((1, batch, baseline.NUM_HEADS, baseline.D_QK), dtype=torch.bfloat16)
     k = torch.randn((batch, baseline.NUM_KV_HEADS, seq_len, baseline.D_QK), dtype=torch.bfloat16)
 
-    num_q_heads_per_core = 8
-    config = SFMLAWorkloadConfig(
+    config = build_sfmla_workload_config(
         batch=batch,
         seq_len=seq_len,
-        num_heads=baseline.NUM_HEADS,
-        num_kv_heads=baseline.NUM_KV_HEADS,
-        kv_lora_rank=baseline.KV_LORA_RANK,
-        qk_rope_head_dim=baseline.D_ROPE,
+        baseline=baseline,
+        cores_per_block=cores_per_block,
         num_q_heads_per_core=num_q_heads_per_core,
-        cores_per_block=baseline.MAX_CORES_PER_HEAD_BATCH,
-        k_chunk_size=baseline.K_CHUNK_SIZE,
+        k_chunk_size=k_chunk_size,
+        num_s_blocks_active=num_s_blocks_active,
+        num_s_blocks=num_s_blocks,
+        lane_cols=lane_cols,
+        lane_rows=lane_rows,
+        custom_dram_banks=custom_dram_banks,
+        grid_layout_json=grid_layout_json,
     )
 
     decode_inputs = None
@@ -184,7 +282,7 @@ def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: 
             latencies.append((t1 - t0) * 1000.0)
             ttnn.deallocate(out)
 
-        grid = get_sfmla_grid(cores_per_block=config.cores_per_block)
+        grid = get_sfmla_grid(config=config, device=device)
         return result_record(
             method="sfmla",
             mode="decode",
@@ -198,7 +296,13 @@ def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: 
                 "N_S": grid.num_s_blocks,
                 "C_S": grid.cores_per_lane,
                 "B": mapping.num_q_shards,
-                "k_chunk_size": baseline.K_CHUNK_SIZE,
+                "tau": config.num_q_heads_per_core,
+                "k_chunk_size": config.k_chunk_size,
+                "max_cores_per_head_batch": config.effective_cores_per_block,
+                "num_s_blocks_active": config.num_s_blocks_active,
+                "custom_grid": config.uses_custom_grid,
+                "lane_cols": config.lane_cols,
+                "lane_rows": config.lane_rows,
             },
         )
     except Exception as e:
@@ -304,7 +408,21 @@ def run_sfmla_prefill(device: Any, batch: int, seq_len: int, warmup: int, iters:
 
 
 def run_child(args: argparse.Namespace) -> dict[str, Any]:
-    skip, reason = should_skip_case(args.method, args.mode, args.batch, args.seq_len)
+    skip, reason = should_skip_case(
+        args.method,
+        args.mode,
+        args.batch,
+        args.seq_len,
+        sfmla_cores_per_block=args.sfmla_cores_per_block,
+        sfmla_num_q_heads_per_core=args.sfmla_num_q_heads_per_core,
+        sfmla_k_chunk_size=args.sfmla_k_chunk_size,
+        sfmla_num_s_blocks_active=args.sfmla_num_s_blocks_active,
+        sfmla_num_s_blocks=args.sfmla_num_s_blocks,
+        sfmla_lane_cols=args.sfmla_lane_cols,
+        sfmla_lane_rows=args.sfmla_lane_rows,
+        sfmla_dram_banks=args.sfmla_dram_banks,
+        sfmla_grid_layout_json=args.sfmla_grid_layout_json,
+    )
     if skip:
         return result_record(
             method=args.method,
@@ -336,7 +454,22 @@ def run_child(args: argparse.Namespace) -> dict[str, Any]:
             return result
         if args.method == "sfmla":
             if args.mode == "decode":
-                return run_sfmla_decode(device, args.batch, args.seq_len, args.warmup, args.iters)
+                return run_sfmla_decode(
+                    device,
+                    args.batch,
+                    args.seq_len,
+                    args.warmup,
+                    args.iters,
+                    cores_per_block=args.sfmla_cores_per_block,
+                    num_q_heads_per_core=args.sfmla_num_q_heads_per_core,
+                    k_chunk_size=args.sfmla_k_chunk_size,
+                    num_s_blocks_active=args.sfmla_num_s_blocks_active,
+                    num_s_blocks=args.sfmla_num_s_blocks,
+                    lane_cols=args.sfmla_lane_cols,
+                    lane_rows=args.sfmla_lane_rows,
+                    custom_dram_banks=args.sfmla_dram_banks,
+                    grid_layout_json=args.sfmla_grid_layout_json,
+                )
             return run_sfmla_prefill(device, args.batch, args.seq_len, args.warmup, args.iters)
         raise ValueError(f"unknown method: {args.method}")
     except Exception as exc:
@@ -411,11 +544,23 @@ def write_outputs(results: list[dict[str, Any]], args: argparse.Namespace) -> No
             "prefill_safe_budget_bytes": PREFILL_SAFE_BUDGET_BYTES,
             "prefill_safe_max_seq_len": PREFILL_SAFE_MAX_SEQ_LEN,
             "prefill_safe_max_tokens": PREFILL_SAFE_MAX_TOKENS,
+            "sfmla_cores_per_block": args.sfmla_cores_per_block,
+            "sfmla_num_q_heads_per_core": args.sfmla_num_q_heads_per_core,
+            "sfmla_k_chunk_size": args.sfmla_k_chunk_size,
+            "sfmla_num_s_blocks_active": args.sfmla_num_s_blocks_active,
+            "sfmla_num_s_blocks": args.sfmla_num_s_blocks,
+            "sfmla_lane_cols": args.sfmla_lane_cols,
+            "sfmla_lane_rows": args.sfmla_lane_rows,
+            "sfmla_dram_banks": list(args.sfmla_dram_banks) if args.sfmla_dram_banks else None,
+            "sfmla_grid_layout_json": args.sfmla_grid_layout_json,
             "notes": [
                 "L40S/3 is intentionally excluded; run it on the GPU machine and merge later.",
                 "mla is the unfused TT-NN matmul/softmax/matmul baseline.",
                 "flash_mla is the TT-NN production FlashMLA path.",
-                "sfmla decode uses flash_multi_latent_attention_decode; sfmla prefill uses chunked_flash_mla_prefill with q_chunk_size=128.",
+                "sfmla decode uses flash_multi_latent_attention_decode with Block-Lane grid; "
+                "τ/C_S/k_chunk/N_S are set via --sfmla-* flags; "
+                "arbitrary N_S×C_S via --sfmla-num-s-blocks --sfmla-lane-cols --sfmla-lane-rows "
+                "or --sfmla-grid-layout-json.",
                 "Cases estimated to exceed the single-chip memory budget are recorded as skipped.",
                 "Long prefill cases may use fewer iterations than the command-line default to keep the sweep tractable.",
                 "Conservative prefill safety caps are enabled to avoid server instability after prior crash.",
@@ -482,7 +627,25 @@ def run_parent(args: argparse.Namespace) -> None:
             str(iters),
             "--device-id",
             str(args.device_id),
+            "--sfmla-cores-per-block",
+            str(args.sfmla_cores_per_block),
+            "--sfmla-num-q-heads-per-core",
+            str(args.sfmla_num_q_heads_per_core),
+            "--sfmla-k-chunk-size",
+            str(args.sfmla_k_chunk_size),
         ]
+        if args.sfmla_num_s_blocks_active is not None:
+            cmd.extend(["--sfmla-num-s-blocks-active", str(args.sfmla_num_s_blocks_active)])
+        if args.sfmla_num_s_blocks is not None:
+            cmd.extend(["--sfmla-num-s-blocks", str(args.sfmla_num_s_blocks)])
+        if args.sfmla_lane_cols is not None:
+            cmd.extend(["--sfmla-lane-cols", str(args.sfmla_lane_cols)])
+        if args.sfmla_lane_rows is not None:
+            cmd.extend(["--sfmla-lane-rows", str(args.sfmla_lane_rows)])
+        if args.sfmla_dram_banks:
+            cmd.extend(["--sfmla-dram-banks", ",".join(str(v) for v in args.sfmla_dram_banks)])
+        if args.sfmla_grid_layout_json:
+            cmd.extend(["--sfmla-grid-layout-json", args.sfmla_grid_layout_json])
         try:
             completed = subprocess.run(
                 cmd,
@@ -581,6 +744,51 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resume", action="store_true", default=True)
     parser.add_argument("--no-resume", dest="resume", action="store_false")
     parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--sfmla-cores-per-block",
+        type=int,
+        default=4,
+        choices=(4, 8),
+        help="S-FMLA lane width C_S (4 or 8 on Wormhole).",
+    )
+    parser.add_argument(
+        "--sfmla-num-q-heads-per-core",
+        type=int,
+        default=8,
+        help="S-FMLA heads per Q shard τ; must divide num_heads (32).",
+    )
+    parser.add_argument(
+        "--sfmla-k-chunk-size",
+        type=int,
+        default=128,
+        help="S-FMLA K sequence chunk L_k (power-of-two, multiple of 32).",
+    )
+    parser.add_argument(
+        "--sfmla-num-s-blocks-active",
+        type=int,
+        default=None,
+        help="Truncate catalog topology to first N S-blocks (1..6 on wh_6x4).",
+    )
+    parser.add_argument(
+        "--sfmla-num-s-blocks",
+        type=int,
+        default=None,
+        help="Custom grid N_S (use with --sfmla-lane-cols/--sfmla-lane-rows).",
+    )
+    parser.add_argument("--sfmla-lane-cols", type=int, default=None, help="Custom lane rectangle width.")
+    parser.add_argument("--sfmla-lane-rows", type=int, default=None, help="Custom lane rectangle height.")
+    parser.add_argument(
+        "--sfmla-dram-banks",
+        type=_parse_int_list,
+        default=None,
+        help="Comma-separated DRAM bank per S-block for custom grid.",
+    )
+    parser.add_argument(
+        "--sfmla-grid-layout-json",
+        type=str,
+        default=None,
+        help="Path to GridLayoutSpec JSON for fully manual core placement.",
+    )
     args = parser.parse_args()
     if args.child_run:
         missing = [name for name in ("method", "mode", "batch", "seq_len") if getattr(args, name.replace("-", "_"), None) is None]

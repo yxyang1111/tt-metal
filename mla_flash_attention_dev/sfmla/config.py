@@ -29,6 +29,31 @@ class SFMLAWorkloadConfig:
     cores_per_block: int = 4
     k_chunk_size: int = 128
     block_size: int = 64
+    num_s_blocks_active: int | None = None
+    """If set, use only the first N_S S-blocks (1..6 on WH). None = full topology."""
+
+    # Custom N_S × C_S grid (overrides catalog floorplans when set).
+    num_s_blocks: int | None = None
+    lane_cols: int | None = None
+    lane_rows: int | None = None
+    custom_dram_banks: tuple[int, ...] | None = None
+    custom_core_coords: tuple[tuple[tuple[int, int], ...], ...] | None = None
+    grid_layout_json: str | None = None
+    """Path to JSON from ``GridLayoutSpec.to_json`` for fully manual placement."""
+
+    @property
+    def uses_custom_grid(self) -> bool:
+        return bool(
+            self.grid_layout_json
+            or self.custom_core_coords is not None
+            or (self.num_s_blocks is not None and self.lane_cols is not None and self.lane_rows is not None)
+        )
+
+    @property
+    def effective_cores_per_block(self) -> int:
+        if self.lane_cols is not None and self.lane_rows is not None:
+            return self.lane_cols * self.lane_rows
+        return self.cores_per_block
 
     @property
     def kvpe_dim(self) -> int:

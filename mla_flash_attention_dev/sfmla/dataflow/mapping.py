@@ -30,7 +30,11 @@ class SFMLAMapping:
 
 
 def derive_mapping(config: SFMLAWorkloadConfig, grid: SFMLAGrid | None = None) -> SFMLAMapping:
-    grid = grid or get_sfmla_grid(cores_per_block=config.cores_per_block)
+    grid = grid or get_sfmla_grid(
+        cores_per_block=config.effective_cores_per_block,
+        num_s_blocks_active=config.num_s_blocks_active,
+        config=config,
+    )
     num_q_shards = config.num_q_shards
     mapping = SFMLAMapping(
         num_q_shards=num_q_shards,
