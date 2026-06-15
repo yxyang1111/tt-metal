@@ -143,59 +143,34 @@ def should_skip_case(method: str, mode: str, batch: int, seq_len: int) -> tuple[
 
 
 def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: int) -> dict[str, Any]:
-    import ttnn
+    from mla_flash_attention_dev.sfmla import SFMLAWorkloadConfig, build_decode_inputs, run_decode
+    from mla_flash_attention_dev.sfmla.dataflow import derive_mapping, get_sfmla_grid
+    from mla_flash_attention_dev.sfmla.runtime.decode import deallocate_decode_inputs
 
     baseline = import_baseline_module()
     q = torch.randn((1, batch, baseline.NUM_HEADS, baseline.D_QK), dtype=torch.bfloat16)
     k = torch.randn((batch, baseline.NUM_KV_HEADS, seq_len, baseline.D_QK), dtype=torch.bfloat16)
 
-    tt_q = None
-    tt_k = None
-    try:
-        tt_q = ttnn.from_torch(
-            q,
-            device=device,
-            dtype=ttnn.bfloat16,
-            layout=ttnn.TILE_LAYOUT,
-            memory_config=ttnn.DRAM_MEMORY_CONFIG,
-        )
-        tt_k = ttnn.from_torch(
-            k,
-            device=device,
-            dtype=ttnn.bfloat8_b,
-            layout=ttnn.TILE_LAYOUT,
-            memory_config=ttnn.DRAM_MEMORY_CONFIG,
-        )
-        program_config = ttnn.SDPAProgramConfig(
-            compute_with_storage_grid_size=device.compute_with_storage_grid_size(),
-            q_chunk_size=0,
-            k_chunk_size=baseline.K_CHUNK_SIZE,
-            exp_approx_mode=False,
-            max_cores_per_head_batch=baseline.MAX_CORES_PER_HEAD_BATCH,
-        )
-        compute_kernel_config = ttnn.WormholeComputeKernelConfig(
-            math_fidelity=ttnn.MathFidelity.HiFi4,
-            math_approx_mode=False,
-            fp32_dest_acc_en=False,
-            packer_l1_acc=False,
-        )
-        cur_pos = [seq_len - 1] * batch
+    num_q_heads_per_core = 8
+    config = SFMLAWorkloadConfig(
+        batch=batch,
+        seq_len=seq_len,
+        num_heads=baseline.NUM_HEADS,
+        num_kv_heads=baseline.NUM_KV_HEADS,
+        kv_lora_rank=baseline.KV_LORA_RANK,
+        qk_rope_head_dim=baseline.D_ROPE,
+        num_q_heads_per_core=num_q_heads_per_core,
+        cores_per_block=baseline.MAX_CORES_PER_HEAD_BATCH,
+        k_chunk_size=baseline.K_CHUNK_SIZE,
+    )
 
-        def run_once():
-            return ttnn.transformer.flash_multi_latent_attention_decode(
-                tt_q,
-                tt_k,
-                None,
-                head_dim_v=baseline.KV_LORA_RANK,
-                cur_pos=cur_pos,
-                scale=baseline.SCALE,
-                program_config=program_config,
-                compute_kernel_config=compute_kernel_config,
-                memory_config=ttnn.DRAM_MEMORY_CONFIG,
-            )
+    decode_inputs = None
+    try:
+        mapping = derive_mapping(config)
+        decode_inputs = build_decode_inputs(device, q, k, config)
 
         for _ in range(warmup):
-            out = run_once()
+            out = run_decode(device, decode_inputs)
             ttnn.synchronize_device(device)
             ttnn.deallocate(out)
 
@@ -203,12 +178,13 @@ def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: 
         for _ in range(iters):
             ttnn.synchronize_device(device)
             t0 = time.perf_counter()
-            out = run_once()
+            out = run_decode(device, decode_inputs)
             ttnn.synchronize_device(device)
             t1 = time.perf_counter()
             latencies.append((t1 - t0) * 1000.0)
             ttnn.deallocate(out)
 
+        grid = get_sfmla_grid(cores_per_block=config.cores_per_block)
         return result_record(
             method="sfmla",
             mode="decode",
@@ -216,10 +192,27 @@ def run_sfmla_decode(device: Any, batch: int, seq_len: int, warmup: int, iters: 
             seq_len=seq_len,
             status="ok",
             latencies_ms=latencies,
-            extra={"program": "flash_multi_latent_attention_decode", "q_chunk_size": 0, "k_chunk_size": baseline.K_CHUNK_SIZE},
+            extra={
+                "program": "flash_multi_latent_attention_decode",
+                "dataflow": "block_lane",
+                "N_S": grid.num_s_blocks,
+                "C_S": grid.cores_per_lane,
+                "B": mapping.num_q_shards,
+                "k_chunk_size": baseline.K_CHUNK_SIZE,
+            },
+        )
+    except Exception as e:
+        return result_record(
+            method="sfmla",
+            mode="decode",
+            batch=batch,
+            seq_len=seq_len,
+            status="error",
+            error=str(e),
         )
     finally:
-        baseline.safe_dealloc(tt_q, tt_k)
+        if decode_inputs is not None:
+            deallocate_decode_inputs(decode_inputs)
 
 
 def run_sfmla_prefill(device: Any, batch: int, seq_len: int, warmup: int, iters: int) -> dict[str, Any]:

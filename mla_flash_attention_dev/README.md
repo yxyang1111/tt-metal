@@ -8,6 +8,7 @@ Production kernel code lives in `ttnn/` and `models/`; this folder holds design 
 
 ```
 mla_flash_attention_dev/
+├── sfmla/              ← S-FMLA implementation API (Block-Lane dataflow)
 ├── autotuner/          Part III: analytical cost model + design-space search
 ├── docs/               SF-MLA design docs, diagrams, and background notes
 ├── experiments/        Part I–IV evaluation pipelines + sweeps + profiling
@@ -25,6 +26,7 @@ mla_flash_attention_dev/
 | Analyze utilization & bubbles (Part II) | `experiments/part2_utilization/build_part2_results.py` |
 | Run cost-model autotuner (Part III) | `experiments/part3_autotuner/build_part3_results.py` |
 | Architecture implications (Part IV) | `experiments/part4_architecture/build_part4_results.py` |
+| S-FMLA decode (Block-Lane API) | `sfmla/runtime/decode.py` |
 | WH batch×seq sweep (mla / flash_mla / sfmla) | `experiments/sweeps/run_wh_mla_batch_seq_sweep.py` |
 | Detailed FlashMLA profiling | `experiments/profiling/profile_flash_mla_wh_detailed.py` |
 

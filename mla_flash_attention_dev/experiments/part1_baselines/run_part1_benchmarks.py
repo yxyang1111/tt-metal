@@ -19,11 +19,7 @@ import torch
 from loguru import logger
 
 import ttnn
-from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import (
-    FlashMLADecode,
-    FlashMLAProgramConfig,
-    get_flash_mla_wormhole_grid,
-)
+from models.demos.deepseek_v3_b1.micro_ops.flash_mla.op import get_flash_mla_wormhole_grid
 from models.common.utility_functions import nearest_y
 from models.tt_transformers.tt.common import PagedAttentionConfig
 from tests.ttnn.unit_tests.operations.sdpa.mla_test_utils import (
@@ -36,6 +32,7 @@ from tests.ttnn.unit_tests.operations.sdpa.mla_test_utils import (
 )
 
 import mla_flash_attention_dev.experiments.profiling.profile_flash_mla_wh_detailed as flash_mla_detailed_profile
+from mla_flash_attention_dev.sfmla import SFMLAWorkloadConfig, build_decode_inputs, run_decode as sfmla_run_decode
 from mla_flash_attention_dev.experiments.part1_baselines.experiment_config import (
     DEFAULT_BATCHES,
     DEFAULT_BLOCK_SIZE,
@@ -887,103 +884,32 @@ def build_deepseek_decode_tt_inputs(
     wh_cores_per_block: int,
 ) -> dict[str, Any]:
     config = workload.config
-    grid = get_flash_mla_wormhole_grid(cores_per_block=wh_cores_per_block)
-    num_q_shards = config.deepseek_num_q_shards
-    if num_q_shards is None:
-        raise RuntimeError(
-            "DeepSeek FlashMLA requires num_heads divisible by deepseek_num_q_heads_per_core "
-            f"({config.num_heads} vs {config.deepseek_num_q_heads_per_core})"
-        )
-    required_q_cores = workload.batch * num_q_shards
-    all_active_cores = [core for block_cores, _ in grid.BLOCKS for core in block_cores]
-    if required_q_cores > len(all_active_cores):
-        raise RuntimeError(
-            f"DeepSeek FlashMLA requires batch * num_q_shards <= {len(all_active_cores)}, "
-            f"got {workload.batch} * {num_q_shards} = {required_q_cores}"
-        )
-
-    tiny_tile = ttnn.Tile((config.deepseek_num_q_heads_per_core, 32))
-    q_cores = all_active_cores[:required_q_cores]
-    q_core_grid = ttnn.CoreRangeSet(
-        [ttnn.CoreRange(ttnn.CoreCoord(x, y), ttnn.CoreCoord(x, y)) for x, y in q_cores]
-    )
-    q_mem_config = ttnn.MemoryConfig(
-        ttnn.TensorMemoryLayout.HEIGHT_SHARDED,
-        ttnn.BufferType.L1,
-        ttnn.ShardSpec(
-            q_core_grid,
-            (config.deepseek_num_q_heads_per_core, config.deepseek_kvpe_dim),
-            ttnn.ShardOrientation.ROW_MAJOR,
-        ),
-    )
-    out_mem_config = ttnn.MemoryConfig(
-        ttnn.TensorMemoryLayout.HEIGHT_SHARDED,
-        ttnn.BufferType.L1,
-        ttnn.ShardSpec(
-            q_core_grid,
-            (config.deepseek_num_q_heads_per_core, config.deepseek_kv_lora_rank),
-            ttnn.ShardOrientation.ROW_MAJOR,
-        ),
-    )
-
-    q_for_tt = inputs["q_deepseek"].permute(2, 0, 1, 3).contiguous()
-    kv_cache_torch = inputs["k_deepseek"]
-
-    tt_q = ttnn.from_torch(
-        q_for_tt,
-        dtype=ttnn.bfloat16,
-        layout=ttnn.TILE_LAYOUT,
-        device=device,
-        memory_config=q_mem_config,
-        tile=tiny_tile,
-    )
-
-    program_config = FlashMLAProgramConfig(
+    sfmla_config = SFMLAWorkloadConfig(
+        batch=workload.batch,
+        seq_len=workload.seq_len,
+        num_heads=config.num_heads,
+        num_kv_heads=config.num_kv_heads,
+        kv_lora_rank=config.deepseek_kv_lora_rank,
+        qk_rope_head_dim=config.deepseek_qk_rope_head_dim,
+        num_q_heads_per_core=config.deepseek_num_q_heads_per_core,
+        cores_per_block=wh_cores_per_block,
         k_chunk_size=config.k_chunk_size,
-        exp_approx_mode=False,
-        grid=grid,
-        allow_wh_fallback=False,
+        block_size=config.block_size,
     )
-    kv_nd_shard_spec = ttnn.NdShardSpec(
-        shard_shape=[1, config.num_kv_heads, program_config.k_chunk_size, config.deepseek_kvpe_dim],
-        grid=grid.optimal_dram_grid(),
-        orientation=ttnn.ShardOrientation.ROW_MAJOR,
-        shard_distribution_strategy=ttnn.ShardDistributionStrategy.ROUND_ROBIN_1D,
+    decode_inputs = build_decode_inputs(
+        device,
+        inputs["q_deepseek"],
+        inputs["k_deepseek"],
+        sfmla_config,
     )
-    kv_mem_config = ttnn.MemoryConfig(
-        buffer_type=ttnn.BufferType.DRAM,
-        nd_shard_spec=kv_nd_shard_spec,
-    )
-    tt_cache = ttnn.from_torch(
-        kv_cache_torch,
-        dtype=ttnn.bfloat8_b,
-        layout=ttnn.TILE_LAYOUT,
-        device=device,
-        memory_config=kv_mem_config,
-    )
-
-    compute_kernel_config = ttnn.types.WormholeComputeKernelConfig(
-        math_fidelity=ttnn.MathFidelity.HiFi4,
-        math_approx_mode=False,
-        fp32_dest_acc_en=False,
-        packer_l1_acc=False,
-        dst_full_sync_en=True,
-    )
-    backend_program_config = FlashMLADecode._build_wh_sdpa_program_config(tt_q, program_config)
-    backend_q = FlashMLADecode._to_wh_backend_tensor(tt_q, dtype=ttnn.bfloat16)
-    backend_k = FlashMLADecode._to_wh_backend_tensor(tt_cache, dtype=tt_cache.dtype)
-    safe_deallocate(tt_q, tt_cache)
     return {
-        "program_config": backend_program_config,
-        "compute_kernel_config": compute_kernel_config,
-        "head_dim_v": config.deepseek_kv_lora_rank,
-        "backend_q": backend_q,
-        "backend_k": backend_k,
-        "cur_pos": [workload.seq_len - 1] * workload.batch,
-        "measurement_note": (
-            "timed only the backend device op after one-time DeepSeek->builtin tensor adaptation; "
-            "excludes current Python wrapper to_torch/from_torch materialization overhead"
-        ),
+        "program_config": decode_inputs.program_config,
+        "compute_kernel_config": decode_inputs.compute_kernel_config,
+        "head_dim_v": decode_inputs.head_dim_v,
+        "backend_q": decode_inputs.backend_q,
+        "backend_k": decode_inputs.backend_k,
+        "cur_pos": decode_inputs.cur_pos,
+        "measurement_note": decode_inputs.mapping_note,
     }
 
 
@@ -1068,16 +994,19 @@ def run_flash_mla_decode(device: Any, tt_inputs: dict[str, Any], scale: float) -
 
 
 def run_deepseek_flash_mla_decode(device: Any, tt_inputs: dict[str, Any], scale: float) -> ttnn.Tensor:
-    return ttnn.transformer.flash_multi_latent_attention_decode(
-        tt_inputs["backend_q"],
-        tt_inputs["backend_k"],
-        None,
-        head_dim_v=tt_inputs["head_dim_v"],
-        cur_pos=tt_inputs["cur_pos"],
-        scale=scale,
-        program_config=tt_inputs["program_config"],
-        compute_kernel_config=tt_inputs["compute_kernel_config"],
-        memory_config=ttnn.DRAM_MEMORY_CONFIG,
+    from mla_flash_attention_dev.sfmla.runtime.decode import SFMLADecodeInputs
+
+    return sfmla_run_decode(
+        device,
+        SFMLADecodeInputs(
+            backend_q=tt_inputs["backend_q"],
+            backend_k=tt_inputs["backend_k"],
+            program_config=tt_inputs["program_config"],
+            compute_kernel_config=tt_inputs["compute_kernel_config"],
+            head_dim_v=tt_inputs["head_dim_v"],
+            cur_pos=tt_inputs["cur_pos"],
+            scale=scale,
+        ),
     )
 
 

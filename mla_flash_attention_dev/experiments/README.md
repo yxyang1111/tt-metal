@@ -60,3 +60,5 @@ sweeps/outputs/consolidated_mla_results/
 ```
 
 Autotuner code: `../autotuner/`
+
+S-FMLA implementation API: `../sfmla/` (Block-Lane decode runtime; see `../sfmla/README.md`)
